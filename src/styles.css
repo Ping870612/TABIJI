@@ -1,0 +1,13 @@
+/* 引入 Tailwind CSS 的基礎樣式 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 若要自定義滾動條樣式，可保留以下設定 */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
