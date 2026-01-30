@@ -1914,19 +1914,88 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-{posterTheme && (
+{/* ↓↓↓ 修正後的隱藏海報區 (補回內容並正確關閉) ↓↓↓ */}
+      {posterTheme && (
         <div
           id="hidden-poster-area"
-          // ↓↓↓ 修改這裡：改成 absolute，並且 z-index 設為 -50 (藏在最下面)
           className="absolute top-0 left-0 w-[400px] bg-white font-sans text-stone-800 overflow-hidden"
-          style={{ 
-            minHeight: "800px", 
+          style={{
+            minHeight: "800px",
             padding: "40px",
-            zIndex: -50, // 讓它在網頁內容的「背後」，而不是螢幕外面
-            visibility: "visible" // 確保它是可見的（只是被蓋住）
+            zIndex: -50,
+            visibility: "visible",
           }}
         >
-      
+          {/* 1. 背景裝飾 */}
+          <div
+            className="absolute top-0 left-0 w-full h-40 opacity-10"
+            style={{ background: posterTheme.color }}
+          ></div>
+          <div
+            className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-10 blur-3xl"
+            style={{ background: posterTheme.color }}
+          ></div>
+
+          {/* 2. 標題區 */}
+          <div className="text-center mb-10 relative z-10">
+            <div className="text-6xl mb-4">{posterTheme.emoji}</div>
+            <h1
+              className="text-3xl font-black tracking-widest mb-2"
+              style={{ color: posterTheme.color }}
+            >
+              {posterTheme.title}
+            </h1>
+            <p className="text-xs font-bold text-stone-400 uppercase tracking-[0.3em]">
+              {tripData.destination} • {tripData.startDate}
+            </p>
+            <div className="mt-4 text-sm text-stone-500 italic font-serif">
+              "{posterTheme.quote}"
+            </div>
+          </div>
+
+          {/* 3. 行程列表 */}
+          <div className="space-y-8 relative z-10">
+            <div className="absolute left-[19px] top-2 bottom-2 w-[2px] bg-stone-100"></div>
+            {Object.keys(groupedItinerary)
+              .sort((a, b) => a - b)
+              .map((day) => (
+                <div key={day} className="relative pl-10">
+                  <div
+                    className="absolute left-0 top-0 w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm z-20"
+                    style={{ background: posterTheme.color }}
+                  >
+                    D{day}
+                  </div>
+                  <div className="space-y-3 pt-1">
+                    {groupedItinerary[day]
+                      .sort((a, b) => a.time.localeCompare(b.time))
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex gap-3 items-baseline"
+                        >
+                          <span className="font-mono text-xs text-stone-400 font-bold min-w-[35px]">
+                            {item.time}
+                          </span>
+                          <div className="flex-1 border-b border-stone-50 pb-2">
+                            <div className="font-bold text-stone-700 text-sm">
+                              {item.location}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+
+          <div className="mt-12 text-center text-[10px] text-stone-300 tracking-widest uppercase">
+            Designed by Tabiji AI
+          </div>
+        </div>
+      )}
+      {/* ↑↑↑ 隱藏區在這裡結束，下面才是原本的 Modals ↑↑↑ */}
+
       <ProfileSetupModal
         isOpen={showProfileSetup}
         onSubmit={handleProfileSubmit}
@@ -1955,6 +2024,7 @@ const handleAIAnalyze = async () => {
         isDebtAnalysis={aiAnalysisResult.isDebtAnalysis}
         members={tripData.members}
       />
+
 
       <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-5 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
         <div className="flex justify-between items-start mb-4">
