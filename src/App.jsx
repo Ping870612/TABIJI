@@ -955,24 +955,34 @@ const WelcomeScreen = ({
     onCreate(newTripData);
   };
 
-  const handleFileAnalyze = async (file) => {
+const handleFileAnalyze = async (file) => {
     setIsImportLoading(true);
+    // 這裡我們不關閉 Modal，因為如果不小心失敗了，使用者還停留在選擇畫面比較好
+    
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64Data = reader.result.split(",")[1];
-        const mimeType = file.type;
-        const prompt = `這是一份旅遊行程表（可能是圖片或PDF）。請分析並提取以下資訊回傳 JSON (純JSON，不要Markdown)：{"name": "旅程名稱", "destination": "主要城市", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "itinerary": [{"day": 數字, "time": "HH:MM", "location": "地點", "category": "sightseeing|food|transport|flight", "notes": "備註"}]}`;
-        const payload = [
-          { text: prompt },
-          { inlineData: { mimeType: mimeType, data: base64Data } },
-        ];
-        const resText = await callGeminiAPI(payload);
-        if (!resText) throw new Error("AI analysis failed");
-        onImportTrip(JSON.parse(resText.replace(/```json|```/g, "").trim()));
-        setIsImportOpen(false);
-      };
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+      });
+
+      const prompt = `這是一份旅遊行程表（可能是圖片或PDF）。請分析並提取以下資訊回傳 JSON (純JSON，不要Markdown)：{"name": "旅程名稱", "destination": "主要城市", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "itinerary": [{"day": 數字, "time": "HH:MM", "location": "地點", "category": "sightseeing|food|transport|flight", "notes": "備註"}]}`;
+      
+      const payload = [
+        { text: prompt },
+        { inlineData: { mimeType: file.type, data: base64Data } },
+      ];
+
+      const resText = await callGeminiAPI(payload);
+      if (!resText) throw new Error("AI analysis failed");
+      
+      const result = JSON.parse(resText.replace(/```json|```/g, "").trim());
+      
+      // 成功後才關閉視窗
+      setIsImportOpen(false);
+      onImportTrip(result);
+
     } catch (e) {
       console.error(e);
       showToast("匯入失敗，請確認檔案格式", "error");
@@ -1372,44 +1382,59 @@ const App = () => {
       ? tripData.members[user.uid].nickname
       : "我";
 
-  const handleFileImport = async (file) => {
+ const handleFileImport = async (file) => {
+    // 開啟全螢幕動畫
     setIsImportLoading(true);
+    // 關閉上傳視窗 (這樣背景就只剩動畫，比較乾淨)
+    setIsImportOpen(false);
+
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const prompt = `這是一份旅遊行程表。請分析並回傳 JSON Array：- "day": 數字 - "time": "HH:MM" - "location": 地點 - "category": "sightseeing|food|transport|flight" - "notes": 備註`;
-        const payload = [
-          { text: prompt },
-          {
-            inlineData: {
-              mimeType: file.type,
-              data: reader.result.split(",")[1],
-            },
+      // 使用 Promise 包裝 FileReader，確保程式會「等待」它讀完
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+      });
+
+      const prompt = `這是一份旅遊行程表。請分析並回傳 JSON Array：- "day": 數字 - "time": "HH:MM" - "location": 地點 - "category": "sightseeing|food|transport|flight" - "notes": 備註`;
+      
+      const payload = [
+        { text: prompt },
+        {
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
           },
-        ];
-        const resText = await callGeminiAPI(payload);
-        if (!resText) throw new Error("AI analysis failed");
+        },
+      ];
 
-        // 修正這裡：確保正則表達式完整閉合
-        const cleanJson = resText.replace(/```json|```/g, "").trim();
-        const newItems = JSON.parse(cleanJson).map((item) => ({
-          ...item,
-          id: Date.now() + Math.random().toString(36).substr(2, 9),
-          createdBy: user.uid,
-        }));
+      // 呼叫 AI (這時候動畫持續在跑)
+      const resText = await callGeminiAPI(payload);
+      
+      if (!resText) throw new Error("AI analysis failed");
 
-        await updateDoc(
-          doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
-          { itinerary: [...(tripData.itinerary || []), ...newItems] }
-        );
-        setIsImportOpen(false);
-        showToast(`成功匯入 ${newItems.length} 個行程！`);
-      };
+      const cleanJson = resText.replace(/```json|```/g, "").trim();
+      const newItems = JSON.parse(cleanJson).map((item) => ({
+        ...item,
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
+        createdBy: user.uid,
+      }));
+
+      await updateDoc(
+        doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
+        { itinerary: [...(tripData.itinerary || []), ...newItems] }
+      );
+
+      showToast(`成功匯入 ${newItems.length} 個行程！`);
+
     } catch (e) {
       console.error(e);
-      showToast("匯入失敗", "error");
+      showToast("匯入失敗或無法判讀檔案", "error");
+      // 失敗時把視窗開回來讓使用者重試
+      setIsImportOpen(true); 
     } finally {
+      // 無論成功失敗，最後才關閉動畫
       setIsImportLoading(false);
     }
   };
