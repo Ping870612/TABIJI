@@ -1306,12 +1306,19 @@ const App = () => {
       await new Promise(r => setTimeout(r, 1500)); 
 
       // (C) 截圖 (使用 CDN 載入的 window.html2canvas)
+      // (C) 截圖 (使用 CDN 載入的 window.html2canvas)
       const element = document.getElementById("hidden-poster-area");
       if (element && window.html2canvas) {
         const canvas = await window.html2canvas(element, {
-          scale: 3, // 畫質清晰 (3倍)
-          useCORS: true,
-          backgroundColor: "#ffffff"
+          scale: 3, // 畫質清晰
+          useCORS: true, // 允許跨域圖片
+          backgroundColor: "#ffffff", // 強制背景是白色
+          // ↓↓↓↓↓ 新增這四行關鍵設定 ↓↓↓↓↓
+          scrollX: 0,
+          scrollY: 0,
+          x: 0,
+          y: 0,
+          // ↑↑↑↑↑ 這能防止因為捲動而抓到空白 ↑↑↑↑↑
         });
         
         // (D) 下載圖片
@@ -1910,12 +1917,15 @@ const handleAIAnalyze = async () => {
 {posterTheme && (
         <div
           id="hidden-poster-area"
-          className="fixed top-0 left-[-9999px] w-[400px] bg-white font-sans text-stone-800 overflow-hidden"
-          style={{ minHeight: "800px", padding: "40px" }}
+          // ↓↓↓ 修改這裡：改成 absolute，並且 z-index 設為 -50 (藏在最下面)
+          className="absolute top-0 left-0 w-[400px] bg-white font-sans text-stone-800 overflow-hidden"
+          style={{ 
+            minHeight: "800px", 
+            padding: "40px",
+            zIndex: -50, // 讓它在網頁內容的「背後」，而不是螢幕外面
+            visibility: "visible" // 確保它是可見的（只是被蓋住）
+          }}
         >
-          {/* ... (省略中間的內容，貼上剛剛那整段) ... */}
-        </div>
-      )}
       
       <ProfileSetupModal
         isOpen={showProfileSetup}
