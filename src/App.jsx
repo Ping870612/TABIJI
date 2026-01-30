@@ -10,6 +10,8 @@ import {
   Navigation,
   CheckCircle,
   Copy,
+  FileSpreadsheet,
+  Image as ImageIcon,
   Edit,
   Sparkles,
   Loader2,
@@ -1248,6 +1250,87 @@ const App = () => {
     document.body.removeChild(textArea);
   };
 
+  // ==========================================
+  // ↓↓↓↓↓ 新增功能：匯出 Excel 與 美圖 ↓↓↓↓↓
+  // ==========================================
+
+  // 1. 匯出 Excel (使用 CDN 載入的 window.XLSX)
+  const handleExportExcel = () => {
+    if (!tripData?.itinerary?.length) {
+      showToast("行程是空的，無法匯出", "error");
+      return;
+    }
+
+    if (!window.XLSX) {
+      showToast("Excel 工具尚未載入，請重新整理網頁", "error");
+      return;
+    }
+
+    // 整理資料
+    const data = tripData.itinerary
+      .sort((a, b) => a.day - b.day || a.time.localeCompare(b.time))
+      .map((item) => ({
+        "Day": `Day ${item.day}`,
+        "時間": item.time,
+        "地點": item.location,
+        "分類": item.category,
+        "備註": item.guideInfo || item.notes || "",
+      }));
+
+    // 產生 Excel
+    const ws = window.XLSX.utils.json_to_sheet(data);
+    const wb = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(wb, ws, "行程表");
+    window.XLSX.writeFile(wb, `${tripData.name}_行程表.xlsx`);
+    showToast("Excel 下載成功！");
+  };
+
+  // 2. 匯出美圖 (包含 AI 設計邏輯)
+  const [posterTheme, setPosterTheme] = useState(null); // 存 AI 設計的主題
+
+  const handleExportImage = async () => {
+    if (!tripData?.itinerary?.length) return;
+    setIsAnalyzing(true); // 開啟 AI 動畫
+
+    try {
+      // (A) 問 AI 怎麼設計比較漂亮
+      const prompt = `針對行程 "${tripData.name}" (${tripData.destination})，請設計一個配色主題。回傳 JSON: {"color": "主色HEX", "subColor": "淺色HEX", "emoji": "代表符號", "title": "給行程一個文青標題(10字內)", "quote": "一句旅行短句"}`;
+      
+      const res = await callGeminiAPI([{ text: prompt }]);
+      if (!res) throw new Error("AI Failed");
+      
+      const theme = JSON.parse(res.replace(/```json|```/g, "").trim());
+      setPosterTheme(theme); // 設定主題，這會讓隱藏的海報區塊顯示出來
+
+      // (B) 等待畫面渲染 (給瀏覽器 1.5 秒畫圖)
+      await new Promise(r => setTimeout(r, 1500)); 
+
+      // (C) 截圖 (使用 CDN 載入的 window.html2canvas)
+      const element = document.getElementById("hidden-poster-area");
+      if (element && window.html2canvas) {
+        const canvas = await window.html2canvas(element, {
+          scale: 3, // 畫質清晰 (3倍)
+          useCORS: true,
+          backgroundColor: "#ffffff"
+        });
+        
+        // (D) 下載圖片
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = `${tripData.name}_精美行程.png`;
+        link.click();
+        showToast("美圖生成成功！");
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("圖片生成失敗", "error");
+    } finally {
+      setIsAnalyzing(false);
+      setPosterTheme(null); // 關閉海報隱藏區
+    }
+  };
+  // ↑↑↑↑↑ 新增功能結束 ↑↑↑↑↑
+  
   const addToHistory = (id, data) => {
     try {
       const current = JSON.parse(
@@ -1823,7 +1906,17 @@ const handleAIAnalyze = async () => {
           </h3>
         </div>
       )}
-    
+
+{posterTheme && (
+        <div
+          id="hidden-poster-area"
+          className="fixed top-0 left-[-9999px] w-[400px] bg-white font-sans text-stone-800 overflow-hidden"
+          style={{ minHeight: "800px", padding: "40px" }}
+        >
+          {/* ... (省略中間的內容，貼上剛剛那整段) ... */}
+        </div>
+      )}
+      
       <ProfileSetupModal
         isOpen={showProfileSetup}
         onSubmit={handleProfileSubmit}
@@ -1969,6 +2062,24 @@ const handleAIAnalyze = async () => {
           >
             <Upload size={14} /> 匯入行程
           </button>
+          
+          <div className="w-[1px] h-6 bg-stone-200 mx-1"></div> {/* 分隔線 */}
+          
+          <button
+            onClick={handleExportExcel}
+            className="flex-none bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-green-500 hover:text-green-600 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
+          >
+            <FileSpreadsheet size={14} /> Excel
+          </button>
+
+          <button
+            onClick={handleExportImage}
+            disabled={isAnalyzing}
+            className="flex-none bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-pink-500 hover:text-pink-600 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
+          >
+            <ImageIcon size={14} /> 美圖
+          </button>
+          
         </div>
       </header>
 
