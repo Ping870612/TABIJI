@@ -3,6 +3,7 @@ import {
   MapPin,
   Calendar,
   CreditCard,
+  Car,
   Plus,
   Trash2,
   LogOut,
@@ -1514,50 +1515,142 @@ const handleAIAnalyze = async () => {
     }
   };
 
-  const handleOptimizeRoute = async () => {
+ // --- 新增：路線優化相關狀態 ---
+  const [transportMode, setTransportMode] = useState("driving");
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
+
+  // --- 新增：路線優化執行邏輯 ---
+  const executeOptimize = async () => {
     if (!tripData?.itinerary?.length) {
       showToast("行程是空的", "error");
       return;
     }
-    setIsAnalyzing(true);
+    
+    setIsAnalyzing(true); // 開啟 AI 動畫
+    
     try {
+      // 抓每一天原本的第一個時間點
+      const days = [...new Set(tripData.itinerary.map(i => i.day))];
+      const dayStartTimes = {};
+      days.forEach(day => {
+        const items = tripData.itinerary.filter(i => i.day === day).sort((a, b) => a.time.localeCompare(b.time));
+        if (items.length > 0) dayStartTimes[day] = items[0].time;
+      });
+
+      const modeText = transportMode === "driving" ? "開車(Driving)" : "大眾運輸(Public Transit)";
+
       const res = await callGeminiAPI([
         {
-          text: `重新安排以下行程順序以最短化交通。輸入 JSON: ${JSON.stringify(
+          text: `你是一個專業的旅遊規劃師。
+          
+          請根據以下規則重新安排行程順序：
+          1. 移動方式：${modeText}。
+          2. 目標：最小化交通時間，讓路線最順暢。
+          3. **時間重算**：請以每一天的「起始時間」(${JSON.stringify(dayStartTimes)}) 為準，根據景點停留時間(假設每站1.5小時)加上交通時間，重新計算每個景點的 "time"。
+          4. 只能調整同一天內的順序，不要跨天移動。
+          
+          輸入 JSON: ${JSON.stringify(
             tripData.itinerary.map((i) => ({
               id: i.id,
               day: i.day,
-              time: i.time,
+              originalTime: i.time,
               location: i.location,
             }))
-          )}。回傳 JSON Array (包含 id, day, time)`,
+          )}。
+          
+          回傳 JSON Array (包含 id, day, time)。`
         },
       ]);
+
       if (!res) throw new Error("AI Failed");
-      const optimized = JSON.parse(res.replace(/```json|```/g, "").trim());
+      
+      const cleanJson = res.replace(/```json|```/g, "").trim();
+      const optimized = JSON.parse(cleanJson);
+
       const newItinerary = optimized
         .map((o) => {
           const orig = tripData.itinerary.find((i) => i.id === o.id);
           return orig ? { ...orig, day: o.day, time: o.time } : null;
         })
         .filter(Boolean);
+
+      const finalItinerary = [
+        ...newItinerary,
+        ...tripData.itinerary.filter((i) => !newItinerary.find((n) => n.id === i.id))
+      ];
+
       await updateDoc(
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
-        {
-          itinerary: [
-            ...newItinerary,
-            ...tripData.itinerary.filter(
-              (i) => !newItinerary.find((n) => n.id === i.id)
-            ),
-          ],
-        }
+        { itinerary: finalItinerary }
       );
-      showToast("路線優化完成！");
+
+      showToast(`已根據${transportMode === "driving" ? "開車" : "大眾運輸"}路線優化完畢！`);
     } catch (e) {
-      showToast("優化失敗", "error");
+      console.error(e);
+      showToast("優化失敗，請稍後再試", "error");
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  // --- 新增：優化設定視窗元件 ---
+  const OptimizeModal = () => {
+    if (!showOptimizeModal) return null;
+    return (
+      <div className="absolute inset-0 z-[80] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+        <div className="bg-white w-full max-w-xs rounded-[2rem] p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+          <h3 className="text-xl font-bold text-stone-800 mb-4 text-center">
+            路線優化設定
+          </h3>
+          <p className="text-sm text-stone-500 mb-6 text-center leading-relaxed">
+            AI 將重新排序景點並計算時間。
+          </p>
+          
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={() => setTransportMode("driving")}
+              className={`flex-1 py-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                transportMode === "driving"
+                  ? "border-indigo-500 bg-indigo-50 text-indigo-600"
+                  : "border-stone-100 bg-white text-stone-400 hover:border-stone-200"
+              }`}
+            >
+              <Car size={24} />
+              <span className="text-xs font-bold">開車</span>
+            </button>
+            <button
+              onClick={() => setTransportMode("transit")}
+              className={`flex-1 py-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                transportMode === "transit"
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-600"
+                  : "border-stone-100 bg-white text-stone-400 hover:border-stone-200"
+              }`}
+            >
+              <Train size={24} />
+              <span className="text-xs font-bold">大眾運輸</span>
+            </button>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowOptimizeModal(false)}
+              className="flex-1 py-3 rounded-xl bg-stone-100 text-stone-600 font-medium hover:bg-stone-200 transition-colors"
+            >
+              取消
+            </button>
+            <button
+              onClick={() => {
+                setShowOptimizeModal(false);
+                executeOptimize();
+              }}
+              className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium hover:bg-stone-700 transition-colors shadow-lg"
+            >
+              開始優化
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const handleCalculateDebts = async () => {
@@ -1713,6 +1806,8 @@ const handleAIAnalyze = async () => {
         tripName={tripData.name}
         copyToClipboard={copyToClipboard}
       />
+
+      <OptimizeModal />
       
       {(isAnalyzing || isImportLoading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
         <div className="absolute inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
@@ -1859,18 +1954,18 @@ const handleAIAnalyze = async () => {
             )}{" "}
             AI 導遊
           </button>
-          <button
-            onClick={handleOptimizeRoute}
-            disabled={isAnalyzing}
-            className="flex-none bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-stone-400 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-          >
-            {isAnalyzing ? (
-              <Loader2 className="animate-spin" size={14} />
-            ) : (
-              <Route size={14} className="text-emerald-500" />
-            )}{" "}
-            路線優化
-          </button>
+<button
+  onClick={() => setShowOptimizeModal(true)}  // <--- 改成這樣，打開視窗
+  disabled={isAnalyzing}
+  className="flex-none bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-stone-400 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
+>
+  {isAnalyzing ? (
+    <Loader2 className="animate-spin" size={14} />
+  ) : (
+    <Route size={14} className="text-emerald-500" />
+  )}{" "}
+  路線優化
+</button>
           <button
             onClick={() => setIsImportOpen(true)}
             className="flex-none bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
