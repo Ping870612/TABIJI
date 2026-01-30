@@ -1460,33 +1460,55 @@ const App = () => {
     } catch (e) {}
   };
 
-  const handleAIAnalyze = async () => {
+const handleAIAnalyze = async () => {
     if (!tripData?.itinerary?.length) {
       showToast("行程是空的", "error");
       return;
     }
+    
+    // 開啟全螢幕 AI 動畫
     setIsAnalyzing(true);
+
     try {
+      // --- 修改重點開始 ---
+      // 我們修改了 Prompt，增加了「規則 2」
       const res = await callGeminiAPI([
         {
-          text: `分析行程 JSON：${JSON.stringify(
+          text: `分析以下旅遊行程 JSON：${JSON.stringify(
             tripData.itinerary.map((i) => ({ id: i.id, location: i.location }))
-          )}。回傳 JSON Array：1. "id" 2. "guideInfo": 景點故事(30字) 3. "tags": [{"type":"mustEat"|"mustBuy"|"reservation"|"story", "text":"標籤"}]`,
+          )}。
+          
+          請回傳 JSON Array，包含以下欄位：
+          1. "id": 對應原本的 id
+          2. "guideInfo": 景點介紹 (30字內)。
+             **重要規則：如果地點是「一般地名」(如：飯店、機場、車站、便利商店) 或「無法辨識的亂碼」，請將 guideInfo 設為空字串 ""，絕對不要硬掰。**
+          3. "tags": [{"type":"mustEat"|"mustBuy"|"reservation"|"story", "text":"標籤"}]`,
         },
       ]);
+      // --- 修改重點結束 ---
+
       if (!res) throw new Error("AI Failed");
-      const enrichedData = JSON.parse(res.replace(/```json|```/g, "").trim());
+
+      const cleanJson = res.replace(/```json|```/g, "").trim();
+      const enrichedData = JSON.parse(cleanJson);
+
       const newItinerary = tripData.itinerary.map((item) => {
         const enrichment = enrichedData.find((e) => e.id === item.id);
+        
+        // 如果 AI 回傳有資料，就更新；
+        // 如果 AI 回傳 guideInfo 是空字串，UI 只要檢查到是空字串就不會顯示
         return enrichment ? { ...item, ...enrichment } : item;
       });
+
       await updateDoc(
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
         { itinerary: newItinerary }
       );
+
       showToast("導遊分析完成！");
     } catch (e) {
-      showToast("分析失敗", "error");
+      console.error(e);
+      showToast("分析失敗，請稍後再試", "error");
     } finally {
       setIsAnalyzing(false);
     }
