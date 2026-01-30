@@ -1027,27 +1027,46 @@ const WelcomeScreen = ({
                   </span>
                 )}
               </label>
-              <div className="flex items-center bg-stone-50 border border-stone-200 rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-stone-300">
-                <input
-                  type="date"
-                  className="flex-1 bg-transparent p-4 outline-none text-stone-700 text-sm"
-                  value={newTripData.startDate}
-                  onChange={handleStartDateChange}
-                />
-                <div className="text-stone-300 px-2">
-                  <ArrowRight size={16} />
-                </div>
-                <input
-                  type="date"
-                  className="flex-1 bg-transparent p-4 outline-none text-stone-700 text-sm disabled:opacity-50"
-                  value={newTripData.endDate}
-                  min={newTripData.startDate}
-                  disabled={!newTripData.startDate}
-                  onChange={(e) =>
-                    setNewTripData({ ...newTripData, endDate: e.target.value })
-                  }
-                />
-              </div>
+             <div className="flex items-center bg-stone-50 border border-stone-200 rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-stone-300 transition-all">
+  {/* 1. 去程日期 (修改過) */}
+  <input
+    type="date"
+    className="flex-1 bg-transparent p-4 outline-none text-stone-700 text-sm cursor-pointer"
+    value={newTripData.startDate}
+    onChange={(e) => {
+      handleStartDateChange(e); // 執行原本的動作
+      
+      // 新增動作：選完後自動打開下一個日期選單
+      if (e.target.value) {
+        setTimeout(() => {
+          const endInput = document.getElementById("endDateInput");
+          if (endInput && endInput.showPicker) {
+            endInput.showPicker();
+          } else {
+            endInput?.focus();
+          }
+        }, 500); 
+      }
+    }}
+  />
+
+  <div className="text-stone-300 px-2">
+    <ArrowRight size={16} />
+  </div>
+
+  {/* 2. 回程日期 (這裡加了 id) */}
+  <input
+    type="date"
+    id="endDateInput" 
+    className="flex-1 bg-transparent p-4 outline-none text-stone-700 text-sm disabled:opacity-50 cursor-pointer"
+    value={newTripData.endDate}
+    min={newTripData.startDate}
+    disabled={!newTripData.startDate}
+    onChange={(e) =>
+      setNewTripData({ ...newTripData, endDate: e.target.value })
+    }
+  />
+</div>
             </div>
           </div>
           <div className="space-y-3 pt-2">
