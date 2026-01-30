@@ -1666,6 +1666,25 @@ const App = () => {
         tripName={tripData.name}
         copyToClipboard={copyToClipboard}
       />
+      
+      {(isAnalyzing || isImportLoading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
+        <div className="absolute inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <div className="relative mb-6">
+            <div className="w-20 h-20 border-4 border-indigo-100 rounded-full animate-spin"></div>
+            <div className="w-20 h-20 border-4 border-indigo-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="text-indigo-500 animate-pulse" size={32} />
+            </div>
+          </div>
+          <h3 className="text-xl font-bold text-stone-800 tracking-widest animate-pulse mb-2">
+            AI 正在思考中...
+          </h3>
+          <p className="text-sm text-stone-500 font-medium">
+            正在為您規劃最佳行程
+          </p>
+        </div>
+      )}
+    
       <ProfileSetupModal
         isOpen={showProfileSetup}
         onSubmit={handleProfileSubmit}
