@@ -1821,9 +1821,6 @@ const handleAIAnalyze = async () => {
           <h3 className="text-xl font-bold text-stone-800 tracking-widest animate-pulse mb-2">
             AI 正在思考中...
           </h3>
-          <p className="text-sm text-stone-500 font-medium">
-            正在為您規劃最佳行程
-          </p>
         </div>
       )}
     
