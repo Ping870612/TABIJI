@@ -2082,15 +2082,19 @@ const handleAIAnalyze = async () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-3 text-xs text-stone-400">
-              <div className="flex items-center gap-1">
-                <MapPin size={10} /> {tripData.destination || "未設定地點"}
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar size={10} /> {tripData.startDate || "未設定"}{" "}
-                <ArrowRight size={10} /> {tripData.endDate || "未設定"}
-              </div>
-            </div>
+
+<div className="flex items-center gap-3 text-xs text-stone-400 mt-1">
+  <div className="flex items-center gap-1 font-mono">
+    <Calendar size={10} /> 
+    <span>{tripData.startDate || "未設定"}</span>
+    {tripData.endDate && (
+      <>
+        <ArrowRight size={10} className="mx-0.5" />
+        <span>{tripData.endDate}</span>
+      </>
+    )}
+  </div>
+</div>
           </div>
           <div className="flex gap-2 shrink-0">
             <button
