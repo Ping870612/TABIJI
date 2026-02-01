@@ -941,6 +941,8 @@ const ItineraryCard = ({
   );
 };
 
+// ↓↓↓↓↓ 請複製這整段 WelcomeScreen (包含前面的 const 和最後的 };) ↓↓↓↓↓
+
 const WelcomeScreen = ({
   onCreate,
   onImportTrip,
@@ -980,7 +982,7 @@ const WelcomeScreen = ({
     } else setDuration(0);
   }, [newTripData.startDate, newTripData.endDate]);
 
-  // 修改後的日期變更函式
+  // 修改後的日期變更函式 (手機版優化：不強求彈出日曆)
   const handleStartDateChange = (e) => {
     const val = e.target.value;
     setNewTripData((prev) => {
@@ -989,10 +991,8 @@ const WelcomeScreen = ({
       return newData;
     });
 
-    // 手機版對策：選完出發日後，不強求彈出日曆
-    // 而是把游標移過去，並透過 UI 引導使用者點擊「天數按鈕」
+    // 手機版對策：選完出發日後，聚焦到回程框，引導視覺
     if (val) {
-      // 稍微延遲一下讓 UI 渲染，然後將焦點移到結束日期框(雖不會彈出日曆，但會讓框框變色)
       setTimeout(() => {
         const endInput = document.getElementById("endDateInput");
         endInput?.focus();
@@ -1000,7 +1000,7 @@ const WelcomeScreen = ({
     }
   };
 
-  // 快速天數設定 (保持不變，這是手機版的神器)
+  // 快速天數設定 (這是手機版一次選完的關鍵)
   const setQuickDuration = (days) => {
     if (!newTripData.startDate) {
       showToast("請先選擇出發日期", "error");
@@ -1009,8 +1009,12 @@ const WelcomeScreen = ({
     const start = new Date(newTripData.startDate);
     const end = new Date(start);
     end.setDate(start.getDate() + (days - 1));
-    setNewTripData({ ...newTripData, endDate: end.toISOString().split("T")[0] });
+    setNewTripData({
+      ...newTripData,
+      endDate: end.toISOString().split("T")[0],
+    });
   };
+
   const handleCreateSubmit = () => {
     if (
       !newTripData.destination ||
@@ -1027,10 +1031,8 @@ const WelcomeScreen = ({
     onCreate(newTripData);
   };
 
-const handleFileAnalyze = async (file) => {
+  const handleFileAnalyze = async (file) => {
     setIsImportLoading(true);
-    // 這裡我們不關閉 Modal，因為如果不小心失敗了，使用者還停留在選擇畫面比較好
-    
     try {
       const base64Data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1040,7 +1042,7 @@ const handleFileAnalyze = async (file) => {
       });
 
       const prompt = `這是一份旅遊行程表（可能是圖片或PDF）。請分析並提取以下資訊回傳 JSON (純JSON，不要Markdown)：{"name": "旅程名稱", "destination": "主要城市", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "itinerary": [{"day": 數字, "time": "HH:MM", "location": "地點", "category": "sightseeing|food|transport|flight", "notes": "備註"}]}`;
-      
+
       const payload = [
         { text: prompt },
         { inlineData: { mimeType: file.type, data: base64Data } },
@@ -1048,13 +1050,11 @@ const handleFileAnalyze = async (file) => {
 
       const resText = await callGeminiAPI(payload);
       if (!resText) throw new Error("AI analysis failed");
-      
+
       const result = JSON.parse(resText.replace(/```json|```/g, "").trim());
-      
-      // 成功後才關閉視窗
+
       setIsImportOpen(false);
       onImportTrip(result);
-
     } catch (e) {
       console.error(e);
       showToast("匯入失敗，請確認檔案格式", "error");
@@ -1100,7 +1100,8 @@ const handleFileAnalyze = async (file) => {
                 }
               />
             </div>
-         {/* 🟢 修改後：手機版優化的日期選擇區 */}
+
+            {/* 🟢 修改後：手機版優化的日期選擇區 */}
             <div className="space-y-3">
               <div className="flex justify-between items-end px-1">
                 <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">
@@ -1112,7 +1113,7 @@ const handleFileAnalyze = async (file) => {
                   </span>
                 )}
               </div>
-              
+
               <div className="bg-stone-50 border border-stone-200 rounded-2xl p-1 focus-within:ring-2 focus-within:ring-stone-800 focus-within:border-stone-800 transition-all shadow-sm">
                 <div className="flex items-center divide-x divide-stone-200">
                   {/* 出發日 */}
@@ -1151,7 +1152,10 @@ const handleFileAnalyze = async (file) => {
                       min={newTripData.startDate}
                       disabled={!newTripData.startDate}
                       onChange={(e) =>
-                        setNewTripData({ ...newTripData, endDate: e.target.value })
+                        setNewTripData({
+                          ...newTripData,
+                          endDate: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -1163,10 +1167,12 @@ const handleFileAnalyze = async (file) => {
                 <div className="animate-in slide-in-from-top-2 fade-in duration-300">
                   <div className="flex items-center gap-2 mb-2 px-1">
                     <div className="h-[1px] bg-stone-200 flex-1"></div>
-                    <span className="text-[10px] text-stone-400 font-bold">或是直接選擇天數</span>
+                    <span className="text-[10px] text-stone-400 font-bold">
+                      或是直接選擇天數
+                    </span>
                     <div className="h-[1px] bg-stone-200 flex-1"></div>
                   </div>
-                  
+
                   <div className="grid grid-cols-4 gap-2">
                     {[2, 3, 4, 5, 6, 7, 8, 10].map((d) => (
                       <button
@@ -1185,6 +1191,8 @@ const handleFileAnalyze = async (file) => {
                 </div>
               )}
             </div>
+          </div>
+
           <div className="space-y-3 pt-2">
             <button
               onClick={handleCreateSubmit}
