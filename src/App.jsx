@@ -1206,6 +1206,7 @@ const App = () => {
   const [tripData, setTripData] = useState(null);
   const [localTripName, setLocalTripName] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false); 
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
 
   useEffect(() => {
     if (tripData?.name) {
@@ -2237,7 +2238,15 @@ const handleAIAnalyze = async () => {
             {/* 匯出行程 (下拉選單) */}
             <div className="relative">
               <button
-                onClick={() => setShowExportMenu(!showExportMenu)}
+                onClick={(e) => {
+                  // 1. 計算按鈕在螢幕上的位置
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setMenuPos({
+                    top: rect.bottom + 8, // 在按鈕下方 8px
+                    right: window.innerWidth - rect.right // 對齊按鈕右邊
+                  });
+                  setShowExportMenu(!showExportMenu);
+                }}
                 className={`bg-white border text-stone-600 px-3 py-2 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap ${
                   showExportMenu 
                     ? "border-stone-800 bg-stone-50" 
@@ -2250,14 +2259,20 @@ const handleAIAnalyze = async () => {
               {/* 下拉選單本體 */}
               {showExportMenu && (
                 <>
-                  {/* 點擊空白處關閉選單的遮罩 */}
+                  {/* 遮罩：點擊空白處關閉 */}
                   <div 
-                    className="fixed inset-0 z-40" 
+                    className="fixed inset-0 z-[60]" 
                     onClick={() => setShowExportMenu(false)}
                   ></div>
                   
-                  {/* 選單內容 */}
-                  <div className="absolute top-full right-0 mt-2 w-36 bg-white rounded-xl shadow-xl border border-stone-100 p-1.5 z-50 flex flex-col gap-1 animate-in zoom-in-95 duration-200">
+                  {/* 選單內容：改用 fixed 定位，這樣就不會被 overflow 切掉了 */}
+                  <div 
+                    className="fixed w-36 bg-white rounded-xl shadow-xl border border-stone-100 p-1.5 z-[70] flex flex-col gap-1 animate-in zoom-in-95 duration-200"
+                    style={{ 
+                      top: menuPos.top, 
+                      right: menuPos.right 
+                    }}
+                  >
                     <button
                       onClick={() => {
                         handleExportExcel();
