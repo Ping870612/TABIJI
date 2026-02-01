@@ -1203,6 +1203,26 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
+  const [localTripName, setLocalTripName] = useState("");
+
+  useEffect(() => {
+    if (tripData?.name) {
+      setLocalTripName(tripData.name);
+    }
+  }, [tripData?.name]);
+
+  const handleSaveName = async () => {
+    if (!tripId || localTripName === tripData?.name) return;
+    try {
+      await updateDoc(
+        doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
+        { name: localTripName }
+      );
+      showToast("旅程名稱已更新");
+    } catch (e) {
+      showToast("更新失敗", "error");
+    }
+  };
   const [activeTab, setActiveTab] = useState("itinerary");
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -2030,24 +2050,19 @@ const handleAIAnalyze = async () => {
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1 mr-4">
             <div className="flex items-center justify-between mb-1">
-              <input
-                className="text-xl font-bold bg-transparent border-none p-0 w-full placeholder-stone-300 focus:ring-0 text-stone-800 tracking-wide"
-                value={tripData.name}
-                onChange={(e) =>
-                  updateDoc(
-                    doc(
-                      db,
-                      "artifacts",
-                      appId,
-                      "public",
-                      "data",
-                      "travel_trips",
-                      tripId
-                    ),
-                    { name: e.target.value }
-                  )
-                }
-              />
+              <div className="flex items-center gap-2 group flex-1">
+                <input
+                  className="text-xl font-bold bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 w-full placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all"
+                  value={localTripName}
+                  placeholder="點擊輸入旅程名稱..."
+                  onChange={(e) => setLocalTripName(e.target.value)}
+                  onBlur={handleSaveName}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") e.target.blur();
+                  }}
+                />
+                <Edit size={14} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </div>
               {/* Feature 1: Member Avatars next to title */}
               <div className="flex -space-x-2 ml-2 flex-shrink-0">
                 {Object.values(tripData.members || {})
