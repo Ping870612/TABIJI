@@ -727,7 +727,7 @@ const LocationInput = ({ value, onChange, placeholder }) => {
         console.warn("Location suggestion unavailable");
         setSuggestions([]);
       }
-    }, 500);
+    }, 200);
   };
 
   const handleSelect = (place) => {
@@ -980,6 +980,7 @@ const WelcomeScreen = ({
     } else setDuration(0);
   }, [newTripData.startDate, newTripData.endDate]);
 
+  // 修改後的日期變更函式
   const handleStartDateChange = (e) => {
     const val = e.target.value;
     setNewTripData((prev) => {
@@ -987,8 +988,29 @@ const WelcomeScreen = ({
       if (prev.endDate && val > prev.endDate) newData.endDate = "";
       return newData;
     });
+
+    // 手機版對策：選完出發日後，不強求彈出日曆
+    // 而是把游標移過去，並透過 UI 引導使用者點擊「天數按鈕」
+    if (val) {
+      // 稍微延遲一下讓 UI 渲染，然後將焦點移到結束日期框(雖不會彈出日曆，但會讓框框變色)
+      setTimeout(() => {
+        const endInput = document.getElementById("endDateInput");
+        endInput?.focus();
+      }, 100);
+    }
   };
 
+  // 快速天數設定 (保持不變，這是手機版的神器)
+  const setQuickDuration = (days) => {
+    if (!newTripData.startDate) {
+      showToast("請先選擇出發日期", "error");
+      return;
+    }
+    const start = new Date(newTripData.startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + (days - 1));
+    setNewTripData({ ...newTripData, endDate: end.toISOString().split("T")[0] });
+  };
   const handleCreateSubmit = () => {
     if (
       !newTripData.destination ||
@@ -1078,57 +1100,91 @@ const handleFileAnalyze = async (file) => {
                 }
               />
             </div>
-            <div>
-              <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1 mb-1 flex justify-between">
-                <span>旅遊日期</span>
+         {/* 🟢 修改後：手機版優化的日期選擇區 */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-end px-1">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">
+                  旅遊日期
+                </label>
                 {duration > 0 && (
-                  <span className="text-indigo-500">
-                    {duration} 天 {duration - 1} 夜
+                  <span className="text-[10px] font-bold bg-stone-800 text-white px-3 py-1 rounded-full animate-in zoom-in spin-in-3">
+                    ✈️ {duration} 天 {duration - 1} 夜
                   </span>
                 )}
-              </label>
-             <div className="flex items-center bg-stone-50 border border-stone-200 rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-stone-300 transition-all">
-  {/* 1. 去程日期 (修改過) */}
-  <input
-    type="date"
-    className="flex-1 bg-transparent p-4 outline-none text-stone-700 text-sm cursor-pointer"
-    value={newTripData.startDate}
-    onChange={(e) => {
-      handleStartDateChange(e); // 執行原本的動作
-      
-      // 新增動作：選完後自動打開下一個日期選單
-      if (e.target.value) {
-        setTimeout(() => {
-          const endInput = document.getElementById("endDateInput");
-          if (endInput && endInput.showPicker) {
-            endInput.showPicker();
-          } else {
-            endInput?.focus();
-          }
-        }, 500); 
-      }
-    }}
-  />
+              </div>
+              
+              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-1 focus-within:ring-2 focus-within:ring-stone-800 focus-within:border-stone-800 transition-all shadow-sm">
+                <div className="flex items-center divide-x divide-stone-200">
+                  {/* 出發日 */}
+                  <div className="flex-1 px-3 py-3 relative group">
+                    <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
+                      DEPART
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full bg-transparent pt-4 pb-1 font-bold text-stone-800 outline-none text-sm font-mono cursor-pointer h-full"
+                      value={newTripData.startDate}
+                      onChange={handleStartDateChange}
+                    />
+                    {!newTripData.startDate && (
+                      <div className="absolute inset-0 top-6 left-3 pointer-events-none text-stone-300 text-sm font-bold">
+                        點擊選擇...
+                      </div>
+                    )}
+                  </div>
 
-  <div className="text-stone-300 px-2">
-    <ArrowRight size={16} />
-  </div>
+                  {/* 裝飾箭頭 */}
+                  <div className="px-2 text-stone-300">
+                    <ArrowRight size={16} />
+                  </div>
 
-  {/* 2. 回程日期 (這裡加了 id) */}
-  <input
-    type="date"
-    id="endDateInput" 
-    className="flex-1 bg-transparent p-4 outline-none text-stone-700 text-sm disabled:opacity-50 cursor-pointer"
-    value={newTripData.endDate}
-    min={newTripData.startDate}
-    disabled={!newTripData.startDate}
-    onChange={(e) =>
-      setNewTripData({ ...newTripData, endDate: e.target.value })
-    }
-  />
-</div>
+                  {/* 回程日 */}
+                  <div className="flex-1 px-3 py-3 relative group">
+                    <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
+                      RETURN
+                    </label>
+                    <input
+                      type="date"
+                      id="endDateInput"
+                      className="w-full bg-transparent pt-4 pb-1 font-bold text-stone-800 outline-none text-sm font-mono cursor-pointer disabled:opacity-30"
+                      value={newTripData.endDate}
+                      min={newTripData.startDate}
+                      disabled={!newTripData.startDate}
+                      onChange={(e) =>
+                        setNewTripData({ ...newTripData, endDate: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 🟢 快速按鈕區：這就是你要的「一次選完」功能 */}
+              {newTripData.startDate && (
+                <div className="animate-in slide-in-from-top-2 fade-in duration-300">
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <div className="h-[1px] bg-stone-200 flex-1"></div>
+                    <span className="text-[10px] text-stone-400 font-bold">或是直接選擇天數</span>
+                    <div className="h-[1px] bg-stone-200 flex-1"></div>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 gap-2">
+                    {[2, 3, 4, 5, 6, 7, 8, 10].map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setQuickDuration(d)}
+                        className={`py-3 rounded-xl text-xs font-bold transition-all active:scale-95 border ${
+                          duration === d
+                            ? "bg-stone-800 text-white border-stone-800 shadow-md transform scale-105"
+                            : "bg-white border-stone-200 text-stone-500 hover:border-stone-400 hover:bg-stone-50"
+                        }`}
+                      >
+                        {d}天
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
           <div className="space-y-3 pt-2">
             <button
               onClick={handleCreateSubmit}
