@@ -117,6 +117,52 @@ async function callGeminiAPI(parts) {
   }
 }
 
+// --- 新增：使用 Google Imagen 3 模型畫圖 ---
+async function callImagenAPI(imagePrompt) {
+  try {
+    // 1. 抓取金鑰 (優先讀取 Vercel 環境變數 VITE_GEMINI_API_KEY)
+    // 如果本地開發讀不到，請確認 .env.local 也有設定
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || firebaseConfig.apiKey;
+    
+    if (!apiKey) {
+      console.error("未找到 API Key");
+      return null;
+    }
+
+    // 2. 呼叫 Imagen 3 模型
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          instances: [{ prompt: imagePrompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: "3:4", // 直式海報比例
+            personGeneration: "allow_adult",
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json();
+      console.warn("Imagen API 呼叫失敗:", err);
+      return null;
+    }
+
+    const data = await response.json();
+    const base64Image = data.predictions?.[0]?.bytesBase64Encoded;
+    
+    // 回傳圖片格式
+    return base64Image ? `data:image/png;base64,${base64Image}` : null;
+  } catch (error) {
+    console.error("Imagen Error:", error);
+    return null;
+  }
+}
+
 // --- UI Components ---
 
 const Toast = ({ message, type, onClose }) => {
@@ -1311,52 +1357,85 @@ const App = () => {
   // 2. 匯出美圖 (包含 AI 設計邏輯)
   const [posterTheme, setPosterTheme] = useState(null); // 存 AI 設計的主題
 
+// ↓↓↓↓↓ 修改後的 handleExportImage (支援 Imagen 3) ↓↓↓↓↓
   const handleExportImage = async () => {
     if (!tripData?.itinerary?.length) return;
-    setIsAnalyzing(true); // 開啟 AI 動畫
+    setIsAnalyzing(true); // 開始轉圈圈
 
     try {
-      // (A) 問 AI 怎麼設計比較漂亮
-      const prompt = `針對行程 "${tripData.name}" (${tripData.destination})，請設計一個配色主題。回傳 JSON: {"color": "主色", "subColor": "配色(選一個對比色或同色系深色)", "emoji": "代表符號", "title": "給行程一個文青標題(10字內)", "quote": "一句旅行短句"}`;
+      // 1. 【大腦】請 Gemini 1.5 Flash 根據行程寫出「繪圖指令」
+      const prompt = `
+        你是一位旅遊海報設計師。針對行程 "${tripData.name}" (${tripData.destination})，請設計一個背景插畫。
+        請回傳 JSON (不要 Markdown): 
+        {
+          "imagePrompt": "一段英文繪圖指令(Prompt)，描述該地點的風景，風格為 'Detailed Watercolor Art' (細緻水彩) 或 'Ghibli anime style' (吉卜力風格)，畫面要夢幻且上方天空要留白以便壓字",
+          "textColor": "適合壓在圖片上的文字顏色 (HEX碼，例如 #FFFFFF 或 #1a1a1a)",
+          "title": "一個文青的短標題(10字內)",
+          "quote": "一句關於旅行的感性短句"
+        }
+      `;
       
+      // 呼叫原本的文字 AI
       const res = await callGeminiAPI([{ text: prompt }]);
-      if (!res) throw new Error("AI Failed");
+      if (!res) throw new Error("AI Text Failed");
       
-      const theme = JSON.parse(res.replace(/```json|```/g, "").trim());
-      setPosterTheme(theme); // 設定主題，這會讓隱藏的海報區塊顯示出來
+      // 解析 JSON
+      let cleanJson = res;
+      const firstBracket = res.indexOf('{');
+      const lastBracket = res.lastIndexOf('}');
+      if (firstBracket !== -1 && lastBracket !== -1) {
+        cleanJson = res.substring(firstBracket, lastBracket + 1);
+      }
+      const theme = JSON.parse(cleanJson);
 
-      // (B) 等待畫面渲染 (給瀏覽器 1.5 秒畫圖)
-      await new Promise(r => setTimeout(r, 1500)); 
+      // 2. 【畫家】使用 Imagen 3 畫圖
+      let aiImageUrl = await callImagenAPI(theme.imagePrompt);
+      
+      // 如果 Imagen 失敗 (例如 Key 有問題)，自動切換到 Pollinations (免費備案)
+      if (!aiImageUrl) {
+        console.log("切換至 Pollinations 備用繪圖引擎");
+        const encoded = encodeURIComponent(theme.imagePrompt);
+        aiImageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=768&height=1024&nologo=true&seed=${Math.random()}`;
+      }
 
-      // (C) 截圖 (使用 CDN 載入的 window.html2canvas)
-      // (C) 截圖 (使用 CDN 載入的 window.html2canvas)
+      // 設定主題
+      setPosterTheme({ ...theme, bgImage: aiImageUrl });
+
+      // 3. 【合成】等待圖片載入
+      await new Promise((resolve) => {
+        const img = new Image();
+        img.src = aiImageUrl;
+        img.crossOrigin = "anonymous"; // 允許跨域
+        img.onload = resolve;
+        img.onerror = resolve; 
+      });
+      
+      // 給瀏覽器一點時間渲染 DOM
+      await new Promise(r => setTimeout(r, 1500));
+
+      // 4. 截圖下載
       const element = document.getElementById("hidden-poster-area");
       if (element && window.html2canvas) {
         const canvas = await window.html2canvas(element, {
-          scale: 3, // 畫質清晰
-          useCORS: true, // 允許跨域圖片
-          backgroundColor: "#ffffff", // 強制背景是白色
-          // ↓↓↓↓↓ 新增這四行關鍵設定 ↓↓↓↓↓
-          scrollX: 0,
-          scrollY: 0,
-          x: 0,
-          y: 0,
-          // ↑↑↑↑↑ 這能防止因為捲動而抓到空白 ↑↑↑↑↑
+          scale: 3, 
+          useCORS: true, 
+          allowTaint: true,
+          backgroundColor: null,
+          scrollX: 0, scrollY: 0, x: 0, y: 0
         });
         
-        // (D) 下載圖片
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
-        link.download = `${tripData.name}_精美行程.png`;
+        link.download = `${tripData.name}_精美海報.png`;
         link.click();
-        showToast("美圖生成成功！");
+        showToast("✨ AI 美圖生成成功！");
       }
     } catch (e) {
       console.error(e);
       showToast("圖片生成失敗", "error");
     } finally {
       setIsAnalyzing(false);
-      setPosterTheme(null); // 關閉海報隱藏區
+      setPosterTheme(null);
     }
   };
   // ↑↑↑↑↑ 新增功能結束 ↑↑↑↑↑
@@ -1946,134 +2025,90 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-{/* ↓↓↓↓↓ 升級版：雜誌風美圖產生器 ↓↓↓↓↓ */}
+{/* ↓↓↓↓↓ 隱藏海報區 (放在 <header> 上面) ↓↓↓↓↓ */}
       {posterTheme && (
         <div
           id="hidden-poster-area"
-          className="absolute top-0 left-0 w-[450px] font-sans text-stone-800 overflow-hidden flex flex-col"
+          className="absolute top-0 left-0 w-[450px] font-sans overflow-hidden flex flex-col justify-between"
           style={{
-            minHeight: "900px", // 拉長一點讓版面更鬆
+            height: "900px", 
             zIndex: -50,
             visibility: "visible",
-            // 使用 AI 建議的顏色做漸層背景
-            background: `linear-gradient(135deg, ${posterTheme.color} 0%, #fff 50%, ${posterTheme.subColor || "#f5f5f4"} 100%)`,
+            // ★ 關鍵：使用 AI 生成的圖當背景
+            backgroundImage: `url(${posterTheme.bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            color: posterTheme.textColor || "#fff",
           }}
         >
-          {/* 1. 引入高級字體 (Google Fonts) */}
-          <style>
-            {`
-              @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
-              .font-serif-display { font-family: 'Playfair Display', serif; }
-              .font-sans-body { font-family: 'Noto Sans TC', sans-serif; }
-            `}
-          </style>
+          {/* 漸層遮罩：讓文字更清楚 (根據文字顏色自動調整黑/白遮罩) */}
+          <div 
+             className="absolute inset-0 z-0"
+             style={{
+               background: `linear-gradient(to bottom, 
+                 ${posterTheme.textColor === '#FFFFFF' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.7)'} 0%, 
+                 rgba(0,0,0,0) 40%, 
+                 ${posterTheme.textColor === '#FFFFFF' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.95)'} 100%)`
+             }}
+          ></div>
 
-          {/* 2. 頂部裝飾 (雜誌標題區) */}
-          <div className="p-10 pb-6 relative">
-            {/* 裝飾圓球 */}
-            <div 
-              className="absolute top-[-50px] right-[-50px] w-64 h-64 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-              style={{ background: posterTheme.color }}
-            ></div>
-            
-            <div className="relative z-10 border-b-2 border-stone-800 pb-6">
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-[10px] tracking-[0.4em] uppercase font-bold text-stone-500">
-                  Travel Itinerary
-                </span>
-                <span className="text-4xl filter drop-shadow-sm">
-                  {posterTheme.emoji}
-                </span>
-              </div>
-              
-              {/* 標題：使用襯線體，看起來更有氣質 */}
-              <h1 
-                className="text-5xl font-serif-display font-bold leading-tight mb-3 text-stone-800"
-                style={{ color: posterTheme.color }}
-              >
-                {posterTheme.title}
-              </h1>
-              
-              <div className="flex items-center gap-3 text-xs font-bold tracking-widest uppercase text-stone-400 font-sans-body">
-                <span>{tripData.destination}</span>
-                <div className="w-1 h-1 bg-stone-300 rounded-full"></div>
-                <span>{tripData.startDate}</span>
-              </div>
-            </div>
-
-            {/* AI 金句區 */}
-            <div className="mt-4 text-right">
-              <p className="font-serif-display italic text-lg text-stone-600 opacity-80">
-                "{posterTheme.quote}"
-              </p>
-            </div>
-          </div>
-
-          {/* 3. 行程列表 (毛玻璃卡片風格) */}
-          <div className="flex-1 px-8 pb-10 relative z-10">
-            <div className="space-y-8">
-              {Object.keys(groupedItinerary)
-                .sort((a, b) => a - b)
-                .map((day) => (
-                  <div key={day} className="relative">
-                    {/* Day 標籤 (側邊懸浮感) */}
-                    <div className="flex items-baseline gap-2 mb-3 sticky top-0">
-                      <span 
-                        className="text-4xl font-black font-serif-display opacity-20"
-                        style={{ color: posterTheme.color }}
-                      >
-                        {String(day).padStart(2, '0')}
-                      </span>
-                      <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">
-                        DAY
-                      </span>
+          {/* 內容層 */}
+          <div className="relative z-10 p-10 flex flex-col h-full">
+             
+             {/* 標題區 */}
+             <div className="text-center border-b-2 border-current pb-6 mb-4" style={{ borderColor: posterTheme.textColor }}>
+               <div className="text-xs font-bold tracking-[0.4em] uppercase opacity-80 mb-2">
+                 Travel Itinerary
+               </div>
+               <h1 className="text-5xl font-serif font-black leading-tight mb-2 drop-shadow-md">
+                 {posterTheme.title}
+               </h1>
+               <div className="text-sm font-bold opacity-90 flex justify-center gap-4">
+                 <span>{tripData.destination}</span>
+                 <span>•</span>
+                 <span>{tripData.startDate}</span>
+               </div>
+               <div className="mt-4 text-sm italic font-serif opacity-90">
+                 "{posterTheme.quote}"
+               </div>
+             </div>
+             
+             {/* 行程列表 (只顯示前 5 天，避免太擠) */}
+             <div className="flex-1 space-y-5 mt-4">
+                {Object.keys(groupedItinerary)
+                  .sort((a, b) => a - b)
+                  .slice(0, 5) 
+                  .map((day) => (
+                    <div key={day} className="flex gap-4 items-baseline">
+                      <div className="w-10 text-right shrink-0">
+                        <span className="text-2xl font-black font-serif opacity-60">
+                          {String(day).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <div className="flex-1 border-l-2 pl-4 py-1" style={{ borderColor: posterTheme.textColor }}>
+                        <div className="space-y-1">
+                          {groupedItinerary[day]
+                            .sort((a, b) => a.time.localeCompare(b.time))
+                            .slice(0, 3) // 每天最多顯示 3 個重點
+                            .map((item) => (
+                              <div key={item.id} className="flex gap-2 text-sm items-center">
+                                <span className="font-mono font-bold opacity-70 text-[10px]">
+                                  {item.time}
+                                </span>
+                                <span className="font-bold truncate text-xs drop-shadow-sm">
+                                  {item.location}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
                     </div>
+                  ))}
+             </div>
 
-                    {/* 白色半透明卡片容器 */}
-                    <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-white/50 space-y-4">
-                      {groupedItinerary[day]
-                        .sort((a, b) => a.time.localeCompare(b.time))
-                        .map((item, idx) => (
-                          <div key={item.id} className="flex gap-4 items-start group">
-                            {/* 時間 */}
-                            <div className="font-mono text-xs font-bold text-stone-400 mt-1 min-w-[40px]">
-                              {item.time}
-                            </div>
-                            
-                            {/* 分隔線 (最後一個不顯示) */}
-                            <div className="relative flex-1">
-                               <div className="font-sans-body font-bold text-stone-700 text-sm leading-snug">
-                                 {item.location}
-                               </div>
-                               {/* 根據分類顯示不同的小標籤 */}
-                               {item.category === 'food' && (
-                                 <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-bold">
-                                   EAT
-                                 </span>
-                               )}
-                               {item.category === 'sightseeing' && (
-                                 <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-600 font-bold">
-                                   VIEW
-                                 </span>
-                               )}
-                               
-                               {/* 虛線分隔 */}
-                               {idx !== groupedItinerary[day].length - 1 && (
-                                 <div className="absolute left-[-26px] top-6 bottom-[-10px] w-[1px] border-l border-dashed border-stone-300"></div>
-                               )}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {/* 4. 底部版權區 */}
-          <div className="p-6 text-center">
-             <div className="inline-block px-4 py-1 rounded-full bg-stone-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase opacity-20">
-               Planned by Tabiji AI
+             {/* Footer */}
+             <div className="mt-6 text-center opacity-60 text-[10px] tracking-widest uppercase">
+               Generated by Tabiji AI
              </div>
           </div>
         </div>
