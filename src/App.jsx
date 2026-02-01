@@ -1668,13 +1668,22 @@ const handleAIAnalyze = async () => {
             }))
           )}。
           
-          回傳 JSON Array (包含 id, day, time)。`
+          回傳 JSON Array (包含 id, day, time)。
+          **注意：嚴禁包含任何說明文字、前言或後記，只能回傳純 JSON 資料，以 [ 開頭並以 ] 結尾。**`
         },
       ]);
 
       if (!res) throw new Error("AI Failed");
       
-      const cleanJson = res.replace(/```json|```/g, "").trim();
+      let cleanJson = res;
+      const firstBracket = res.indexOf('[');
+      const lastBracket = res.lastIndexOf(']');
+      
+      if (firstBracket !== -1 && lastBracket !== -1) {
+        cleanJson = res.substring(firstBracket, lastBracket + 1);
+      } else {
+        cleanJson = res.replace(/```json|```/g, "").trim();
+      }
       const optimized = JSON.parse(cleanJson);
 
       const newItinerary = optimized
