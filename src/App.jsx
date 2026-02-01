@@ -12,6 +12,7 @@ import {
   Copy,
   FileSpreadsheet,
   Image as ImageIcon,
+  Download,
   Edit,
   Sparkles,
   Loader2,
@@ -1204,6 +1205,7 @@ const App = () => {
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
   const [localTripName, setLocalTripName] = useState("");
+  const [showExportMenu, setShowExportMenu] = useState(false); 
 
   useEffect(() => {
     if (tripData?.name) {
@@ -2189,67 +2191,98 @@ const handleAIAnalyze = async () => {
           </div>
         </div>
 
-        {/* Feature 2: AI Features moved to Header */}
-       {/* --- AI 功能按鈕列 (優化版) --- */}
-<div className="flex items-center gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide mask-linear-fade">
-  
-  {/* 群組 1: AI 核心功能 */}
-  <div className="flex gap-2 flex-shrink-0">
-    <button
-      onClick={handleAIAnalyze}
-      disabled={isAnalyzing}
-      className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-yellow-400 hover:text-yellow-600 hover:bg-yellow-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-    >
-      {isAnalyzing ? (
-        <Loader2 className="animate-spin" size={14} />
-      ) : (
-        <Sparkles size={14} className="text-yellow-500" />
-      )}
-      AI 導遊
-    </button>
+{/* ↓↓↓↓↓ 修改後的按鈕區塊 (包含下拉選單) ↓↓↓↓↓ */}
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide mask-linear-fade relative">
+          
+          {/* 群組 1: 智能功能 */}
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={handleAIAnalyze}
+              disabled={isAnalyzing}
+              className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-yellow-400 hover:text-yellow-600 hover:bg-yellow-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
+            >
+              {isAnalyzing ? (
+                <Loader2 className="animate-spin" size={14} />
+              ) : (
+                <Sparkles size={14} className="text-yellow-500" />
+              )}
+              智能導遊
+            </button>
 
-    <button
-      onClick={() => setShowOptimizeModal(true)}
-      disabled={isAnalyzing}
-      className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-    >
-      {isAnalyzing ? (
-        <Loader2 className="animate-spin" size={14} />
-      ) : (
-        <Route size={14} className="text-emerald-500" />
-      )}
-      路線優化
-    </button>
-  </div>
+            <button
+              onClick={() => setShowOptimizeModal(true)}
+              disabled={isAnalyzing}
+              className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
+            >
+              {isAnalyzing ? (
+                <Loader2 className="animate-spin" size={14} />
+              ) : (
+                <Route size={14} className="text-emerald-500" />
+              )}
+              路線優化
+            </button>
+          </div>
 
-  {/* 分隔線 (視覺區隔) */}
-  <div className="w-[1px] h-6 bg-stone-200 flex-shrink-0"></div>
+          <div className="w-[1px] h-6 bg-stone-200 flex-shrink-0"></div>
 
-  {/* 群組 2: 匯入匯出功能 */}
-  <div className="flex gap-2 flex-shrink-0">
-    <button
-      onClick={() => setIsImportOpen(true)}
-      className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-    >
-      <Upload size={14} /> 匯入
-    </button>
+          {/* 群組 2: 檔案操作 */}
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={() => setIsImportOpen(true)}
+              className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
+            >
+              <Upload size={14} /> 匯入行程
+            </button>
 
-    <button
-      onClick={handleExportExcel}
-      className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-    >
-      <FileSpreadsheet size={14} /> Excel
-    </button>
+            {/* 匯出行程 (下拉選單) */}
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className={`bg-white border text-stone-600 px-3 py-2 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap ${
+                  showExportMenu 
+                    ? "border-stone-800 bg-stone-50" 
+                    : "border-stone-200 hover:border-stone-400"
+                }`}
+              >
+                <Download size={14} /> 匯出行程
+              </button>
 
-    <button
-      onClick={handleExportImage}
-      disabled={isAnalyzing}
-      className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-pink-400 hover:text-pink-600 hover:bg-pink-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-    >
-      <ImageIcon size={14} /> 美圖
-    </button>
-  </div>
-</div>
+              {/* 下拉選單本體 */}
+              {showExportMenu && (
+                <>
+                  {/* 點擊空白處關閉選單的遮罩 */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowExportMenu(false)}
+                  ></div>
+                  
+                  {/* 選單內容 */}
+                  <div className="absolute top-full right-0 mt-2 w-36 bg-white rounded-xl shadow-xl border border-stone-100 p-1.5 z-50 flex flex-col gap-1 animate-in zoom-in-95 duration-200">
+                    <button
+                      onClick={() => {
+                        handleExportExcel();
+                        setShowExportMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-bold text-stone-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-left"
+                    >
+                      <FileSpreadsheet size={16} /> Excel 表格
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportImage();
+                        setShowExportMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-bold text-stone-600 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition-colors text-left"
+                    >
+                      <ImageIcon size={16} /> 美圖分享
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* ↑↑↑↑↑ 修改結束 ↑↑↑↑↑ */}
 
       </header>
 
