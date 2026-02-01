@@ -1364,14 +1364,15 @@ const App = () => {
 
     try {
       // 1. 【大腦】請 Gemini 1.5 Flash 根據行程寫出「繪圖指令」
-      const prompt = `
-        你是一位旅遊海報設計師。針對行程 "${tripData.name}" (${tripData.destination})，請設計一個背景插畫。
+     const prompt = `
+        你是一位旅遊手帳設計師。針對行程 "${tripData.name}" (${tripData.destination})，請設計一個簡約風格的插畫指令。
         請回傳 JSON (不要 Markdown): 
         {
-          "imagePrompt": "一段英文繪圖指令(Prompt)，描述該地點的風景，風格為 'Detailed Watercolor Art' (細緻水彩) 或 'Ghibli anime style' (吉卜力風格)，畫面要夢幻且上方天空要留白以便壓字",
-          "textColor": "適合壓在圖片上的文字顏色 (HEX碼，例如 #FFFFFF 或 #1a1a1a)",
-          "title": "一個文青的短標題(10字內)",
-          "quote": "一句關於旅行的感性短句"
+          "imagePrompt": "一段英文繪圖指令，描述代表該地的一個小物件或地標 (例如: 'Cute minimalist watercolor sticker of Tokyo Tower, white background' 或 'Simple line art of a suitcase and croissant, white background')。風格必須是 'Minimalist Watercolor' (極簡水彩) 或 'Flat Vector Icon' (扁平圖示)，背景必須是純白 (White Background)，不要複雜背景。",
+          "themeColor": "一個適合該城市的粉嫩色系 (HEX碼，例如 #FFF5F5 或 #F0F9FF，用來做海報底色)",
+          "borderColor": "邊框顏色 (通常是深色或對比色，例如 #333333 或 #8B5CF6)",
+          "title": "手帳標題(10字內)",
+          "quote": "一句短語"
         }
       `;
       
@@ -2025,91 +2026,106 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-{/* ↓↓↓↓↓ 隱藏海報區 (放在 <header> 上面) ↓↓↓↓↓ */}
+{/* ↓↓↓↓↓ 修改版：簡約手帳 / 票券風格 ↓↓↓↓↓ */}
       {posterTheme && (
         <div
           id="hidden-poster-area"
-          className="absolute top-0 left-0 w-[450px] font-sans overflow-hidden flex flex-col justify-between"
+          className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
           style={{
-            height: "900px", 
+            minHeight: "800px",
             zIndex: -50,
             visibility: "visible",
-            // ★ 關鍵：使用 AI 生成的圖當背景
-            backgroundImage: `url(${posterTheme.bgImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            color: posterTheme.textColor || "#fff",
+            backgroundColor: posterTheme.themeColor || "#fffbf0", // AI 決定的底色
+            color: "#333", // 文字統一深色比較清楚
           }}
         >
-          {/* 漸層遮罩：讓文字更清楚 (根據文字顏色自動調整黑/白遮罩) */}
+          {/* 1. 外框裝飾 (票券感) */}
           <div 
-             className="absolute inset-0 z-0"
-             style={{
-               background: `linear-gradient(to bottom, 
-                 ${posterTheme.textColor === '#FFFFFF' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.7)'} 0%, 
-                 rgba(0,0,0,0) 40%, 
-                 ${posterTheme.textColor === '#FFFFFF' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.95)'} 100%)`
-             }}
-          ></div>
+            className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
+            style={{ borderColor: posterTheme.borderColor || "#333" }}
+          >
+            
+            {/* 2. 頂部插圖區 (Sticker) */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
+                  Boarding Pass
+                </div>
+                <h1 
+                  className="text-4xl font-serif font-black leading-tight text-stone-800"
+                  style={{ color: posterTheme.borderColor }}
+                >
+                  {posterTheme.title}
+                </h1>
+                <div className="mt-2 text-sm font-bold text-stone-500 flex gap-2 items-center">
+                  <span>{tripData.destination}</span>
+                  <div className="w-10 h-[1px] bg-stone-300"></div>
+                  <span>{tripData.startDate}</span>
+                </div>
+              </div>
 
-          {/* 內容層 */}
-          <div className="relative z-10 p-10 flex flex-col h-full">
-             
-             {/* 標題區 */}
-             <div className="text-center border-b-2 border-current pb-6 mb-4" style={{ borderColor: posterTheme.textColor }}>
-               <div className="text-xs font-bold tracking-[0.4em] uppercase opacity-80 mb-2">
-                 Travel Itinerary
-               </div>
-               <h1 className="text-5xl font-serif font-black leading-tight mb-2 drop-shadow-md">
-                 {posterTheme.title}
-               </h1>
-               <div className="text-sm font-bold opacity-90 flex justify-center gap-4">
-                 <span>{tripData.destination}</span>
-                 <span>•</span>
-                 <span>{tripData.startDate}</span>
-               </div>
-               <div className="mt-4 text-sm italic font-serif opacity-90">
-                 "{posterTheme.quote}"
-               </div>
-             </div>
-             
-             {/* 行程列表 (只顯示前 5 天，避免太擠) */}
-             <div className="flex-1 space-y-5 mt-4">
-                {Object.keys(groupedItinerary)
-                  .sort((a, b) => a - b)
-                  .slice(0, 5) 
-                  .map((day) => (
-                    <div key={day} className="flex gap-4 items-baseline">
-                      <div className="w-10 text-right shrink-0">
-                        <span className="text-2xl font-black font-serif opacity-60">
-                          {String(day).padStart(2, '0')}
-                        </span>
-                      </div>
-                      <div className="flex-1 border-l-2 pl-4 py-1" style={{ borderColor: posterTheme.textColor }}>
-                        <div className="space-y-1">
-                          {groupedItinerary[day]
-                            .sort((a, b) => a.time.localeCompare(b.time))
-                            .slice(0, 3) // 每天最多顯示 3 個重點
-                            .map((item) => (
-                              <div key={item.id} className="flex gap-2 text-sm items-center">
-                                <span className="font-mono font-bold opacity-70 text-[10px]">
-                                  {item.time}
-                                </span>
-                                <span className="font-bold truncate text-xs drop-shadow-sm">
-                                  {item.location}
-                                </span>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
+              {/* ★ AI 插圖 (右上角裝飾) ★ */}
+              <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
+                 {/* 透過 mix-blend-multiply 把白底變透明，看起來像貼紙 */}
+                 <img 
+                   src={posterTheme.bgImage} 
+                   alt="Sticker" 
+                   className="w-full h-full object-contain mix-blend-multiply" 
+                 />
+              </div>
+            </div>
+
+            {/* 3. 中間分隔線 (虛線) */}
+            <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
+               {/* 左右兩個半圓缺口，模仿票券 */}
+               <div className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0" style={{backgroundColor: posterTheme.themeColor}}></div>
+               <div className="absolute -right-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0" style={{backgroundColor: posterTheme.themeColor}}></div>
+            </div>
+
+            {/* 4. 行程列表 (簡約清單) */}
+            <div className="flex-1 space-y-6 mt-2">
+              {Object.keys(groupedItinerary)
+                .sort((a, b) => a - b)
+                .slice(0, 6) // 手帳版可以放多一點點
+                .map((day) => (
+                  <div key={day} className="flex gap-4">
+                    {/* Day 圓圈標籤 */}
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
+                      style={{ backgroundColor: posterTheme.borderColor || "#333" }}
+                    >
+                      {day}
                     </div>
-                  ))}
-             </div>
+                    
+                    {/* 行程內容 */}
+                    <div className="flex-1 space-y-2 pt-1">
+                      {groupedItinerary[day]
+                        .sort((a, b) => a.time.localeCompare(b.time))
+                        .map((item) => (
+                          <div key={item.id} className="flex gap-3 text-sm items-baseline border-b border-stone-200 pb-1 last:border-0">
+                            <span className="font-mono text-stone-400 text-xs shrink-0">
+                              {item.time}
+                            </span>
+                            <span className="font-bold text-stone-700 truncate">
+                              {item.location}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
 
-             {/* Footer */}
-             <div className="mt-6 text-center opacity-60 text-[10px] tracking-widest uppercase">
-               Generated by Tabiji AI
-             </div>
+            {/* 5. 底部金句 */}
+            <div className="mt-8 pt-4 border-t border-stone-200 text-center">
+              <p className="font-serif italic text-stone-500 text-sm">
+                "{posterTheme.quote}"
+              </p>
+              <div className="mt-2 text-[9px] tracking-widest opacity-30 uppercase font-bold">
+                Design by Tabiji
+              </div>
+            </div>
+
           </div>
         </div>
       )}
