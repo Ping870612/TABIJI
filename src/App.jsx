@@ -1314,7 +1314,7 @@ const App = () => {
 
     try {
       // (A) 問 AI 怎麼設計比較漂亮
-      const prompt = `針對行程 "${tripData.name}" (${tripData.destination})，請設計一個配色主題。回傳 JSON: {"color": "主色HEX", "subColor": "淺色HEX", "emoji": "代表符號", "title": "給行程一個文青標題(10字內)", "quote": "一句旅行短句"}`;
+      const prompt = `針對行程 "${tripData.name}" (${tripData.destination})，請設計一個配色主題。回傳 JSON: {"color": "主色", "subColor": "配色(選一個對比色或同色系深色)", "emoji": "代表符號", "title": "給行程一個文青標題(10字內)", "quote": "一句旅行短句"}`;
       
       const res = await callGeminiAPI([{ text: prompt }]);
       if (!res) throw new Error("AI Failed");
@@ -1943,87 +1943,138 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-{/* ↓↓↓ 修正後的隱藏海報區 (補回內容並正確關閉) ↓↓↓ */}
+{/* ↓↓↓↓↓ 升級版：雜誌風美圖產生器 ↓↓↓↓↓ */}
       {posterTheme && (
         <div
           id="hidden-poster-area"
-          className="absolute top-0 left-0 w-[400px] bg-white font-sans text-stone-800 overflow-hidden"
+          className="absolute top-0 left-0 w-[450px] font-sans text-stone-800 overflow-hidden flex flex-col"
           style={{
-            minHeight: "800px",
-            padding: "40px",
+            minHeight: "900px", // 拉長一點讓版面更鬆
             zIndex: -50,
             visibility: "visible",
+            // 使用 AI 建議的顏色做漸層背景
+            background: `linear-gradient(135deg, ${posterTheme.color} 0%, #fff 50%, ${posterTheme.subColor || "#f5f5f4"} 100%)`,
           }}
         >
-          {/* 1. 背景裝飾 */}
-          <div
-            className="absolute top-0 left-0 w-full h-40 opacity-10"
-            style={{ background: posterTheme.color }}
-          ></div>
-          <div
-            className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-10 blur-3xl"
-            style={{ background: posterTheme.color }}
-          ></div>
+          {/* 1. 引入高級字體 (Google Fonts) */}
+          <style>
+            {`
+              @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+              .font-serif-display { font-family: 'Playfair Display', serif; }
+              .font-sans-body { font-family: 'Noto Sans TC', sans-serif; }
+            `}
+          </style>
 
-          {/* 2. 標題區 */}
-          <div className="text-center mb-10 relative z-10">
-            <div className="text-6xl mb-4">{posterTheme.emoji}</div>
-            <h1
-              className="text-3xl font-black tracking-widest mb-2"
-              style={{ color: posterTheme.color }}
-            >
-              {posterTheme.title}
-            </h1>
-            <p className="text-xs font-bold text-stone-400 uppercase tracking-[0.3em]">
-              {tripData.destination} • {tripData.startDate}
-            </p>
-            <div className="mt-4 text-sm text-stone-500 italic font-serif">
-              "{posterTheme.quote}"
+          {/* 2. 頂部裝飾 (雜誌標題區) */}
+          <div className="p-10 pb-6 relative">
+            {/* 裝飾圓球 */}
+            <div 
+              className="absolute top-[-50px] right-[-50px] w-64 h-64 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
+              style={{ background: posterTheme.color }}
+            ></div>
+            
+            <div className="relative z-10 border-b-2 border-stone-800 pb-6">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-[10px] tracking-[0.4em] uppercase font-bold text-stone-500">
+                  Travel Itinerary
+                </span>
+                <span className="text-4xl filter drop-shadow-sm">
+                  {posterTheme.emoji}
+                </span>
+              </div>
+              
+              {/* 標題：使用襯線體，看起來更有氣質 */}
+              <h1 
+                className="text-5xl font-serif-display font-bold leading-tight mb-3 text-stone-800"
+                style={{ color: posterTheme.color }}
+              >
+                {posterTheme.title}
+              </h1>
+              
+              <div className="flex items-center gap-3 text-xs font-bold tracking-widest uppercase text-stone-400 font-sans-body">
+                <span>{tripData.destination}</span>
+                <div className="w-1 h-1 bg-stone-300 rounded-full"></div>
+                <span>{tripData.startDate}</span>
+              </div>
+            </div>
+
+            {/* AI 金句區 */}
+            <div className="mt-4 text-right">
+              <p className="font-serif-display italic text-lg text-stone-600 opacity-80">
+                "{posterTheme.quote}"
+              </p>
             </div>
           </div>
 
-          {/* 3. 行程列表 */}
-          <div className="space-y-8 relative z-10">
-            <div className="absolute left-[19px] top-2 bottom-2 w-[2px] bg-stone-100"></div>
-            {Object.keys(groupedItinerary)
-              .sort((a, b) => a - b)
-              .map((day) => (
-                <div key={day} className="relative pl-10">
-                  <div
-                    className="absolute left-0 top-0 w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm z-20"
-                    style={{ background: posterTheme.color }}
-                  >
-                    D{day}
-                  </div>
-                  <div className="space-y-3 pt-1">
-                    {groupedItinerary[day]
-                      .sort((a, b) => a.time.localeCompare(b.time))
-                      .map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex gap-3 items-baseline"
-                        >
-                          <span className="font-mono text-xs text-stone-400 font-bold min-w-[35px]">
-                            {item.time}
-                          </span>
-                          <div className="flex-1 border-b border-stone-50 pb-2">
-                            <div className="font-bold text-stone-700 text-sm">
-                              {item.location}
+          {/* 3. 行程列表 (毛玻璃卡片風格) */}
+          <div className="flex-1 px-8 pb-10 relative z-10">
+            <div className="space-y-8">
+              {Object.keys(groupedItinerary)
+                .sort((a, b) => a - b)
+                .map((day) => (
+                  <div key={day} className="relative">
+                    {/* Day 標籤 (側邊懸浮感) */}
+                    <div className="flex items-baseline gap-2 mb-3 sticky top-0">
+                      <span 
+                        className="text-4xl font-black font-serif-display opacity-20"
+                        style={{ color: posterTheme.color }}
+                      >
+                        {String(day).padStart(2, '0')}
+                      </span>
+                      <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">
+                        DAY
+                      </span>
+                    </div>
+
+                    {/* 白色半透明卡片容器 */}
+                    <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-white/50 space-y-4">
+                      {groupedItinerary[day]
+                        .sort((a, b) => a.time.localeCompare(b.time))
+                        .map((item, idx) => (
+                          <div key={item.id} className="flex gap-4 items-start group">
+                            {/* 時間 */}
+                            <div className="font-mono text-xs font-bold text-stone-400 mt-1 min-w-[40px]">
+                              {item.time}
+                            </div>
+                            
+                            {/* 分隔線 (最後一個不顯示) */}
+                            <div className="relative flex-1">
+                               <div className="font-sans-body font-bold text-stone-700 text-sm leading-snug">
+                                 {item.location}
+                               </div>
+                               {/* 根據分類顯示不同的小標籤 */}
+                               {item.category === 'food' && (
+                                 <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-bold">
+                                   EAT
+                                 </span>
+                               )}
+                               {item.category === 'sightseeing' && (
+                                 <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-600 font-bold">
+                                   VIEW
+                                 </span>
+                               )}
+                               
+                               {/* 虛線分隔 */}
+                               {idx !== groupedItinerary[day].length - 1 && (
+                                 <div className="absolute left-[-26px] top-6 bottom-[-10px] w-[1px] border-l border-dashed border-stone-300"></div>
+                               )}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+            </div>
           </div>
 
-          <div className="mt-12 text-center text-[10px] text-stone-300 tracking-widest uppercase">
-            Designed by Tabiji AI
+          {/* 4. 底部版權區 */}
+          <div className="p-6 text-center">
+             <div className="inline-block px-4 py-1 rounded-full bg-stone-900 text-white text-[9px] font-bold tracking-[0.2em] uppercase opacity-20">
+               Planned by Tabiji AI
+             </div>
           </div>
         </div>
       )}
-      {/* ↑↑↑ 隱藏區在這裡結束，下面才是原本的 Modals ↑↑↑ */}
 
       <ProfileSetupModal
         isOpen={showProfileSetup}
