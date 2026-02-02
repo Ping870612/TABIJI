@@ -2166,7 +2166,7 @@ const handleAIAnalyze = async () => {
                         .sort((a, b) => a.time.localeCompare(b.time))
                         .map((item) => (
                           <div key={item.id} className="flex gap-3 text-sm items-baseline border-b border-stone-200 pb-1 last:border-0">
-                            <span className="font-mono text-stone-400 text-xs shrink-0">
+                            <span className="font-mono text-stone-400 text-[10px] shrink-0">
                               {item.time}
                             </span>
                             <span className="font-bold text-stone-700 truncate">
