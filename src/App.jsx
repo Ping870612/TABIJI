@@ -2091,7 +2091,7 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-{/* ↓↓↓↓↓ 修改版：簡約手帳 / 票券風格 (已修復括號與字體裁切問題) ↓↓↓↓↓ */}
+{/* ↓↓↓↓↓ 包含備註的美圖海報版本 ↓↓↓↓↓ */}
       {posterTheme && (
         <div
           id="hidden-poster-area"
@@ -2132,7 +2132,6 @@ const handleAIAnalyze = async () => {
 
               {/* ★ AI 插圖 (右上角裝飾) ★ */}
               <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
-                {/* 透過 mix-blend-multiply 把白底變透明，看起來像貼紙 */}
                 <img
                   src={posterTheme.bgImage}
                   alt="Sticker"
@@ -2144,7 +2143,6 @@ const handleAIAnalyze = async () => {
 
             {/* 3. 中間分隔線 (虛線) */}
             <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
-              {/* 左右兩個半圓缺口，模仿票券 */}
               <div
                 className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
                 style={{ backgroundColor: posterTheme.themeColor }}
@@ -2155,11 +2153,11 @@ const handleAIAnalyze = async () => {
               ></div>
             </div>
 
-            {/* 4. 行程列表 (簡約清單) */}
+            {/* 4. 行程列表 (含備註) */}
             <div className="flex-1 space-y-6 mt-2">
               {Object.keys(groupedItinerary)
                 .sort((a, b) => a - b)
-                .slice(0, 6) // 手帳版可以放多一點點
+                .slice(0, 6)
                 .map((day) => (
                   <div key={day} className="flex gap-4">
                     {/* Day 圓圈標籤 */}
@@ -2178,24 +2176,32 @@ const handleAIAnalyze = async () => {
                           <div
                             key={item.id}
                             className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
-                            style={{ lineHeight: "1.8" }} // 強制加大行高，預留上下空間防止切到
+                            style={{ lineHeight: "1.5" }} //稍微調緊一點行高，因為有備註會變長
                           >
-                            {/* 調整時間字體大小與對齊 */}
+                            {/* 時間 */}
                             <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
                               {item.time}
                             </span>
 
-                            {/* 調整地點字體大小，取消 truncate 改用 break-words 防止橫向切斷 */}
-                            <span
-                              className="font-bold text-stone-700 text-[12px] break-words flex-1"
-                              style={{
-                                wordBreak: "break-word",
-                                display: "block",
-                                paddingBottom: "2px", // 額外補償底部空間
-                              }}
-                            >
-                              {item.location}
-                            </span>
+                            {/* 地點 + 備註 (垂直排列) */}
+                            <div className="flex-1 flex flex-col min-w-0">
+                              <span
+                                className="font-bold text-stone-700 text-[12px] break-words"
+                                style={{
+                                  wordBreak: "break-word",
+                                  display: "block",
+                                }}
+                              >
+                                {item.location}
+                              </span>
+                              
+                              {/* --- 這裡新增了備註 --- */}
+                              {item.notes && (
+                                <span className="text-[9px] text-stone-500 font-normal mt-0.5 break-words opacity-80 leading-snug">
+                                  {item.notes}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         ))}
                     </div>
