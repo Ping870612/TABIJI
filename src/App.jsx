@@ -2820,6 +2820,7 @@ const handleAIAnalyze = async () => {
         </button>
       </nav>
 
+      {/* ↓↓↓↓↓ 請完整替換這整段 isModalOpen 區塊 ↓↓↓↓↓ */}
       {isModalOpen && (
         <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div className="bg-[#FDFCF8] w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col">
@@ -2830,8 +2831,11 @@ const handleAIAnalyze = async () => {
                 ? "新增行程"
                 : "新增支出"}
             </h3>
+            
             <div className="space-y-4 overflow-y-auto scrollbar-hide px-1 flex-1">
+              {/* === 判斷目前是「行程」還是「支出」 === */}
               {activeTab === "itinerary" ? (
+                /* --- 行程表單 (Itinerary Form) --- */
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -2880,40 +2884,19 @@ const handleAIAnalyze = async () => {
                       }
                     />
                   </div>
-                 {/* Category 選擇區 */}
+                  
+                  {/* 行程分類按鈕 (包含住宿) */}
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       Category
                     </label>
                     <div className="flex gap-2 flex-wrap">
                       {[
-                        {
-                          id: "sightseeing",
-                          icon: <Camera size={16} />,
-                          label: "景點",
-                        },
-                        {
-                          id: "food",
-                          icon: <Utensils size={16} />,
-                          label: "餐廳",
-                        },
-                        {
-                          id: "transport",
-                          icon: <Train size={16} />,
-                          label: "交通",
-                        },
-                        {
-                          id: "flight",
-                          icon: <Plane size={16} />,
-                          label: "航班",
-                        },
-                        // ↓↓↓ 新增這個按鈕 ↓↓↓
-                        {
-                          id: "accommodation",
-                          icon: <Home size={16} />,
-                          label: "住宿",
-                        },
-                        // ↑↑↑ 新增結束 ↑↑↑
+                        { id: "sightseeing", icon: <Camera size={16} />, label: "景點" },
+                        { id: "food", icon: <Utensils size={16} />, label: "餐廳" },
+                        { id: "transport", icon: <Train size={16} />, label: "交通" },
+                        { id: "flight", icon: <Plane size={16} />, label: "航班" },
+                        { id: "accommodation", icon: <Home size={16} />, label: "住宿" },
                       ].map((cat) => (
                         <button
                           key={cat.id}
@@ -2931,6 +2914,7 @@ const handleAIAnalyze = async () => {
                       ))}
                     </div>
                   </div>
+
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       {itemData.category === "flight"
@@ -2948,6 +2932,7 @@ const handleAIAnalyze = async () => {
                   </div>
                 </>
               ) : (
+                /* --- 支出表單 (Expense Form) --- */
                 <>
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
@@ -2963,37 +2948,19 @@ const handleAIAnalyze = async () => {
                       className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400"
                     />
                   </div>
+                  
+                  {/* 支出分類按鈕 */}
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       分類
                     </label>
                     <div className="flex gap-2 flex-wrap">
                       {[
-                        {
-                          id: "food",
-                          label: "飲食",
-                          icon: <Utensils size={16} />,
-                        },
-                        {
-                          id: "transport",
-                          label: "交通",
-                          icon: <Train size={16} />,
-                        },
-                        {
-                          id: "accommodation",
-                          label: "住宿",
-                          icon: <Home size={16} />,
-                        },
-                        {
-                          id: "shopping",
-                          label: "購物",
-                          icon: <ShoppingBag size={16} />,
-                        },
-                        {
-                          id: "other",
-                          label: "其他",
-                          icon: <MoreHorizontal size={16} />,
-                        },
+                        { id: "food", label: "飲食", icon: <Utensils size={16} /> },
+                        { id: "transport", label: "交通", icon: <Train size={16} /> },
+                        { id: "accommodation", label: "住宿", icon: <Home size={16} /> },
+                        { id: "shopping", label: "購物", icon: <ShoppingBag size={16} /> },
+                        { id: "other", label: "其他", icon: <MoreHorizontal size={16} /> },
                       ].map((cat) => (
                         <button
                           key={cat.id}
@@ -3011,6 +2978,7 @@ const handleAIAnalyze = async () => {
                       ))}
                     </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
@@ -3157,6 +3125,7 @@ const handleAIAnalyze = async () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
