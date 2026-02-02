@@ -707,8 +707,11 @@ const FileImportModal = ({ isOpen, onClose, onImport, isLoading }) => {
 const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
   if (!isOpen) return null;
 
-  // 1. 產生完整網址 (例如: https://myapp.com?trip=123456)
+  // 1. 產生完整網址
   const shareUrl = `${window.location.origin}?trip=${tripId}`;
+
+  // 2. 自訂複製文案 (使用 \n 來換行)
+  const shareText = `👋 點擊下方連結一起參與 ${tripName} 的行程！✈️\n${shareUrl}`;
 
   return (
     <div className="absolute inset-0 z-[60] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
@@ -730,18 +733,18 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
             他們點擊連結即可直接共同編輯 <b>{tripName}</b>。
           </p>
           <div
-            onClick={() => copyToClipboard(shareUrl)} // 2. 這裡改成複製完整網址
+            onClick={() => copyToClipboard(shareText)} // 這裡改成複製完整文案
             className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
           >
             <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
               旅程連結
             </div>
-            {/* 這裡顯示代碼就好，不然網址太長很醜 */}
+            {/* 畫面顯示代碼比較乾淨，但實際複製的是整段文案 */}
             <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
               {tripId}
             </div>
             <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
-              <Copy size={12} /> 點擊複製連結
+              <Copy size={12} /> 點擊複製邀請函
             </div>
           </div>
         </div>
