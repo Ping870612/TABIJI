@@ -1127,11 +1127,6 @@ const WelcomeScreen = ({
                       value={newTripData.startDate}
                       onChange={handleStartDateChange}
                     />
-                    {!newTripData.startDate && (
-                      <div className="absolute inset-0 top-6 left-3 pointer-events-none text-stone-300 text-sm font-bold">
-                        點擊選擇...
-                      </div>
-                    )}
                   </div>
 
                   {/* 裝飾箭頭 */}
