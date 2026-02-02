@@ -2001,11 +2001,33 @@ const App = () => {
     );
   };
 
-  const handleCalculateDebts = async () => {
+const handleCalculateDebts = async () => {
+    // 1. 基礎檢查：是否有資料
     if (!tripData?.expenses?.length) {
       showToast("沒有支出紀錄", "error");
       return;
     }
+
+    // 2. 進階檢查：是否包含有效的數字金額
+    // 我們檢查是否至少有一筆資料的 amount 轉成數字後大於 0
+    const validExpenses = tripData.expenses.filter((item) => {
+      const amount = parseFloat(item.amount);
+      return !isNaN(amount) && amount > 0;
+    });
+
+    // 如果沒有任何有效的金額資料，直接報錯，不呼叫 AI
+    if (validExpenses.length === 0) {
+      setAiAnalysisResult({
+        isOpen: true,
+        title: "計算失敗",
+        content: "原因：偵測不到有效的金額數字。\n請檢查您的支出紀錄，確保「金額」欄位皆為大於 0 的數字。",
+        isDebtAnalysis: false, // 設定為 false 以顯示純文字訊息
+        isLoading: false,
+      });
+      return;
+    }
+
+    // 3. 通過檢查，開始呼叫 AI
     setAiAnalysisResult({
       isOpen: true,
       title: "AI 分帳計算",
@@ -2013,15 +2035,19 @@ const App = () => {
       isDebtAnalysis: true,
       isLoading: true,
     });
+
     try {
+      // 只傳送有效的支出資料給 AI，減少 token 消耗並提高準確度
       const res = await callGeminiAPI([
         {
           text: `計算旅遊記帳 JSON: ${JSON.stringify(
-            tripData.expenses
+            validExpenses
           )}。回傳純 JSON Array: [{"from": "付款人", "to": "收款人", "amount": 整數金額}]。金額請四捨五入。`,
         },
       ]);
+
       if (!res) throw new Error("AI Failed");
+
       setAiAnalysisResult((prev) => ({
         ...prev,
         content: res,
@@ -2030,8 +2056,9 @@ const App = () => {
     } catch (e) {
       setAiAnalysisResult((prev) => ({
         ...prev,
-        content: "計算失敗",
+        content: "計算失敗，請稍後再試。",
         isLoading: false,
+        isDebtAnalysis: false,
       }));
     }
   };
