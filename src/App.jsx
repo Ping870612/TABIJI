@@ -1632,15 +1632,6 @@ useEffect(() => {
     return () => unsubscribe();
   }, [user, tripId]);
 
-        } else {
-          showToast("找不到旅程", "error");
-          setTripId(null);
-        }
-      }
-    );
-    return () => unsubscribe();
-  }, [user, tripId]);
-
   const createTrip = async ({ destination, startDate, endDate }) => {
     if (!user) return;
     const newId = Math.random().toString(36).substring(2, 8).toUpperCase();
