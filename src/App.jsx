@@ -920,33 +920,38 @@ const ItineraryCard = ({
   return (
     <div
       onClick={() => onSelect(item)}
-      className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-stone-100 mb-3 relative group transition-all active:scale-[0.99] border-l-4 cursor-pointer hover:shadow-md ${config.color}`}
+      // 修改 1: p-4 -> p-3 (整體內距變小，內容更靠邊)
+      className={`bg-white rounded-xl p-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-stone-100 mb-3 relative group transition-all active:scale-[0.99] border-l-4 cursor-pointer hover:shadow-md ${config.color}`}
     >
       <div className="flex justify-between items-start">
-        <div className="flex flex-col items-center mr-4 pt-1 min-w-[3.5rem]">
+        {/* 左側時間軸 */}
+        <div className="flex flex-col items-center mr-3 pt-1 min-w-[3rem]">
           <span className="text-sm font-bold text-stone-800 tracking-wider font-mono">
             {item.time}
           </span>
-          <div className="h-full w-[1px] bg-stone-100 my-2"></div>
+          <div className="h-full w-[1px] bg-stone-100 my-1"></div>
         </div>
-        <div className="flex-1 min-w-0 pr-20">
+
+        {/* 中間內容區 */}
+        {/* 修改 2: pr-20 -> pr-14 (縮小右側留白，讓文字有更多空間，但仍避開按鈕) */}
+        <div className="flex-1 min-w-0 pr-14">
           <div className="flex items-center gap-2 mb-1">
             <span className={`p-1.5 rounded-lg ${config.bgIcon}`}>
               {config.icon}
             </span>
-            <h3 className="font-bold text-stone-800 text-lg truncate tracking-tight">
+            <h3 className="font-bold text-stone-800 text-base sm:text-lg truncate tracking-tight">
               {item.location}
             </h3>
           </div>
           {(item.tags || []).length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2 mt-1">
+            <div className="flex flex-wrap gap-1 mb-1.5 mt-0.5">
               {item.tags.map((tag, i) => (
                 <Tag key={i} type={tag.type} text={tag.text} />
               ))}
             </div>
           )}
           {item.guideInfo && (
-            <div className="text-xs text-stone-500 bg-stone-50 p-2 rounded-lg leading-relaxed mb-2 border border-stone-100 flex gap-2">
+            <div className="text-xs text-stone-500 bg-stone-50 p-2 rounded-lg leading-relaxed mb-1 border border-stone-100 flex gap-2">
               <BookOpen
                 size={14}
                 className="text-stone-400 flex-shrink-0 mt-0.5"
@@ -954,50 +959,63 @@ const ItineraryCard = ({
               {item.guideInfo}
             </div>
           )}
+          
+          {/* 修改 3: mt-1 -> mt-0.5 (備註更靠近上方) */}
           {item.notes && !item.guideInfo && (
-            <p className="text-stone-400 text-xs mt-1 line-clamp-2">
+            <p className="text-stone-400 text-xs mt-0.5 line-clamp-2 leading-snug">
               {item.notes}
             </p>
           )}
+
+          {/* 修改 4: mt-2 -> mt-1 (添加者更靠近上方，且靠右對齊邊框) */}
           {author.nickname && (
-            <div className="flex items-center gap-1 mt-2 justify-end opacity-50 text-[10px]">
+            <div className="flex items-center gap-1 mt-1 justify-end opacity-50 text-[10px]">
               <span className="text-stone-400">added by</span>
               <UserBadge
                 nickname={author.nickname}
                 emoji={author.emoji}
                 color={author.color}
+                size="sm"
               />
             </div>
           )}
         </div>
       </div>
-      <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+
+      {/* 修改 5: 按鈕群組位置優化 */}
+      {/* top-4 right-4 -> top-2 right-2 (更靠角落) */}
+      {/* gap-1 -> gap-0.5 (按鈕間距變小) */}
+      <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-0.5">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onMap(item.location);
           }}
-          className="p-2 text-stone-300 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+          // p-2 -> p-1.5 (按鈕變小一點)
+          className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+          title="導航"
         >
-          <Navigation size={16} />
+          <Navigation size={14} />
         </button>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onEdit(item);
           }}
-          className="p-2 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
+          className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+          title="編輯"
         >
-          <Edit size={16} />
+          <Edit size={14} />
         </button>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDelete(item);
           }}
-          className="p-2 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded-full transition-colors"
+          className="p-1.5 text-stone-400 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+          title="刪除"
         >
-          <Trash2 size={16} />
+          <Trash2 size={14} />
         </button>
       </div>
     </div>
