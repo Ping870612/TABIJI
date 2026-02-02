@@ -445,7 +445,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
             </div>
           </div>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            href={`https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(
               item.location
             )}`}
             target="_blank"
@@ -2091,123 +2091,129 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-{/* ↓↓↓↓↓ 修改版：簡約手帳 / 票券風格 ↓↓↓↓↓ */}
+{/* ↓↓↓↓↓ 修改版：簡約手帳 / 票券風格 (已修復括號與字體裁切問題) ↓↓↓↓↓ */}
       {posterTheme && (
-{/* --- 請完整替換這一個 div (id="hidden-poster-area") --- */}
-<div
-  id="hidden-poster-area"
-  className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
-  style={{
-    height: "auto",
-    minHeight: "800px",
-    zIndex: -50,
-    visibility: "visible",
-    backgroundColor: posterTheme.themeColor || "#fffbf0",
-    color: "#333",
-    overflow: "visible",
-  }}
->
-  {/* 1. 外框裝飾 */}
-  <div
-    className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
-    style={{ borderColor: posterTheme.borderColor || "#333" }}
-  >
-    {/* 2. 頂部插圖區 */}
-    <div className="flex justify-between items-start mb-6">
-      <div>
-        <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
-          Boarding Pass
-        </div>
-        <h1
-          className="text-4xl font-serif font-black leading-tight text-stone-800"
-          style={{ color: posterTheme.borderColor }}
+        <div
+          id="hidden-poster-area"
+          className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
+          style={{
+            height: "auto",            // 確保容器隨內容長高
+            minHeight: "800px",
+            zIndex: -50,
+            visibility: "visible",
+            backgroundColor: posterTheme.themeColor || "#fffbf0",
+            color: "#333",
+            overflow: "visible",       // 防止切斷溢出內容
+          }}
         >
-          {posterTheme.title}
-        </h1>
-        <div className="mt-2 text-sm font-bold text-stone-500 flex gap-2 items-center">
-          <span>{tripData.destination}</span>
-          <div className="w-10 h-[1px] bg-stone-300"></div>
-          <span>{tripData.startDate}</span>
-        </div>
-      </div>
+          {/* 1. 外框裝飾 (票券感) */}
+          <div
+            className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
+            style={{ borderColor: posterTheme.borderColor || "#333" }}
+          >
+            {/* 2. 頂部插圖區 (Sticker) */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
+                  Boarding Pass
+                </div>
+                <h1
+                  className="text-4xl font-serif font-black leading-tight text-stone-800"
+                  style={{ color: posterTheme.borderColor }}
+                >
+                  {posterTheme.title}
+                </h1>
+                <div className="mt-2 text-sm font-bold text-stone-500 flex gap-2 items-center">
+                  <span>{tripData.destination}</span>
+                  <div className="w-10 h-[1px] bg-stone-300"></div>
+                  <span>{tripData.startDate}</span>
+                </div>
+              </div>
 
-      {/* AI 插圖 */}
-      <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
-        <img
-          src={posterTheme.bgImage}
-          alt="Sticker"
-          crossOrigin="anonymous"
-          className="w-full h-full object-contain mix-blend-multiply"
-        />
-      </div>
-    </div>
-
-    {/* 3. 中間分隔線 */}
-    <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
-      <div
-        className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
-        style={{ backgroundColor: posterTheme.themeColor }}
-      ></div>
-      <div
-        className="absolute -right-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
-        style={{ backgroundColor: posterTheme.themeColor }}
-      ></div>
-    </div>
-
-    {/* 4. 行程列表 (修正後版本) */}
-    <div className="flex-1 space-y-6 mt-2">
-      {Object.keys(groupedItinerary)
-        .sort((a, b) => a - b)
-        .slice(0, 6)
-        .map((day) => (
-          <div key={day} className="flex gap-4">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
-              style={{ backgroundColor: posterTheme.borderColor || "#333" }}
-            >
-              {day}
+              {/* ★ AI 插圖 (右上角裝飾) ★ */}
+              <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
+                {/* 透過 mix-blend-multiply 把白底變透明，看起來像貼紙 */}
+                <img
+                  src={posterTheme.bgImage}
+                  alt="Sticker"
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-contain mix-blend-multiply"
+                />
+              </div>
             </div>
 
-            <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
-              {groupedItinerary[day]
-                .sort((a, b) => a.time.localeCompare(b.time))
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
-                    style={{ lineHeight: "1.8" }}
-                  >
-                    <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
-                      {item.time}
-                    </span>
-                    <span
-                      className="font-bold text-stone-700 text-[12px] break-words flex-1"
-                      style={{
-                        wordBreak: "break-word",
-                        display: "block",
-                        paddingBottom: "2px",
-                      }}
+            {/* 3. 中間分隔線 (虛線) */}
+            <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
+              {/* 左右兩個半圓缺口，模仿票券 */}
+              <div
+                className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
+                style={{ backgroundColor: posterTheme.themeColor }}
+              ></div>
+              <div
+                className="absolute -right-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
+                style={{ backgroundColor: posterTheme.themeColor }}
+              ></div>
+            </div>
+
+            {/* 4. 行程列表 (簡約清單) */}
+            <div className="flex-1 space-y-6 mt-2">
+              {Object.keys(groupedItinerary)
+                .sort((a, b) => a - b)
+                .slice(0, 6) // 手帳版可以放多一點點
+                .map((day) => (
+                  <div key={day} className="flex gap-4">
+                    {/* Day 圓圈標籤 */}
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
+                      style={{ backgroundColor: posterTheme.borderColor || "#333" }}
                     >
-                      {item.location}
-                    </span>
+                      {day}
+                    </div>
+
+                    {/* 行程內容 */}
+                    <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
+                      {groupedItinerary[day]
+                        .sort((a, b) => a.time.localeCompare(b.time))
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
+                            style={{ lineHeight: "1.8" }} // 強制加大行高，預留上下空間防止切到
+                          >
+                            {/* 調整時間字體大小與對齊 */}
+                            <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
+                              {item.time}
+                            </span>
+
+                            {/* 調整地點字體大小，取消 truncate 改用 break-words 防止橫向切斷 */}
+                            <span
+                              className="font-bold text-stone-700 text-[12px] break-words flex-1"
+                              style={{
+                                wordBreak: "break-word",
+                                display: "block",
+                                paddingBottom: "2px", // 額外補償底部空間
+                              }}
+                            >
+                              {item.location}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 ))}
             </div>
-          </div>
-        ))}
-    </div>
 
-    {/* 5. 底部金句 */}
-    <div className="mt-8 pt-4 border-t border-stone-200 text-center">
-      <p className="font-serif italic text-stone-500 text-sm">
-        "{posterTheme.quote}"
-      </p>
-      <div className="mt-2 text-[9px] tracking-widest opacity-30 uppercase font-bold">
-        Design by Tabiji
-      </div>
-    </div>
-  </div>
-</div>
+            {/* 5. 底部金句 */}
+            <div className="mt-8 pt-4 border-t border-stone-200 text-center">
+              <p className="font-serif italic text-stone-500 text-sm">
+                "{posterTheme.quote}"
+              </p>
+              <div className="mt-2 text-[9px] tracking-widest opacity-30 uppercase font-bold">
+                Design by Tabiji
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <ProfileSetupModal
