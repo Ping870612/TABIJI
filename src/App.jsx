@@ -1476,15 +1476,19 @@ const App = () => {
       // 4. 截圖下載
       const element = document.getElementById("hidden-poster-area");
       if (element && window.html2canvas) {
-        const canvas = await window.html2canvas(element, {
-          width: element.offsetWidth,
-          height: element.offsetHeight,
-          scale: 3, 
-          useCORS: true, 
-          allowTaint: true,
-          backgroundColor: null,
-          scrollX: 0, scrollY: 0, x: 0, y: 0
-        });
+      const canvas = await window.html2canvas(element, {
+        scale: 3, 
+        useCORS: true, 
+        allowTaint: true,
+        backgroundColor: null,
+        scrollX: 0, 
+        scrollY: 0, 
+        x: 0, 
+        y: 0,
+        // 補上這兩行，精確對準元件的大小
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+      });
         
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
@@ -2093,15 +2097,15 @@ const handleAIAnalyze = async () => {
           id="hidden-poster-area"
           className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
           style={{
-            height: "auto",
-            overflow: "visible",
-            minHeight: "800px",
-            zIndex: -50,
-            visibility: "visible",
-            backgroundColor: posterTheme.themeColor || "#fffbf0", // AI 決定的底色
-            color: "#333", // 文字統一深色比較清楚
-          }}
-        >
+              height: "auto",             // 確保容器隨內容長高
+              minHeight: "800px",
+              zIndex: -50,
+              visibility: "visible",
+              backgroundColor: posterTheme.themeColor || "#fffbf0",
+              color: "#333",
+              overflow: "visible",        // 防止切斷溢出內容
+            }}
+          >
           {/* 1. 外框裝飾 (票券感) */}
           <div 
             className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
@@ -2165,14 +2169,30 @@ const handleAIAnalyze = async () => {
                       {groupedItinerary[day]
                         .sort((a, b) => a.time.localeCompare(b.time))
                         .map((item) => (
-                          <div key={item.id} className="flex gap-3 text-sm items-baseline border-b border-stone-200 pb-1 last:border-0">
-                            <span className="font-mono text-stone-400 text-[10px] shrink-0">
-                              {item.time}
-                            </span>
-                            <span className="font-bold text-stone-700 truncate">
-                              {item.location}
-                            </span>
-                          </div>
+                          {/* --- 複製這段替換 --- */}
+                         <div 
+                           key={item.id} 
+                           className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
+                           style={{ lineHeight: '1.8' }} // 強制加大行高，預留上下空間防止切到
+                         >
+                           {/* 調整時間字體大小與對齊 */}
+                           <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
+                             {item.time}
+                           </span>
+
+                           {/* 調整地點字體大小，取消 truncate 改用 break-words 防止橫向切斷 */}
+                           <span 
+                             className="font-bold text-stone-700 text-[12px] break-words flex-1"
+                             style={{ 
+                               wordBreak: 'break-word', 
+                               display: 'block',
+                               paddingBottom: '2px' // 額外補償底部空間
+                             }}
+                           >
+                             {item.location}
+                           </span>
+                         </div>
+                         {/* --- 替換結束 --- */}
                         ))}
                     </div>
                   </div>
