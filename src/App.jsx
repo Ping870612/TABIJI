@@ -82,7 +82,6 @@ const firebaseConfig = {
 };
 
 // --- 初始化 Firebase ---
-// 修正: 檢查是否已經初始化過，避免 Hot Reload 導致 Duplicate App Error
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -92,14 +91,12 @@ const appId =
   typeof __app_id !== "undefined" ? __app_id : "travel-app-sandbox-v1";
 
 // --- AI 呼叫函式 ---
-// --- 修改後的 AI 呼叫函式 ---
 async function callGeminiAPI(parts) {
   try {
-    // 改為呼叫我們自己的後端 API，不需要帶 Key
     const response = await fetch("/api/gemini", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parts: parts }), // 傳送資料給後端
+      body: JSON.stringify({ parts: parts }),
     });
 
     if (!response.ok) {
@@ -108,20 +105,15 @@ async function callGeminiAPI(parts) {
     }
 
     const data = await response.json();
-    // 解析回傳結構
     return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    // 回傳空字串或錯誤訊息，避免程式崩潰
     return "";
   }
 }
 
-// --- 新增：使用 Google Imagen 3 模型畫圖 ---
 async function callImagenAPI(imagePrompt) {
   try {
-    // 1. 抓取金鑰 (優先讀取 Vercel 環境變數 VITE_GEMINI_API_KEY)
-    // 如果本地開發讀不到，請確認 .env.local 也有設定
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || firebaseConfig.apiKey;
     
     if (!apiKey) {
@@ -129,7 +121,6 @@ async function callImagenAPI(imagePrompt) {
       return null;
     }
 
-    // 2. 呼叫 Imagen 3 模型
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
       {
@@ -139,7 +130,7 @@ async function callImagenAPI(imagePrompt) {
           instances: [{ prompt: imagePrompt }],
           parameters: {
             sampleCount: 1,
-            aspectRatio: "3:4", // 直式海報比例
+            aspectRatio: "3:4",
             personGeneration: "allow_adult",
           },
         }),
@@ -155,7 +146,6 @@ async function callImagenAPI(imagePrompt) {
     const data = await response.json();
     const base64Image = data.predictions?.[0]?.bytesBase64Encoded;
     
-    // 回傳圖片格式
     return base64Image ? `data:image/png;base64,${base64Image}` : null;
   } catch (error) {
     console.error("Imagen Error:", error);
@@ -394,38 +384,36 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   const typeConfig = {
     sightseeing: {
       icon: <Camera size={24} />,
-      bg: "bg-indigo-100 text-indigo-600",
+      bgIcon: "bg-indigo-100 text-indigo-600",
       label: "景點",
     },
     food: {
       icon: <Utensils size={24} />,
-      bg: "bg-orange-100 text-orange-600",
+      bgIcon: "bg-orange-100 text-orange-600",
       label: "餐廳",
     },
     transport: {
       icon: <Train size={24} />,
-      bg: "bg-emerald-100 text-emerald-600",
+      bgIcon: "bg-emerald-100 text-emerald-600",
       label: "交通",
     },
     flight: {
       icon: <Plane size={24} />,
-      bg: "bg-sky-100 text-sky-600",
+      bgIcon: "bg-sky-100 text-sky-600",
       label: "航班",
     },
-    // ↓↓↓ 新增這個區塊 ↓↓↓
     accommodation: {
       icon: <Home size={24} />,
-      bg: "bg-rose-100 text-rose-600",
+      bgIcon: "bg-rose-100 text-rose-600",
       label: "住宿",
     },
-    // ↑↑↑ 新增結束 ↑↑↑
     activity: {
       icon: <MapPin size={24} />,
-      bg: "bg-stone-100 text-stone-600",
+      bgIcon: "bg-stone-100 text-stone-600",
       label: "活動",
     },
   };
-  // ... (後面的程式碼不用動)
+  
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
@@ -440,7 +428,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
         </button>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4 border-b border-stone-100 pb-4">
-            <div className={`p-4 rounded-2xl ${config.bg} shadow-sm`}>
+            <div className={`p-4 rounded-2xl ${config.bgIcon} shadow-sm`}>
               {config.icon}
             </div>
             <div>
@@ -898,42 +886,36 @@ const ItineraryCard = ({
   const typeConfig = {
     sightseeing: {
       icon: <Camera size={15} />,
-      // 卡片樣式：極淺藍底 + 淺藍邊框 + 深藍文字
       cardStyle: "bg-indigo-50/60 border-indigo-200 hover:border-indigo-300",
       iconColor: "text-indigo-500",
       label: "景點",
     },
     food: {
       icon: <Utensils size={15} />,
-      // 卡片樣式：極淺橘底 + 淺橘邊框
       cardStyle: "bg-orange-50/60 border-orange-200 hover:border-orange-300",
       iconColor: "text-orange-500",
       label: "餐廳",
     },
     transport: {
       icon: <Train size={15} />,
-      // 卡片樣式：極淺綠底 + 淺綠邊框
       cardStyle: "bg-emerald-50/60 border-emerald-200 hover:border-emerald-300",
       iconColor: "text-emerald-500",
       label: "交通",
     },
     flight: {
       icon: <Plane size={15} />,
-      // 卡片樣式：極淺天藍底 + 淺天藍邊框
       cardStyle: "bg-sky-50/60 border-sky-200 hover:border-sky-300",
       iconColor: "text-sky-500",
       label: "航班",
     },
     accommodation: {
       icon: <Home size={15} />,
-      // 卡片樣式：極淺玫瑰底 + 淺玫瑰邊框
       cardStyle: "bg-rose-50/60 border-rose-200 hover:border-rose-300",
       iconColor: "text-rose-500",
       label: "住宿",
     },
     activity: {
       icon: <MapPin size={15} />,
-      // 卡片樣式：極淺灰底 + 淺灰邊框
       cardStyle: "bg-stone-100/60 border-stone-200 hover:border-stone-300",
       iconColor: "text-stone-500",
       label: "活動",
@@ -946,24 +928,19 @@ const ItineraryCard = ({
   return (
     <div
       onClick={() => onSelect(item)}
-      // 這裡套用 config.cardStyle 來改變整張卡片的背景色
       className={`rounded-xl p-3 border mb-2 relative group transition-all active:scale-[0.99] cursor-pointer shadow-sm ${config.cardStyle}`}
     >
       <div className="flex justify-between items-start">
-        {/* 左側時間軸 */}
         <div className="flex flex-col items-center mr-3 pt-1 min-w-[3rem]">
           <span className="text-sm font-bold text-stone-600 tracking-wider font-mono">
             {item.time}
           </span>
-          {/* 分隔線改為半透明，融合背景 */}
           <div className="h-full w-[1px] bg-stone-400/20 my-1"></div>
         </div>
 
-        {/* 中間內容區 */}
         <div className="flex-1 min-w-0 pr-1">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 min-w-0">
-              {/* 圖示不再有方框背景，改為單純顏色 */}
               <span className={`${config.iconColor} shrink-0 opacity-80`}>
                 {config.icon}
               </span>
@@ -971,7 +948,6 @@ const ItineraryCard = ({
                 {item.location}
               </h3>
             </div>
-            {/* 預留空間給按鈕 */}
             <div className="w-16 shrink-0"></div>
           </div>
 
@@ -984,7 +960,6 @@ const ItineraryCard = ({
           )}
           
           {item.guideInfo && (
-            // 導遊資訊框改成白色半透明背景，疊在淡色卡片上很有層次感
             <div className="text-xs text-stone-600 bg-white/60 p-2 rounded-lg leading-relaxed mb-1 border border-stone-100/50 flex gap-2">
               <BookOpen
                 size={14}
@@ -1014,7 +989,6 @@ const ItineraryCard = ({
         </div>
       </div>
 
-      {/* 右上角功能按鈕 */}
       <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/60 backdrop-blur-sm rounded-lg p-0.5 z-10 shadow-sm border border-stone-100/50">
         <button
           onClick={(e) => {
@@ -1050,8 +1024,6 @@ const ItineraryCard = ({
     </div>
   );
 };
-
-// ↓↓↓↓↓ 請複製這整段 WelcomeScreen (包含前面的 const 和最後的 };) ↓↓↓↓↓
 
 const WelcomeScreen = ({
   onCreate,
@@ -1092,7 +1064,6 @@ const WelcomeScreen = ({
     } else setDuration(0);
   }, [newTripData.startDate, newTripData.endDate]);
 
-  // 修改後的日期變更函式 (手機版優化：不強求彈出日曆)
   const handleStartDateChange = (e) => {
     const val = e.target.value;
     setNewTripData((prev) => {
@@ -1101,7 +1072,6 @@ const WelcomeScreen = ({
       return newData;
     });
 
-    // 手機版對策：選完出發日後，聚焦到回程框，引導視覺
     if (val) {
       setTimeout(() => {
         const endInput = document.getElementById("endDateInput");
@@ -1110,7 +1080,6 @@ const WelcomeScreen = ({
     }
   };
 
-  // 快速天數設定 (這是手機版一次選完的關鍵)
   const setQuickDuration = (days) => {
     if (!newTripData.startDate) {
       showToast("請先選擇出發日期", "error");
@@ -1211,7 +1180,6 @@ const WelcomeScreen = ({
               />
             </div>
 
-            {/* 🟢 修改後：手機版優化的日期選擇區 */}
             <div className="space-y-3">
               <div className="flex justify-between items-end px-1">
                 <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">
@@ -1226,7 +1194,6 @@ const WelcomeScreen = ({
 
               <div className="bg-stone-50 border border-stone-200 rounded-2xl p-1 focus-within:ring-2 focus-within:ring-stone-800 focus-within:border-stone-800 transition-all shadow-sm">
                 <div className="flex items-center divide-x divide-stone-200">
-                  {/* 出發日 */}
                   <div className="flex-1 px-3 py-3 relative group">
                     <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
                       DEPART
@@ -1239,12 +1206,10 @@ const WelcomeScreen = ({
                     />
                   </div>
 
-                  {/* 裝飾箭頭 */}
                   <div className="px-2 text-stone-300">
                     <ArrowRight size={16} />
                   </div>
 
-                  {/* 回程日 */}
                   <div className="flex-1 px-3 py-3 relative group">
                     <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
                       RETURN
@@ -1267,7 +1232,6 @@ const WelcomeScreen = ({
                 </div>
               </div>
 
-              {/* 🟢 快速按鈕區：這就是你要的「一次選完」功能 */}
               {newTripData.startDate && (
                 <div className="animate-in slide-in-from-top-2 fade-in duration-300">
                   <div className="flex items-center gap-2 mb-2 px-1">
@@ -1423,13 +1387,11 @@ const App = () => {
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
 
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlTripId = params.get("trip");
     if (urlTripId) {
       setTripId(urlTripId);
-      // 選擇性：讀取完後把網址清乾淨，避免重新整理時又觸發
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -1488,11 +1450,11 @@ const App = () => {
     textArea.select();
     try {
       const successful = document.execCommand("copy");
-      if (successful) showToast("代碼已複製");
+      if (successful) showToast("已複製");
       else
         navigator.clipboard
           .writeText(text)
-          .then(() => showToast("代碼已複製"))
+          .then(() => showToast("已複製"))
           .catch(() => showToast("複製失敗", "error"));
     } catch (err) {
       showToast("複製失敗", "error");
@@ -1500,11 +1462,6 @@ const App = () => {
     document.body.removeChild(textArea);
   };
 
-  // ==========================================
-  // ↓↓↓↓↓ 新增功能：匯出 Excel 與 美圖 ↓↓↓↓↓
-  // ==========================================
-
-  // 1. 匯出 Excel (使用 CDN 載入的 window.XLSX)
   const handleExportExcel = () => {
     if (!tripData?.itinerary?.length) {
       showToast("行程是空的，無法匯出", "error");
@@ -1516,7 +1473,6 @@ const App = () => {
       return;
     }
 
-    // 整理資料
     const data = tripData.itinerary
       .sort((a, b) => a.day - b.day || a.time.localeCompare(b.time))
       .map((item) => ({
@@ -1527,7 +1483,6 @@ const App = () => {
         "備註": item.guideInfo || item.notes || "",
       }));
 
-    // 產生 Excel
     const ws = window.XLSX.utils.json_to_sheet(data);
     const wb = window.XLSX.utils.book_new();
     window.XLSX.utils.book_append_sheet(wb, ws, "行程表");
@@ -1535,17 +1490,14 @@ const App = () => {
     showToast("Excel 下載成功！");
   };
 
-  // 2. 匯出美圖 (包含 AI 設計邏輯)
-  const [posterTheme, setPosterTheme] = useState(null); // 存 AI 設計的主題
+  const [posterTheme, setPosterTheme] = useState(null);
 
-// ↓↓↓↓↓ 修改後的 handleExportImage (支援 Imagen 3) ↓↓↓↓↓
   const handleExportImage = async () => {
     if (!tripData?.itinerary?.length) return;
-    setIsAnalyzing(true); // 開始轉圈圈
+    setIsAnalyzing(true);
 
     try {
-      // 1. 【大腦】請 Gemini 1.5 Flash 根據行程寫出「繪圖指令」
-     const prompt = `
+      const prompt = `
         你是一位旅遊手帳設計師。針對行程 "${tripData.name}" (${tripData.destination})，請設計一個簡約風格的插畫指令。
         請回傳 JSON (不要 Markdown): 
         {
@@ -1557,11 +1509,9 @@ const App = () => {
         }
       `;
       
-      // 呼叫原本的文字 AI
       const res = await callGeminiAPI([{ text: prompt }]);
       if (!res) throw new Error("AI Text Failed");
       
-      // 解析 JSON
       let cleanJson = res;
       const firstBracket = res.indexOf('{');
       const lastBracket = res.lastIndexOf('}');
@@ -1570,47 +1520,40 @@ const App = () => {
       }
       const theme = JSON.parse(cleanJson);
 
-      // 2. 【畫家】使用 Imagen 3 畫圖
       let aiImageUrl = await callImagenAPI(theme.imagePrompt);
       
-      // 如果 Imagen 失敗 (例如 Key 有問題)，自動切換到 Pollinations (免費備案)
       if (!aiImageUrl) {
         console.log("切換至 Pollinations 備用繪圖引擎");
         const encoded = encodeURIComponent(theme.imagePrompt);
         aiImageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=768&height=1024&nologo=true&seed=${Math.random()}`;
       }
 
-      // 設定主題
       setPosterTheme({ ...theme, bgImage: aiImageUrl });
 
-      // 3. 【合成】等待圖片載入
       await new Promise((resolve) => {
         const img = new Image();
         img.src = aiImageUrl;
-        img.crossOrigin = "anonymous"; // 允許跨域
+        img.crossOrigin = "anonymous";
         img.onload = resolve;
         img.onerror = resolve; 
       });
       
-      // 給瀏覽器一點時間渲染 DOM
       await new Promise(r => setTimeout(r, 1500));
 
-      // 4. 截圖下載
       const element = document.getElementById("hidden-poster-area");
       if (element && window.html2canvas) {
-      const canvas = await window.html2canvas(element, {
-        scale: 3, 
-        useCORS: true, 
-        allowTaint: true,
-        backgroundColor: null,
-        scrollX: 0, 
-        scrollY: 0, 
-        x: 0, 
-        y: 0,
-        // 補上這兩行，精確對準元件的大小
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-      });
+        const canvas = await window.html2canvas(element, {
+          scale: 3, 
+          useCORS: true, 
+          allowTaint: true,
+          backgroundColor: null,
+          scrollX: 0, 
+          scrollY: 0, 
+          x: 0, 
+          y: 0,
+          width: element.offsetWidth,
+          height: element.offsetHeight,
+        });
         
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
@@ -1626,7 +1569,6 @@ const App = () => {
       setPosterTheme(null);
     }
   };
-  // ↑↑↑↑↑ 新增功能結束 ↑↑↑↑↑
   
   const addToHistory = (id, data) => {
     try {
@@ -1664,7 +1606,7 @@ const App = () => {
     return onAuthStateChanged(auth, setUser);
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     if (!user || !tripId) return;
     const unsubscribe = onSnapshot(
       doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
@@ -1674,18 +1616,13 @@ useEffect(() => {
           setTripData(data);
           addToHistory(tripId, data);
           
-          // --- 身分判斷邏輯 ---
-          // 如果我還不在成員名單中
           if (!data.members || !data.members[user.uid]) {
-            // 如果行程已經有其他人 (代表是舊行程或別人開的)，詢問是否要繼承
             if (data.members && Object.keys(data.members).length > 0) {
               setShowMemberSelect(true);
             } else {
-              // 如果完全沒成員 (新行程)，直接建立新檔案
               setShowProfileSetup(true);
             }
           } else {
-            // 我已經在名單中，隱藏所有視窗
             setShowMemberSelect(false);
             setShowProfileSetup(false);
           }
@@ -1772,19 +1709,16 @@ useEffect(() => {
     showToast(`歡迎加入，${profileData.nickname}！`);
   };
 
- // --- 修正後的 handleJoinAsMember (補回了遺失的後半段) ---
   const handleJoinAsMember = async (targetUid, targetMemberData) => {
     if (!user || !tripId) return;
     setShowMemberSelect(false);
     
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     
-    // 1. 更新成員名單：移除舊 UID，加入新 UID
     const newMembers = { ...(tripData.members || {}) };
     delete newMembers[targetUid];
     newMembers[user.uid] = targetMemberData;
     
-    // 2. 更新行程擁有權
     const newItinerary = (tripData.itinerary || []).map(item => {
       if (item.createdBy === targetUid) {
         return { ...item, createdBy: user.uid };
@@ -1804,7 +1738,6 @@ useEffect(() => {
     }
   };
 
-  // --- 修正後的 handleFileImport (確保獨立於上面的函式之外) ---
   const handleFileImport = async (file) => {
     setIsImportLoading(true);
     setIsImportOpen(false);
@@ -1877,18 +1810,15 @@ useEffect(() => {
     } catch (e) {}
   };
 
-const handleAIAnalyze = async () => {
+  const handleAIAnalyze = async () => {
     if (!tripData?.itinerary?.length) {
       showToast("行程是空的", "error");
       return;
     }
     
-    // 開啟全螢幕 AI 動畫
     setIsAnalyzing(true);
 
     try {
-      // --- 修改重點開始 ---
-      // 我們修改了 Prompt，增加了「規則 2」
       const res = await callGeminiAPI([
         {
           text: `分析以下旅遊行程 JSON：${JSON.stringify(
@@ -1902,7 +1832,6 @@ const handleAIAnalyze = async () => {
           3. "tags": [{"type":"mustEat"|"mustBuy"|"reservation"|"story", "text":"標籤"}]`,
         },
       ]);
-      // --- 修改重點結束 ---
 
       if (!res) throw new Error("AI Failed");
 
@@ -1912,8 +1841,6 @@ const handleAIAnalyze = async () => {
       const newItinerary = tripData.itinerary.map((item) => {
         const enrichment = enrichedData.find((e) => e.id === item.id);
         
-        // 如果 AI 回傳有資料，就更新；
-        // 如果 AI 回傳 guideInfo 是空字串，UI 只要檢查到是空字串就不會顯示
         return enrichment ? { ...item, ...enrichment } : item;
       });
 
@@ -1931,21 +1858,18 @@ const handleAIAnalyze = async () => {
     }
   };
 
- // --- 新增：路線優化相關狀態 ---
   const [transportMode, setTransportMode] = useState("driving");
   const [showOptimizeModal, setShowOptimizeModal] = useState(false);
 
-  // --- 新增：路線優化執行邏輯 ---
   const executeOptimize = async () => {
     if (!tripData?.itinerary?.length) {
       showToast("行程是空的", "error");
       return;
     }
     
-    setIsAnalyzing(true); // 開啟 AI 動畫
+    setIsAnalyzing(true);
     
     try {
-      // 抓每一天原本的第一個時間點
       const days = [...new Set(tripData.itinerary.map(i => i.day))];
       const dayStartTimes = {};
       days.forEach(day => {
@@ -2018,7 +1942,6 @@ const handleAIAnalyze = async () => {
     }
   };
 
-  // --- 新增：優化設定視窗元件 ---
   const OptimizeModal = () => {
     if (!showOptimizeModal) return null;
     return (
@@ -2172,7 +2095,6 @@ const handleAIAnalyze = async () => {
       await deleteDoc(
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId)
       );
-      // Remove from local history
       const currentHistory = JSON.parse(
         localStorage.getItem("myTravelHistory") || "[]"
       );
@@ -2200,6 +2122,11 @@ const handleAIAnalyze = async () => {
     d.setDate(d.getDate() + (parseInt(day) - 1));
     return d.toISOString().split("T")[0];
   };
+
+  const getCurrentUserNickname = () =>
+    tripData && user && tripData.members && tripData.members[user.uid]
+      ? tripData.members[user.uid].nickname
+      : "我";
 
   if (firebaseError) return <SetupGuide error={firebaseError} />;
   if (!user)
@@ -2234,152 +2161,7 @@ const handleAIAnalyze = async () => {
 
       <OptimizeModal />
       
-      {(isAnalyzing || isImportLoading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
-        <div className="absolute inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
-          <div className="relative mb-6">
-            <div className="w-20 h-20 border-4 border-indigo-100 rounded-full animate-spin"></div>
-            <div className="w-20 h-20 border-4 border-indigo-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Sparkles className="text-indigo-500 animate-pulse" size={32} />
-            </div>
-          </div>
-          <h3 className="text-xl font-bold text-stone-800 tracking-widest animate-pulse mb-2">
-            AI 正在思考中...
-          </h3>
-        </div>
-      )}
-
-      {posterTheme && (
-        <div
-          id="hidden-poster-area"
-          className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
-          style={{
-            height: "auto",            // 確保容器隨內容長高
-            minHeight: "800px",
-            zIndex: -50,
-            visibility: "visible",
-            backgroundColor: posterTheme.themeColor || "#fffbf0",
-            color: "#333",
-            overflow: "visible",       // 防止切斷溢出內容
-          }}
-        >
-         
-          <div
-            className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
-            style={{ borderColor: posterTheme.borderColor || "#333" }}
-          >
-            
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
-                  Boarding Pass
-                </div>
-                <h1
-                  className="text-4xl font-serif font-black leading-tight text-stone-800"
-                  style={{ color: posterTheme.borderColor }}
-                >
-                  {posterTheme.title}
-                </h1>
-                <div className="mt-2 text-sm font-bold text-stone-500 flex gap-2 items-center">
-                  <span>{tripData.destination}</span>
-                  <div className="w-10 h-[1px] bg-stone-300"></div>
-                  <span>{tripData.startDate}</span>
-                </div>
-              </div>
-
-              
-              <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
-                <img
-                  src={posterTheme.bgImage}
-                  alt="Sticker"
-                  crossOrigin="anonymous"
-                  className="w-full h-full object-contain mix-blend-multiply"
-                />
-              </div>
-            </div>
-
-        
-            <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
-              <div
-                className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
-                style={{ backgroundColor: posterTheme.themeColor }}
-              ></div>
-              <div
-                className="absolute -right-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
-                style={{ backgroundColor: posterTheme.themeColor }}
-              ></div>
-            </div>
-
-        
-            <div className="flex-1 space-y-6 mt-2">
-              {Object.keys(groupedItinerary)
-                .sort((a, b) => a - b)
-                .slice(0, 6)
-                .map((day) => (
-                  <div key={day} className="flex gap-4">
-                  
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
-                      style={{ backgroundColor: posterTheme.borderColor || "#333" }}
-                    >
-                      {day}
-                    </div>
-
-                  
-                    <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
-                      {groupedItinerary[day]
-                        .sort((a, b) => a.time.localeCompare(b.time))
-                        .map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
-                            style={{ lineHeight: "1.5" }} //稍微調緊一點行高，因為有備註會變長
-                          >
-                        
-                            <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
-                              {item.time}
-                            </span>
-
-                          
-                            <div className="flex-1 flex flex-col min-w-0">
-                              <span
-                                className="font-bold text-stone-700 text-[12px] break-words"
-                                style={{
-                                  wordBreak: "break-word",
-                                  display: "block",
-                                }}
-                              >
-                                {item.location}
-                              </span>
-                              
-                            
-                              {item.notes && (
-                                <span className="text-[9px] text-stone-500 font-normal mt-0.5 break-words opacity-80 leading-snug">
-                                  {item.notes}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-           
-            <div className="mt-8 pt-4 border-t border-stone-200 text-center">
-              <p className="font-serif italic text-stone-500 text-sm">
-                "{posterTheme.quote}"
-              </p>
-              <div className="mt-2 text-[9px] tracking-widest opacity-30 uppercase font-bold">
-                Design by Tabiji
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-<MemberSelectModal 
+      <MemberSelectModal 
         isOpen={showMemberSelect}
         members={tripData?.members || {}} 
         onSelect={handleJoinAsMember}
@@ -2418,6 +2200,136 @@ const handleAIAnalyze = async () => {
         members={tripData.members}
       />
 
+      {(isAnalyzing || isImportLoading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
+        <div className="absolute inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <div className="relative mb-6">
+            <div className="w-20 h-20 border-4 border-indigo-100 rounded-full animate-spin"></div>
+            <div className="w-20 h-20 border-4 border-indigo-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="text-indigo-500 animate-pulse" size={32} />
+            </div>
+          </div>
+          <h3 className="text-xl font-bold text-stone-800 tracking-widest animate-pulse mb-2">
+            AI 正在思考中...
+          </h3>
+        </div>
+      )}
+
+      {posterTheme && (
+        <div
+          id="hidden-poster-area"
+          className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
+          style={{
+            height: "auto",
+            minHeight: "800px",
+            zIndex: -50,
+            visibility: "visible",
+            backgroundColor: posterTheme.themeColor || "#fffbf0",
+            color: "#333",
+            overflow: "visible",
+          }}
+        >
+          <div
+            className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
+            style={{ borderColor: posterTheme.borderColor || "#333" }}
+          >
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
+                  Boarding Pass
+                </div>
+                <h1
+                  className="text-4xl font-serif font-black leading-tight text-stone-800"
+                  style={{ color: posterTheme.borderColor }}
+                >
+                  {posterTheme.title}
+                </h1>
+                <div className="mt-2 text-sm font-bold text-stone-500 flex gap-2 items-center">
+                  <span>{tripData.destination}</span>
+                  <div className="w-10 h-[1px] bg-stone-300"></div>
+                  <span>{tripData.startDate}</span>
+                </div>
+              </div>
+              <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
+                <img
+                  src={posterTheme.bgImage}
+                  alt="Sticker"
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-contain mix-blend-multiply"
+                />
+              </div>
+            </div>
+
+            <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
+              <div
+                className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
+                style={{ backgroundColor: posterTheme.themeColor }}
+              ></div>
+              <div
+                className="absolute -right-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
+                style={{ backgroundColor: posterTheme.themeColor }}
+              ></div>
+            </div>
+
+            <div className="flex-1 space-y-6 mt-2">
+              {Object.keys(groupedItinerary)
+                .sort((a, b) => a - b)
+                .slice(0, 6)
+                .map((day) => (
+                  <div key={day} className="flex gap-4">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
+                      style={{ backgroundColor: posterTheme.borderColor || "#333" }}
+                    >
+                      {day}
+                    </div>
+
+                    <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
+                      {groupedItinerary[day]
+                        .sort((a, b) => a.time.localeCompare(b.time))
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
+                            style={{ lineHeight: "1.5" }}
+                          >
+                            <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
+                              {item.time}
+                            </span>
+                            <div className="flex-1 flex flex-col min-w-0">
+                              <span
+                                className="font-bold text-stone-700 text-[12px] break-words"
+                                style={{
+                                  wordBreak: "break-word",
+                                  display: "block",
+                                }}
+                              >
+                                {item.location}
+                              </span>
+                              {item.notes && (
+                                <span className="text-[9px] text-stone-500 font-normal mt-0.5 break-words opacity-80 leading-snug">
+                                  {item.notes}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-stone-200 text-center">
+              <p className="font-serif italic text-stone-500 text-sm">
+                "{posterTheme.quote}"
+              </p>
+              <div className="mt-2 text-[9px] tracking-widest opacity-30 uppercase font-bold">
+                Design by Tabiji
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-5 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
         <div className="flex justify-between items-start mb-4">
@@ -2436,7 +2348,6 @@ const handleAIAnalyze = async () => {
                 />
                 <Edit size={14} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </div>
-              {/* Feature 1: Member Avatars next to title */}
               <div className="flex -space-x-2 ml-2 flex-shrink-0">
                 {Object.values(tripData.members || {})
                   .slice(0, 3)
@@ -2455,19 +2366,18 @@ const handleAIAnalyze = async () => {
                 )}
               </div>
             </div>
-
-<div className="flex items-center gap-3 text-xs text-stone-400 mt-1">
-  <div className="flex items-center gap-1 font-mono">
-    <Calendar size={10} /> 
-    <span>{tripData.startDate || "未設定"}</span>
-    {tripData.endDate && (
-      <>
-        <ArrowRight size={10} className="mx-0.5" />
-        <span>{tripData.endDate}</span>
-      </>
-    )}
-  </div>
-</div>
+            <div className="flex items-center gap-3 text-xs text-stone-400 mt-1">
+              <div className="flex items-center gap-1 font-mono">
+                <Calendar size={10} /> 
+                <span>{tripData.startDate || "未設定"}</span>
+                {tripData.endDate && (
+                  <>
+                    <ArrowRight size={10} className="mx-0.5" />
+                    <span>{tripData.endDate}</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
           <div className="flex gap-2 shrink-0">
             <button
@@ -2476,7 +2386,6 @@ const handleAIAnalyze = async () => {
             >
               <Share2 size={18} />
             </button>
-            {/* Feature 3: Delete Trip Button */}
             <button
               onClick={() =>
                 setConfirmConfig({
@@ -2502,10 +2411,7 @@ const handleAIAnalyze = async () => {
           </div>
         </div>
 
-{/* ↓↓↓↓↓ 優化後的響應式選單 (Grid Layout) ↓↓↓↓↓ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 w-full">
-          
-          {/* 按鈕 1: 智能導遊 */}
           <button
             onClick={handleAIAnalyze}
             disabled={isAnalyzing}
@@ -2519,7 +2425,6 @@ const handleAIAnalyze = async () => {
             智能導遊
           </button>
 
-          {/* 按鈕 2: 路線優化 */}
           <button
             onClick={() => setShowOptimizeModal(true)}
             disabled={isAnalyzing}
@@ -2533,7 +2438,6 @@ const handleAIAnalyze = async () => {
             路線優化
           </button>
 
-          {/* 按鈕 3: 匯入行程 */}
           <button
             onClick={() => setIsImportOpen(true)}
             className="bg-white border border-stone-200 text-stone-600 py-3 rounded-xl shadow-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold w-full"
@@ -2541,7 +2445,6 @@ const handleAIAnalyze = async () => {
             <Upload size={14} /> 匯入行程
           </button>
 
-          {/* 按鈕 4: 匯出行程 (下拉選單) */}
           <div className="relative w-full">
             <button
               onClick={(e) => {
@@ -2561,7 +2464,6 @@ const handleAIAnalyze = async () => {
               <Download size={14} /> 匯出行程
             </button>
 
-            {/* 下拉選單內容 */}
             {showExportMenu && (
               <>
                 <div
@@ -2572,7 +2474,7 @@ const handleAIAnalyze = async () => {
                   className="fixed w-36 bg-white rounded-xl shadow-xl border border-stone-100 p-1.5 z-[70] flex flex-col gap-1 animate-in zoom-in-95 duration-200"
                   style={{
                     top: menuPos.top,
-                    right: menuPos.right, // 保持靠右對齊
+                    right: menuPos.right,
                   }}
                 >
                   <button
@@ -2598,8 +2500,6 @@ const handleAIAnalyze = async () => {
             )}
           </div>
         </div>
-        {/* ↑↑↑↑↑ 修改結束 ↑↑↑↑↑ */}
-
       </header>
 
       <main className="flex-1 overflow-y-auto pb-32 px-4 pt-4 scrollbar-hide relative">
@@ -2681,7 +2581,6 @@ const handleAIAnalyze = async () => {
             )}
           </>
         )}
-
         {activeTab === "expenses" && (
           <div className="space-y-4">
             <div className="bg-stone-800 text-stone-50 p-6 rounded-2xl shadow-xl relative overflow-hidden flex justify-between items-center">
@@ -2820,7 +2719,6 @@ const handleAIAnalyze = async () => {
         </button>
       </nav>
 
-      {/* ↓↓↓↓↓ 請完整替換這整段 isModalOpen 區塊 ↓↓↓↓↓ */}
       {isModalOpen && (
         <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div className="bg-[#FDFCF8] w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col">
@@ -2833,9 +2731,7 @@ const handleAIAnalyze = async () => {
             </h3>
             
             <div className="space-y-4 overflow-y-auto scrollbar-hide px-1 flex-1">
-              {/* === 判斷目前是「行程」還是「支出」 === */}
               {activeTab === "itinerary" ? (
-                /* --- 行程表單 (Itinerary Form) --- */
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -2885,7 +2781,6 @@ const handleAIAnalyze = async () => {
                     />
                   </div>
                   
-                  {/* 行程分類按鈕 (包含住宿) */}
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       Category
@@ -2932,7 +2827,6 @@ const handleAIAnalyze = async () => {
                   </div>
                 </>
               ) : (
-                /* --- 支出表單 (Expense Form) --- */
                 <>
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
@@ -2949,7 +2843,6 @@ const handleAIAnalyze = async () => {
                     />
                   </div>
                   
-                  {/* 支出分類按鈕 */}
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       分類
