@@ -897,68 +897,74 @@ const ItineraryCard = ({
 }) => {
   const typeConfig = {
     sightseeing: {
-      icon: <Camera size={14} />,
-      bgIcon: "bg-indigo-100 text-indigo-600", // 圖示背景
-      color: "border-indigo-500",              // 左側邊框色
+      icon: <Camera size={15} />,
+      // 卡片樣式：極淺藍底 + 淺藍邊框 + 深藍文字
+      cardStyle: "bg-indigo-50/60 border-indigo-200 hover:border-indigo-300",
+      iconColor: "text-indigo-500",
       label: "景點",
     },
     food: {
-      icon: <Utensils size={14} />,
-      bgIcon: "bg-orange-100 text-orange-600",
-      color: "border-orange-500",
+      icon: <Utensils size={15} />,
+      // 卡片樣式：極淺橘底 + 淺橘邊框
+      cardStyle: "bg-orange-50/60 border-orange-200 hover:border-orange-300",
+      iconColor: "text-orange-500",
       label: "餐廳",
     },
     transport: {
-      icon: <Train size={14} />,
-      bgIcon: "bg-emerald-100 text-emerald-600",
-      color: "border-emerald-500",
+      icon: <Train size={15} />,
+      // 卡片樣式：極淺綠底 + 淺綠邊框
+      cardStyle: "bg-emerald-50/60 border-emerald-200 hover:border-emerald-300",
+      iconColor: "text-emerald-500",
       label: "交通",
     },
     flight: {
-      icon: <Plane size={14} />,
-      bgIcon: "bg-sky-100 text-sky-600",
-      color: "border-sky-500",
+      icon: <Plane size={15} />,
+      // 卡片樣式：極淺天藍底 + 淺天藍邊框
+      cardStyle: "bg-sky-50/60 border-sky-200 hover:border-sky-300",
+      iconColor: "text-sky-500",
       label: "航班",
     },
     accommodation: {
-      icon: <Home size={14} />,
-      bgIcon: "bg-rose-100 text-rose-600",
-      color: "border-rose-500",
+      icon: <Home size={15} />,
+      // 卡片樣式：極淺玫瑰底 + 淺玫瑰邊框
+      cardStyle: "bg-rose-50/60 border-rose-200 hover:border-rose-300",
+      iconColor: "text-rose-500",
       label: "住宿",
     },
     activity: {
-      icon: <MapPin size={14} />,
-      bgIcon: "bg-stone-100 text-stone-600",
-      color: "border-stone-400",
+      icon: <MapPin size={15} />,
+      // 卡片樣式：極淺灰底 + 淺灰邊框
+      cardStyle: "bg-stone-100/60 border-stone-200 hover:border-stone-300",
+      iconColor: "text-stone-500",
       label: "活動",
     },
   };
-  
-  // 如果找不到分類，預設使用 'activity'
+
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
   return (
     <div
       onClick={() => onSelect(item)}
-      // 這裡讀取 config.color 來顯示邊框顏色
-      className={`bg-white rounded-xl p-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-stone-100 mb-3 relative group transition-all active:scale-[0.99] border-l-4 cursor-pointer hover:shadow-md ${config.color}`}
+      // 這裡套用 config.cardStyle 來改變整張卡片的背景色
+      className={`rounded-xl p-3 border mb-2 relative group transition-all active:scale-[0.99] cursor-pointer shadow-sm ${config.cardStyle}`}
     >
       <div className="flex justify-between items-start">
         {/* 左側時間軸 */}
         <div className="flex flex-col items-center mr-3 pt-1 min-w-[3rem]">
-          <span className="text-sm font-bold text-stone-800 tracking-wider font-mono">
+          <span className="text-sm font-bold text-stone-600 tracking-wider font-mono">
             {item.time}
           </span>
-          <div className="h-full w-[1px] bg-stone-100 my-1"></div>
+          {/* 分隔線改為半透明，融合背景 */}
+          <div className="h-full w-[1px] bg-stone-400/20 my-1"></div>
         </div>
 
         {/* 中間內容區 */}
         <div className="flex-1 min-w-0 pr-1">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 min-w-0">
-              {/* 這裡讀取 config.bgIcon 來顯示圖示顏色 */}
-              <span className={`p-1.5 rounded-lg ${config.bgIcon} shrink-0`}>
+              {/* 圖示不再有方框背景，改為單純顏色 */}
+              <span className={`${config.iconColor} shrink-0 opacity-80`}>
                 {config.icon}
               </span>
               <h3 className="font-bold text-stone-800 text-base sm:text-lg truncate tracking-tight">
@@ -978,7 +984,8 @@ const ItineraryCard = ({
           )}
           
           {item.guideInfo && (
-            <div className="text-xs text-stone-500 bg-stone-50 p-2 rounded-lg leading-relaxed mb-1 border border-stone-100 flex gap-2">
+            // 導遊資訊框改成白色半透明背景，疊在淡色卡片上很有層次感
+            <div className="text-xs text-stone-600 bg-white/60 p-2 rounded-lg leading-relaxed mb-1 border border-stone-100/50 flex gap-2">
               <BookOpen
                 size={14}
                 className="text-stone-400 flex-shrink-0 mt-0.5"
@@ -988,14 +995,14 @@ const ItineraryCard = ({
           )}
           
           {item.notes && !item.guideInfo && (
-            <p className="text-stone-400 text-xs mt-0.5 line-clamp-2 leading-snug">
+            <p className="text-stone-500 text-xs mt-0.5 line-clamp-2 leading-snug opacity-80">
               {item.notes}
             </p>
           )}
 
           {author.nickname && (
-            <div className="flex items-center gap-1 mt-1 justify-end opacity-50 text-[10px]">
-              <span className="text-stone-400">added by</span>
+            <div className="flex items-center gap-1 mt-1 justify-end opacity-40 text-[10px]">
+              <span className="text-stone-500">by</span>
               <UserBadge
                 nickname={author.nickname}
                 emoji={author.emoji}
@@ -1008,7 +1015,7 @@ const ItineraryCard = ({
       </div>
 
       {/* 右上角功能按鈕 */}
-      <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-0.5 z-10">
+      <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/60 backdrop-blur-sm rounded-lg p-0.5 z-10 shadow-sm border border-stone-100/50">
         <button
           onClick={(e) => {
             e.stopPropagation();
