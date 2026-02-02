@@ -412,12 +412,20 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
       bg: "bg-sky-100 text-sky-600",
       label: "航班",
     },
+    // ↓↓↓ 新增這個區塊 ↓↓↓
+    accommodation: {
+      icon: <Home size={24} />,
+      bg: "bg-rose-100 text-rose-600",
+      label: "住宿",
+    },
+    // ↑↑↑ 新增結束 ↑↑↑
     activity: {
       icon: <MapPin size={24} />,
       bg: "bg-stone-100 text-stone-600",
       label: "活動",
     },
   };
+  // ... (後面的程式碼不用動)
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
@@ -908,12 +916,20 @@ const ItineraryCard = ({
       bg: "bg-sky-100 text-sky-600",
       label: "航班",
     },
+    // ↓↓↓ 新增這個區塊 ↓↓↓
+    accommodation: {
+      icon: <Home size={14} />,
+      bg: "bg-rose-100 text-rose-600",
+      label: "住宿",
+    },
+    // ↑↑↑ 新增結束 ↑↑↑
     activity: {
       icon: <MapPin size={14} />,
       bg: "bg-stone-100 text-stone-600",
       label: "活動",
     },
   };
+
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
@@ -2852,6 +2868,7 @@ const handleAIAnalyze = async () => {
                       }
                     />
                   </div>
+                 {/* Category 選擇區 */}
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       Category
@@ -2878,6 +2895,13 @@ const handleAIAnalyze = async () => {
                           icon: <Plane size={16} />,
                           label: "航班",
                         },
+                        // ↓↓↓ 新增這個按鈕 ↓↓↓
+                        {
+                          id: "accommodation",
+                          icon: <Home size={16} />,
+                          label: "住宿",
+                        },
+                        // ↑↑↑ 新增結束 ↑↑↑
                       ].map((cat) => (
                         <button
                           key={cat.id}
