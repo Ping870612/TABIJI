@@ -1706,14 +1706,15 @@ useEffect(() => {
     showToast(`歡迎加入，${profileData.nickname}！`);
   };
 
- const handleJoinAsMember = async (targetUid, targetMemberData) => {
+ // --- 修正後的 handleJoinAsMember (補回了遺失的後半段) ---
+  const handleJoinAsMember = async (targetUid, targetMemberData) => {
     if (!user || !tripId) return;
     setShowMemberSelect(false);
     
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     
     // 1. 更新成員名單：移除舊 UID，加入新 UID
-    const newMembers = { ...(tripData.members || {}) }; // 加了 || {} 防止舊行程報錯
+    const newMembers = { ...(tripData.members || {}) };
     delete newMembers[targetUid];
     newMembers[user.uid] = targetMemberData;
     
@@ -1725,10 +1726,22 @@ useEffect(() => {
       return item;
     });
 
- // --- 請將這段程式碼貼在 handleJoinAsMember 之後，fetchWeather 之前 ---
+    try {
+      await updateDoc(tripRef, { 
+        members: newMembers,
+        itinerary: newItinerary
+      });
+      showToast(`身分已轉移！歡迎回來，${targetMemberData.nickname}`);
+    } catch (e) {
+      console.error(e);
+      showToast("身分轉移失敗", "error");
+    }
+  };
+
+  // --- 修正後的 handleFileImport (確保獨立於上面的函式之外) ---
   const handleFileImport = async (file) => {
     setIsImportLoading(true);
-    setIsImportOpen(false); // 關閉視窗，顯示全螢幕動畫
+    setIsImportOpen(false);
 
     try {
       const base64Data = await new Promise((resolve, reject) => {
@@ -1750,7 +1763,6 @@ useEffect(() => {
         },
       ];
 
-      // 呼叫 AI (這時候動畫持續在跑)
       const resText = await callGeminiAPI(payload);
       
       if (!resText) throw new Error("AI analysis failed");
@@ -1772,10 +1784,8 @@ useEffect(() => {
     } catch (e) {
       console.error(e);
       showToast("匯入失敗或無法判讀檔案", "error");
-      // 失敗時把視窗開回來讓使用者重試
       setIsImportOpen(true); 
     } finally {
-      // 無論成功失敗，最後才關閉動畫
       setIsImportLoading(false);
     }
   };
