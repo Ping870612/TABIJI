@@ -1725,7 +1725,7 @@ useEffect(() => {
       return item;
     });
 
-   // --- 修正後的 handleFileImport ---
+ // --- 請將這段程式碼貼在 handleJoinAsMember 之後，fetchWeather 之前 ---
   const handleFileImport = async (file) => {
     setIsImportLoading(true);
     setIsImportOpen(false); // 關閉視窗，顯示全螢幕動畫
