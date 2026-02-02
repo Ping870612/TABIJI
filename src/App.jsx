@@ -1477,6 +1477,8 @@ const App = () => {
       const element = document.getElementById("hidden-poster-area");
       if (element && window.html2canvas) {
         const canvas = await window.html2canvas(element, {
+          width: element.offsetWidth,
+          height: element.offsetHeight,
           scale: 3, 
           useCORS: true, 
           allowTaint: true,
@@ -2091,6 +2093,8 @@ const handleAIAnalyze = async () => {
           id="hidden-poster-area"
           className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
           style={{
+            height: "auto",
+            overflow: "visible",
             minHeight: "800px",
             zIndex: -50,
             visibility: "visible",
@@ -2157,7 +2161,7 @@ const handleAIAnalyze = async () => {
                     </div>
                     
                     {/* 行程內容 */}
-                    <div className="flex-1 space-y-2 pt-1">
+                    <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
                       {groupedItinerary[day]
                         .sort((a, b) => a.time.localeCompare(b.time))
                         .map((item) => (
