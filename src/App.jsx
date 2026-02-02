@@ -706,6 +706,10 @@ const FileImportModal = ({ isOpen, onClose, onImport, isLoading }) => {
 
 const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
   if (!isOpen) return null;
+
+  // 1. 產生完整網址 (例如: https://myapp.com?trip=123456)
+  const shareUrl = `${window.location.origin}?trip=${tripId}`;
+
   return (
     <div className="absolute inset-0 z-[60] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
@@ -721,22 +725,23 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
           </div>
           <h3 className="text-xl font-bold text-stone-800">邀請朋友加入</h3>
           <p className="text-sm text-stone-500 leading-relaxed">
-            將此代碼分享給您的旅伴。
+            分享此連結給您的旅伴。
             <br />
-            他們只需在首頁輸入代碼即可共同編輯 <b>{tripName}</b>。
+            他們點擊連結即可直接共同編輯 <b>{tripName}</b>。
           </p>
           <div
-            onClick={() => copyToClipboard(tripId)}
+            onClick={() => copyToClipboard(shareUrl)} // 2. 這裡改成複製完整網址
             className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
           >
             <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
-              旅程代碼
+              旅程連結
             </div>
+            {/* 這裡顯示代碼就好，不然網址太長很醜 */}
             <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
               {tripId}
             </div>
             <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
-              <Copy size={12} /> 點擊複製
+              <Copy size={12} /> 點擊複製連結
             </div>
           </div>
         </div>
@@ -1367,6 +1372,17 @@ const App = () => {
   const [localTripName, setLocalTripName] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlTripId = params.get("trip");
+    if (urlTripId) {
+      setTripId(urlTripId);
+      // 選擇性：讀取完後把網址清乾淨，避免重新整理時又觸發
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     if (tripData?.name) {
