@@ -2181,7 +2181,6 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-{/* ↓↓↓↓↓ 包含備註的美圖海報版本 ↓↓↓↓↓ */}
       {posterTheme && (
         <div
           id="hidden-poster-area"
@@ -2196,12 +2195,12 @@ const handleAIAnalyze = async () => {
             overflow: "visible",       // 防止切斷溢出內容
           }}
         >
-          {/* 1. 外框裝飾 (票券感) */}
+         
           <div
             className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
             style={{ borderColor: posterTheme.borderColor || "#333" }}
           >
-            {/* 2. 頂部插圖區 (Sticker) */}
+            
             <div className="flex justify-between items-start mb-6">
               <div>
                 <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
@@ -2220,7 +2219,7 @@ const handleAIAnalyze = async () => {
                 </div>
               </div>
 
-              {/* ★ AI 插圖 (右上角裝飾) ★ */}
+              
               <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
                 <img
                   src={posterTheme.bgImage}
@@ -2231,7 +2230,7 @@ const handleAIAnalyze = async () => {
               </div>
             </div>
 
-            {/* 3. 中間分隔線 (虛線) */}
+        
             <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
               <div
                 className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
@@ -2243,14 +2242,14 @@ const handleAIAnalyze = async () => {
               ></div>
             </div>
 
-            {/* 4. 行程列表 (含備註) */}
+        
             <div className="flex-1 space-y-6 mt-2">
               {Object.keys(groupedItinerary)
                 .sort((a, b) => a - b)
                 .slice(0, 6)
                 .map((day) => (
                   <div key={day} className="flex gap-4">
-                    {/* Day 圓圈標籤 */}
+                  
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
                       style={{ backgroundColor: posterTheme.borderColor || "#333" }}
@@ -2258,7 +2257,7 @@ const handleAIAnalyze = async () => {
                       {day}
                     </div>
 
-                    {/* 行程內容 */}
+                  
                     <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
                       {groupedItinerary[day]
                         .sort((a, b) => a.time.localeCompare(b.time))
@@ -2268,12 +2267,12 @@ const handleAIAnalyze = async () => {
                             className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
                             style={{ lineHeight: "1.5" }} //稍微調緊一點行高，因為有備註會變長
                           >
-                            {/* 時間 */}
+                        
                             <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
                               {item.time}
                             </span>
 
-                            {/* 地點 + 備註 (垂直排列) */}
+                          
                             <div className="flex-1 flex flex-col min-w-0">
                               <span
                                 className="font-bold text-stone-700 text-[12px] break-words"
@@ -2285,7 +2284,7 @@ const handleAIAnalyze = async () => {
                                 {item.location}
                               </span>
                               
-                              {/* --- 這裡新增了備註 --- */}
+                            
                               {item.notes && (
                                 <span className="text-[9px] text-stone-500 font-normal mt-0.5 break-words opacity-80 leading-snug">
                                   {item.notes}
@@ -2299,7 +2298,7 @@ const handleAIAnalyze = async () => {
                 ))}
             </div>
 
-            {/* 5. 底部金句 */}
+           
             <div className="mt-8 pt-4 border-t border-stone-200 text-center">
               <p className="font-serif italic text-stone-500 text-sm">
                 "{posterTheme.quote}"
