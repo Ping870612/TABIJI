@@ -898,45 +898,50 @@ const ItineraryCard = ({
   const typeConfig = {
     sightseeing: {
       icon: <Camera size={14} />,
-      bg: "bg-indigo-100 text-indigo-600",
+      bgIcon: "bg-indigo-100 text-indigo-600", // 圖示背景
+      color: "border-indigo-500",              // 左側邊框色
       label: "景點",
     },
     food: {
       icon: <Utensils size={14} />,
-      bg: "bg-orange-100 text-orange-600",
+      bgIcon: "bg-orange-100 text-orange-600",
+      color: "border-orange-500",
       label: "餐廳",
     },
     transport: {
       icon: <Train size={14} />,
-      bg: "bg-emerald-100 text-emerald-600",
+      bgIcon: "bg-emerald-100 text-emerald-600",
+      color: "border-emerald-500",
       label: "交通",
     },
     flight: {
       icon: <Plane size={14} />,
-      bg: "bg-sky-100 text-sky-600",
+      bgIcon: "bg-sky-100 text-sky-600",
+      color: "border-sky-500",
       label: "航班",
     },
-    // ↓↓↓ 新增這個區塊 ↓↓↓
     accommodation: {
       icon: <Home size={14} />,
-      bg: "bg-rose-100 text-rose-600",
+      bgIcon: "bg-rose-100 text-rose-600",
+      color: "border-rose-500",
       label: "住宿",
     },
-    // ↑↑↑ 新增結束 ↑↑↑
     activity: {
       icon: <MapPin size={14} />,
-      bg: "bg-stone-100 text-stone-600",
+      bgIcon: "bg-stone-100 text-stone-600",
+      color: "border-stone-400",
       label: "活動",
     },
   };
-
+  
+  // 如果找不到分類，預設使用 'activity'
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
   return (
     <div
       onClick={() => onSelect(item)}
-      // 保持緊湊的內距 p-3
+      // 這裡讀取 config.color 來顯示邊框顏色
       className={`bg-white rounded-xl p-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-stone-100 mb-3 relative group transition-all active:scale-[0.99] border-l-4 cursor-pointer hover:shadow-md ${config.color}`}
     >
       <div className="flex justify-between items-start">
@@ -949,10 +954,10 @@ const ItineraryCard = ({
         </div>
 
         {/* 中間內容區 */}
-        {/* 修改重點：pr-1 (縮小右側留白，填滿空間) */}
         <div className="flex-1 min-w-0 pr-1">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 min-w-0">
+              {/* 這裡讀取 config.bgIcon 來顯示圖示顏色 */}
               <span className={`p-1.5 rounded-lg ${config.bgIcon} shrink-0`}>
                 {config.icon}
               </span>
@@ -960,7 +965,7 @@ const ItineraryCard = ({
                 {item.location}
               </h3>
             </div>
-            {/* 預留一點空間給絕對定位的按鈕，避免標題太長時重疊 */}
+            {/* 預留空間給按鈕 */}
             <div className="w-16 shrink-0"></div>
           </div>
 
@@ -1002,7 +1007,7 @@ const ItineraryCard = ({
         </div>
       </div>
 
-      {/* 右上角功能按鈕 (保持原位) */}
+      {/* 右上角功能按鈕 */}
       <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-0.5 z-10">
         <button
           onClick={(e) => {
