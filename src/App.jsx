@@ -1598,8 +1598,7 @@ const App = () => {
     return onAuthStateChanged(auth, setUser);
   }, []);
 
-// 修改原本的 useEffect
-  useEffect(() => {
+useEffect(() => {
     if (!user || !tripId) return;
     const unsubscribe = onSnapshot(
       doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
@@ -1608,23 +1607,30 @@ const App = () => {
           const data = docSnap.data();
           setTripData(data);
           addToHistory(tripId, data);
-
-          // --- 修改邏輯開始 ---
+          
+          // --- 身分判斷邏輯 ---
+          // 如果我還不在成員名單中
           if (!data.members || !data.members[user.uid]) {
-            // 如果我不在成員名單中
+            // 如果行程已經有其他人 (代表是舊行程或別人開的)，詢問是否要繼承
             if (data.members && Object.keys(data.members).length > 0) {
-              // 如果行程已經有其他人，詢問是否要繼承身分
               setShowMemberSelect(true);
             } else {
-              // 如果是第一個成員，直接建立新檔案
+              // 如果完全沒成員 (新行程)，直接建立新檔案
               setShowProfileSetup(true);
             }
           } else {
-            // 我已經在名單中，不用選也不用建
+            // 我已經在名單中，隱藏所有視窗
             setShowMemberSelect(false);
             setShowProfileSetup(false);
           }
-          // --- 修改邏輯結束 ---
+        } else {
+          showToast("找不到旅程", "error");
+          setTripId(null);
+        }
+      }
+    );
+    return () => unsubscribe();
+  }, [user, tripId]);
 
         } else {
           showToast("找不到旅程", "error");
@@ -1709,23 +1715,18 @@ const App = () => {
     showToast(`歡迎加入，${profileData.nickname}！`);
   };
 
-  // 處理身分繼承 (轉移靈魂)
-  const handleJoinAsMember = async (targetUid, targetMemberData) => {
+ const handleJoinAsMember = async (targetUid, targetMemberData) => {
     if (!user || !tripId) return;
-    
-    // 關閉選擇視窗
     setShowMemberSelect(false);
     
-    // 準備更新資料
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     
-    // 1. 複製成員資料到我的新 UID，並刪除舊的 UID (避免雙胞胎)
-    const newMembers = { ...tripData.members };
-    delete newMembers[targetUid]; // 移除舊裝置的連結
-    newMembers[user.uid] = targetMemberData; // 綁定到我現在的裝置
+    // 1. 更新成員名單：移除舊 UID，加入新 UID
+    const newMembers = { ...(tripData.members || {}) }; // 加了 || {} 防止舊行程報錯
+    delete newMembers[targetUid];
+    newMembers[user.uid] = targetMemberData;
     
-    // 2. 更新行程中所有由舊 UID 建立的項目的擁有權
-    // (這樣 "Added by xxx" 才不會變成未知)
+    // 2. 更新行程擁有權
     const newItinerary = (tripData.itinerary || []).map(item => {
       if (item.createdBy === targetUid) {
         return { ...item, createdBy: user.uid };
@@ -1744,26 +1745,6 @@ const App = () => {
       showToast("身分轉移失敗", "error");
     }
   };
-
-  const getCurrentUserNickname = () =>
-    tripData && user && tripData.members && tripData.members[user.uid]
-      ? tripData.members[user.uid].nickname
-      : "我";
-
- const handleFileImport = async (file) => {
-    // 開啟全螢幕動畫
-    setIsImportLoading(true);
-    // 關閉上傳視窗 (這樣背景就只剩動畫，比較乾淨)
-    setIsImportOpen(false);
-
-    try {
-      // 使用 Promise 包裝 FileReader，確保程式會「等待」它讀完
-      const base64Data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(",")[1]);
-        reader.onerror = reject;
-      });
 
       const prompt = `這是一份旅遊行程表。請分析並回傳 JSON Array：- "day": 數字 - "time": "HH:MM" - "location": 地點 - "category": "sightseeing|food|transport|flight" - "notes": 備註`;
       
@@ -2331,9 +2312,9 @@ const handleAIAnalyze = async () => {
         </div>
       )}
 
-      <MemberSelectModal 
+<MemberSelectModal 
         isOpen={showMemberSelect}
-        members={tripData?.members || {}}
+        members={tripData?.members || {}} 
         onSelect={handleJoinAsMember}
         onCreateNew={() => {
           setShowMemberSelect(false);
