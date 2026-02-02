@@ -391,6 +391,61 @@ const AIAnalysisModal = ({
 const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   if (!isOpen || !item) return null;
 
+// --- 新增元件：成員選擇視窗 ---
+const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="absolute inset-0 z-[90] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+        <div className="text-center mb-6">
+          <h3 className="text-xl font-bold text-stone-800 mb-2">
+            歡迎回來！
+          </h3>
+          <p className="text-sm text-stone-500">
+            這個行程已經有成員了，請問您是...？
+          </p>
+        </div>
+        
+        <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+          {Object.entries(members).map(([uid, member]) => (
+            <button
+              key={uid}
+              onClick={() => onSelect(uid, member)}
+              className="w-full flex items-center gap-4 p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition-all active:scale-95 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl shadow-sm border border-stone-100">
+                {member.emoji}
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-stone-800 group-hover:text-indigo-600 transition-colors">
+                  我是 {member.nickname}
+                </div>
+                <div className="text-[10px] text-stone-400">
+                  點擊以繼承此身分
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="relative flex py-2 items-center mb-4">
+          <div className="flex-grow border-t border-stone-100"></div>
+          <span className="flex-shrink mx-4 text-stone-300 text-xs">或是</span>
+          <div className="flex-grow border-t border-stone-100"></div>
+        </div>
+
+        <button
+          onClick={onCreateNew}
+          className="w-full bg-stone-800 text-white font-bold py-3 rounded-xl hover:bg-stone-700 transition-all shadow-lg"
+        >
+          我是新成員 (建立新檔案)
+        </button>
+      </div>
+    </div>
+  );
+};
+  
   const typeConfig = {
     sightseeing: {
       icon: <Camera size={24} />,
@@ -1341,6 +1396,7 @@ const App = () => {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
   const [selectedItem, setSelectedItem] = useState(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showMemberSelect, setShowMemberSelect] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isImportLoading, setIsImportLoading] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState({
@@ -1542,6 +1598,7 @@ const App = () => {
     return onAuthStateChanged(auth, setUser);
   }, []);
 
+// 修改原本的 useEffect
   useEffect(() => {
     if (!user || !tripId) return;
     const unsubscribe = onSnapshot(
@@ -1551,8 +1608,24 @@ const App = () => {
           const data = docSnap.data();
           setTripData(data);
           addToHistory(tripId, data);
-          if (!data.members || !data.members[user.uid])
-            setShowProfileSetup(true);
+
+          // --- 修改邏輯開始 ---
+          if (!data.members || !data.members[user.uid]) {
+            // 如果我不在成員名單中
+            if (data.members && Object.keys(data.members).length > 0) {
+              // 如果行程已經有其他人，詢問是否要繼承身分
+              setShowMemberSelect(true);
+            } else {
+              // 如果是第一個成員，直接建立新檔案
+              setShowProfileSetup(true);
+            }
+          } else {
+            // 我已經在名單中，不用選也不用建
+            setShowMemberSelect(false);
+            setShowProfileSetup(false);
+          }
+          // --- 修改邏輯結束 ---
+
         } else {
           showToast("找不到旅程", "error");
           setTripId(null);
@@ -1634,6 +1707,42 @@ const App = () => {
     await updateDoc(tripRef, { members: updatedMembers });
     setShowProfileSetup(false);
     showToast(`歡迎加入，${profileData.nickname}！`);
+  };
+
+  // 處理身分繼承 (轉移靈魂)
+  const handleJoinAsMember = async (targetUid, targetMemberData) => {
+    if (!user || !tripId) return;
+    
+    // 關閉選擇視窗
+    setShowMemberSelect(false);
+    
+    // 準備更新資料
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    
+    // 1. 複製成員資料到我的新 UID，並刪除舊的 UID (避免雙胞胎)
+    const newMembers = { ...tripData.members };
+    delete newMembers[targetUid]; // 移除舊裝置的連結
+    newMembers[user.uid] = targetMemberData; // 綁定到我現在的裝置
+    
+    // 2. 更新行程中所有由舊 UID 建立的項目的擁有權
+    // (這樣 "Added by xxx" 才不會變成未知)
+    const newItinerary = (tripData.itinerary || []).map(item => {
+      if (item.createdBy === targetUid) {
+        return { ...item, createdBy: user.uid };
+      }
+      return item;
+    });
+
+    try {
+      await updateDoc(tripRef, { 
+        members: newMembers,
+        itinerary: newItinerary
+      });
+      showToast(`身分已轉移！歡迎回來，${targetMemberData.nickname}`);
+    } catch (e) {
+      console.error(e);
+      showToast("身分轉移失敗", "error");
+    }
   };
 
   const getCurrentUserNickname = () =>
@@ -2221,6 +2330,16 @@ const handleAIAnalyze = async () => {
           </div>
         </div>
       )}
+
+      <MemberSelectModal 
+        isOpen={showMemberSelect}
+        members={tripData?.members || {}}
+        onSelect={handleJoinAsMember}
+        onCreateNew={() => {
+          setShowMemberSelect(false);
+          setShowProfileSetup(true);
+        }}
+      />
 
       <ProfileSetupModal
         isOpen={showProfileSetup}
