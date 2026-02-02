@@ -1725,17 +1725,18 @@ useEffect(() => {
       return item;
     });
 
+   // --- 修正後的 handleFileImport ---
+  const handleFileImport = async (file) => {
+    setIsImportLoading(true);
+    setIsImportOpen(false); // 關閉視窗，顯示全螢幕動畫
+
     try {
-      await updateDoc(tripRef, { 
-        members: newMembers,
-        itinerary: newItinerary
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
       });
-      showToast(`身分已轉移！歡迎回來，${targetMemberData.nickname}`);
-    } catch (e) {
-      console.error(e);
-      showToast("身分轉移失敗", "error");
-    }
-  };
 
       const prompt = `這是一份旅遊行程表。請分析並回傳 JSON Array：- "day": 數字 - "time": "HH:MM" - "location": 地點 - "category": "sightseeing|food|transport|flight" - "notes": 備註`;
       
