@@ -1436,15 +1436,17 @@ const WelcomeScreen = ({
 };
 
 const App = () => {
+  // --- 1. 狀態定義 (請全部集中在這裡，不要穿插函式) ---
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
-  const [localTripName, setLocalTripName] = useState(""); // <-- 確保這行存在
-  const [showAIMenu, setShowAIMenu] = useState(false);    // <-- 確保這行存在
-  const [isImportLoading, setIsImportLoading] = useState(false); 
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [localTripName, setLocalTripName] = useState("");
+  const [showExportMenu, setShowExportMenu] = useState(false); 
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   
+  // ★ 補回缺失的 showAIMenu
+  const [showAIMenu, setShowAIMenu] = useState(false);
+
   const [activeTab, setActiveTab] = useState("itinerary");
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -1455,27 +1457,24 @@ const App = () => {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
   const [selectedItem, setSelectedItem] = useState(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [showMemberSelect, setShowMemberSelect] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  
+  // ★ 確保 isImportLoading 在這裡定義
+  const [isImportLoading, setIsImportLoading] = useState(false);
+  
   const [aiAnalysisResult, setAiAnalysisResult] = useState({
     isOpen: false,
     title: "",
     content: "",
     isDebtAnalysis: false,
-    isLoading: false
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [firebaseError, setFirebaseError] = useState(null);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlTripId = params.get("trip");
-    if (urlTripId) {
-      setTripId(urlTripId);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
+  // --- 2. 輔助函式 (定義在 State 之後，確保能讀取到上面的變數) ---
+  const showToast = (message, type = "success") => setToast({ message, type });
 
+  // --- 3. Effects ---
   useEffect(() => {
     if (tripData?.name) {
       setLocalTripName(tripData.name);
@@ -1495,6 +1494,7 @@ const App = () => {
     }
   };
 
+  // ... 這裡接原本的 copyToClipboard, handleExportExcel 等函式 ...
   const handleDateUpdate = async (field, value) => {
     if (!tripId) return;
     
