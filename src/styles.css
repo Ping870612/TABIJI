@@ -11,3 +11,29 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* 自定義美化滾動條：半透明白色質感 */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 5px; /* 橫向捲動條的高度 */
+  width: 5px;  /* 縱向捲動條的寬度 */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* 軌道保持透明，不遮擋背景 */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5); /* 半透明白色 */
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1); /* 極細微的邊框增加精緻感 */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.8); /* 滑鼠移上去時稍微亮一點 */
+}
+
+/* 針對 Firefox 的設定 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+}
