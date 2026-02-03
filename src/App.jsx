@@ -752,7 +752,6 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
 const LocationInput = ({ value, onChange, placeholder }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showAIMenu, setShowAIMenu] = useState(false);
   const wrapperRef = useRef(null);
   const debounceTimeout = useRef(null);
 
