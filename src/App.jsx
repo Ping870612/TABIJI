@@ -880,7 +880,7 @@ const WeatherBadge = ({ date, weatherData }) => {
     const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
     return (
-     <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-4 pt-2 px-4 -mx-4 mb-4 border-b border-stone-100/50 shadow-sm">
+      <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-4 pt-2 px-4 -mx-4 mb-4 border-b border-stone-100/50 shadow-sm">
         {/* 將 class 換成 custom-scrollbar */}
         <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar justify-start md:justify-center">
           {days.map((day) => {
@@ -1100,6 +1100,7 @@ const WelcomeScreen = ({
   const [history, setHistory] = useState([]);
   const [duration, setDuration] = useState(0);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isImportLoading, setIsImportLoading] = useState(false);
 
   useEffect(() => {
     try {
@@ -1457,6 +1458,7 @@ const App = () => {
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
   const [selectedItem, setSelectedItem] = useState(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showMemberSelect, setShowMemberSelect] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   
   // ★ 確保 isImportLoading 在這裡定義
@@ -1470,6 +1472,9 @@ const App = () => {
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [firebaseError, setFirebaseError] = useState(null);
+  const [posterTheme, setPosterTheme] = useState(null);
+  const [transportMode, setTransportMode] = useState("driving");
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
 
   // --- 2. 輔助函式 (定義在 State 之後，確保能讀取到上面的變數) ---
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -1512,8 +1517,6 @@ const App = () => {
       showToast("日期更新失敗", "error");
     }
   };
-
-  const showToast = (message, type = "success") => setToast({ message, type });
 
   const copyToClipboard = (text) => {
     const textArea = document.createElement("textarea");
@@ -1566,8 +1569,6 @@ const App = () => {
     window.XLSX.writeFile(wb, `${tripData.name}_行程表.xlsx`);
     showToast("Excel 下載成功！");
   };
-
-  const [posterTheme, setPosterTheme] = useState(null);
 
   const handleExportImage = async () => {
     if (!tripData?.itinerary?.length) return;
@@ -1934,9 +1935,6 @@ const App = () => {
       setIsAnalyzing(false);
     }
   };
-
-  const [transportMode, setTransportMode] = useState("driving");
-  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
 
   const executeOptimize = async () => {
     if (!tripData?.itinerary?.length) {
@@ -2435,7 +2433,7 @@ const handleCalculateDebts = async () => {
         </div>
       )}
 
-<header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
+      <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1 mr-4 min-w-0"> {/* 這裡加 min-w-0 防止被子元素撐爆 */}
             <div className="flex items-center justify-between mb-1">
@@ -2444,7 +2442,7 @@ const handleCalculateDebts = async () => {
               <div className="flex items-center gap-2 group flex-1 min-w-0"> {/* min-w-0 再次確保彈性佈局正常 */}
                 <input
                   // 🔴 修改這裡：將 w-full 改為 flex-1 min-w-0
-                  className="text-2xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
+                  className="text-3xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
                   value={localTripName}
                   placeholder="點擊輸入旅程名稱..."
                   onChange={(e) => setLocalTripName(e.target.value)}
@@ -2535,15 +2533,15 @@ const handleCalculateDebts = async () => {
         </div>
       </header>
 
-<main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
-  {/* 檢查這裡：如果 tripData 沒抓到，可能也會空白 */}
-  {activeTab === "itinerary" && tripData && (
-    <>
-      <DayNavigation 
-        days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
-        tripData={tripData}
-        onScrollToDay={scrollToDay}
-      />
+      <main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
+        {/* 檢查這裡：如果 tripData 沒抓到，可能也會空白 */}
+        {activeTab === "itinerary" && tripData && (
+          <>
+            <DayNavigation 
+              days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
+              tripData={tripData}
+              onScrollToDay={scrollToDay}
+            />
 
             {/* 下方行程列表 ... */}
             {Object.keys(groupedItinerary)
@@ -2760,7 +2758,7 @@ const handleCalculateDebts = async () => {
           <span className="text-[10px] font-medium tracking-wide">記帳</span>
         </button>
       </nav>
-{/* --- 修改：加上 !isModalOpen 判斷，當新增視窗打開時，隱藏魔法球 --- */}
+
       {!isModalOpen && (
         <div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
           
