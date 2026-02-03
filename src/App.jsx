@@ -702,13 +702,6 @@ const FileImportModal = ({ isOpen, onClose, onImport, isLoading }) => {
 
 const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
   if (!isOpen) return null;
-
-  // 1. 產生完整網址
-  const shareUrl = `${window.location.origin}?trip=${tripId}`;
-
-  // 2. 自訂複製文案 (使用 \n 來換行)
-  const shareText = `👋 點擊下方連結一起參與 ${tripName} 的行程！✈️\n${shareUrl}`;
-
   return (
     <div className="absolute inset-0 z-[60] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
@@ -724,34 +717,40 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
           </div>
           <h3 className="text-xl font-bold text-stone-800">邀請朋友加入</h3>
           <p className="text-sm text-stone-500 leading-relaxed">
-            分享此連結給您的旅伴。
+            將此代碼分享給您的旅伴。
             <br />
-            他們點擊連結即可直接共同編輯 <b>{tripName}</b>。
+            他們只需在首頁輸入代碼即可共同編輯 <b>{tripName}</b>。
           </p>
+          
+          {/* ↓↓↓ 重點修改區 ↓↓↓ */}
           <div
-<div
-  onClick={() => {
-    // 1. 產生連結
-    const link = `${window.location.origin}${window.location.pathname}?tripId=${tripId}`;
-    
-    // 2. 組合您想要的文字格式 (可自行修改 emoji 或文案)
-    const message = `👋 點擊下方連結一起參與 ${tripName} 的行程！✈️\n${link}`;
-    
-    // 3. 執行複製
-    copyToClipboard(message);
-  }}
-  className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
->
-  <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
-    點擊複製邀請函
-  </div>
-  <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
-    {tripId}
-  </div>
-  <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
-    <Copy size={12} /> 複製文字與連結
-  </div>
-</div>
+            onClick={() => {
+              // 1. 取得完整網址
+              const link = `${window.location.origin}${window.location.pathname}?tripId=${tripId}`;
+              // 2. 組合邀請訊息
+              const message = `👋 點擊下方連結一起參與 ${tripName} 的行程！✈️\n${link}`;
+              // 3. 複製
+              copyToClipboard(message);
+            }}
+            className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
+          >
+            <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
+              點擊複製邀請函
+            </div>
+            <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
+              {tripId}
+            </div>
+            <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
+              <Copy size={12} /> 複製文字與連結
+            </div>
+          </div>
+          {/* ↑↑↑ 修改結束 ↑↑↑ */}
+          
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const LocationInput = ({ value, onChange, placeholder }) => {
   const [suggestions, setSuggestions] = useState([]);
