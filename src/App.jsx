@@ -1884,25 +1884,86 @@ const App = () => {
     }
   };
 
+// --- 1. 新增：天氣代碼轉換表 (將數字轉為中文) ---
+  const getWeatherDesc = (code) => {
+    const codes = {
+      0: "晴朗 ☀️", 1: "晴朗 ☀️", 2: "多雲 ⛅", 3: "陰天 ☁️",
+      45: "霧 🌫️", 48: "霧 🌫️",
+      51: "毛毛雨 🌧️", 53: "毛毛雨 🌧️", 55: "毛毛雨 🌧️",
+      61: "下雨 ☔", 63: "下雨 ☔", 65: "豪大雨 ⛈️",
+      71: "下雪 ❄️", 73: "下雪 ❄️", 75: "暴雪 ❄️",
+      80: "陣雨 🌦️", 81: "陣雨 🌦️", 82: "強陣雨 ⛈️",
+      95: "雷雨 ⚡", 96: "雷雨 ⚡", 99: "雷雨 ⚡"
+    };
+    return codes[code] || "多雲";
+  };
+
+  // --- 2. 修改：改用 Open-Meteo 真實氣象 API ---
   const fetchWeather = async (id, destination, startDate) => {
-    if (!destination || !startDate) return;
+    if (!destination || !startDate) {
+      showToast("無法更新：缺少地點或日期", "error");
+      return;
+    }
+
+    showToast("正在連線氣象衛星抓取資料...", "success");
+
     try {
-      const res = await callGeminiAPI([
-        {
-          text: `預測 ${destination} ${startDate} 起 7 天天氣。回傳 JSON Array: [{"date": "YYYY-MM-DD", "temp": "25°C", "condition": "晴朗"}]`,
-        },
-      ]);
-      if (res) {
-        const weatherMap = {};
-        JSON.parse(res.replace(/```json|```/g, "").trim()).forEach((d) => {
-          if (d.date) weatherMap[d.date] = d;
-        });
-        await updateDoc(
-          doc(db, "artifacts", appId, "public", "data", "travel_trips", id),
-          { weather: weatherMap }
-        );
+      // 第一步：將「地名」轉為「經緯度」 (使用 OpenStreetMap)
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`
+      );
+      const geoData = await geoRes.json();
+
+      if (!geoData || geoData.length === 0) {
+        throw new Error("找不到這個地點");
       }
-    } catch (e) {}
+
+      const { lat, lon } = geoData[0];
+
+      // 第二步：利用經緯度，向 Open-Meteo 查詢天氣
+      // 計算結束日期 (往後抓 7 天)
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      const endDateStr = end.toISOString().split('T')[0];
+
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${startDate}&end_date=${endDateStr}`;
+      
+      const weatherRes = await fetch(weatherUrl);
+      const weatherData = await weatherRes.json();
+
+      if (!weatherData.daily) {
+        throw new Error("無法取得氣象資料");
+      }
+
+      // 第三步：整理資料格式
+      const weatherMap = {};
+      const { time, weathercode, temperature_2m_max, temperature_2m_min } = weatherData.daily;
+
+      time.forEach((date, index) => {
+        const minT = Math.round(temperature_2m_min[index]);
+        const maxT = Math.round(temperature_2m_max[index]);
+        const code = weathercode[index];
+        
+        weatherMap[date] = {
+          date: date,
+          temp: `${minT}~${maxT}°C`,
+          condition: getWeatherDesc(code)
+        };
+      });
+
+      // 第四步：存回 Firebase
+      await updateDoc(
+        doc(db, "artifacts", appId, "public", "data", "travel_trips", id),
+        { weather: weatherMap }
+      );
+
+      showToast(`成功更新 ${destination} 的氣象！`);
+
+    } catch (e) {
+      console.error(e);
+      showToast("更新失敗：找不到地點或服務忙碌", "error");
+    }
   };
 
   const handleAIAnalyze = async () => {
