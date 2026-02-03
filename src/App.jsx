@@ -2724,7 +2724,7 @@ const handleCalculateDebts = async () => {
         </button>
       </nav>
 
-<div className="fixed bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
+<div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
         {/* 主按鈕 */}
         <button
           onClick={() => {
