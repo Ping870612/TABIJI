@@ -2724,7 +2724,7 @@ const handleCalculateDebts = async () => {
         </button>
       </nav>
 
-      <div className="fixed bottom-28 left-6 z-[60] flex flex-col-reverse items-start gap-3">
+<div className="fixed bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
         {/* 主按鈕 */}
         <button
           onClick={() => {
@@ -2735,20 +2735,19 @@ const handleCalculateDebts = async () => {
             showAIMenu ? "bg-stone-800 rotate-45" : "bg-indigo-600 hover:bg-indigo-700"
           }`}
         >
-          {isAnalyzing || isImportLoading ? (
+          {isAnalyzing || (typeof isImportLoading !== 'undefined' && isImportLoading) ? (
             <Loader2 className="animate-spin text-white" size={24} />
           ) : (
             <Sparkles className={`text-white transition-all ${showAIMenu ? "opacity-0" : "opacity-100"}`} size={24} />
           )}
           {showAIMenu && <Plus className="text-white absolute rotate-0" size={24} />}
-          {!showAIMenu && !isAnalyzing && (
-            <span className="absolute inset-0 rounded-full bg-indigo-500 animate-ping opacity-20"></span>
-          )}
+          
+          {/* 已移除呼吸燈特效 (animate-ping) */}
         </button>
 
-        {/* 展開後的整合選單 */}
+        {/* 展開後的選單 (靠右對齊) */}
         {showAIMenu && (
-          <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-5 duration-300">
+          <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-5 duration-300 items-end">
             <div className="px-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">AI Tools</div>
             <button
               onClick={() => { handleAIAnalyze(); setShowAIMenu(false); }}
@@ -2779,7 +2778,8 @@ const handleCalculateDebts = async () => {
               <button
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
-                  setMenuPos({ top: rect.top, left: rect.right + 12 });
+                  // 修改這裡：讓子選單出現在按鈕的「左側」，避免超出右邊螢幕
+                  setMenuPos({ top: rect.top - 10, left: rect.left - 160 });
                   setShowExportMenu(!showExportMenu);
                 }}
                 className={`flex items-center gap-3 w-48 bg-white/90 backdrop-blur-md border px-4 py-3 rounded-2xl shadow-xl transition-all ${
@@ -2793,7 +2793,7 @@ const handleCalculateDebts = async () => {
 
               {showExportMenu && (
                 <div 
-                  className="fixed bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-left-2 duration-200"
+                  className="fixed bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-right-2 duration-200"
                   style={{ top: menuPos.top, left: menuPos.left }}
                 >
                   <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-green-50 rounded-xl transition-colors whitespace-nowrap">
