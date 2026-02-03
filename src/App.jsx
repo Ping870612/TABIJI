@@ -875,13 +875,14 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
-// --- 更新後的導覽列元件 ---
+// --- 更新後的導覽列元件 (半透明毛玻璃版) ---
   const DayNavigation = ({ days, tripData, onScrollToDay }) => {
     const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
     return (
-      <div className="sticky top-0 z-50 bg-[#FDFCF8] pb-4 pt-2 px-2 -mx-4 mb-4 border-b border-stone-50 shadow-sm">
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+      <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-4 pt-2 px-4 -mx-4 mb-4 border-b border-stone-100/50 shadow-sm">
+        {/* justify-start md:justify-center 確保在手機上靠左滑動，在寬螢幕上置中 */}
+        <div className="flex gap-3 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-stone-200 justify-start md:justify-center">
           {days.map((day) => {
             const dateObj = new Date(tripData.startDate);
             dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
@@ -889,7 +890,6 @@ const WeatherBadge = ({ date, weatherData }) => {
             const formattedDate = dateObj.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
             const dayOfWeek = weekdays[dateObj.getDay()];
             
-            // 修正天氣比對字串格式 (YYYY-MM-DD)
             const y = dateObj.getFullYear();
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
             const d = String(dateObj.getDate()).padStart(2, '0');
@@ -901,7 +901,7 @@ const WeatherBadge = ({ date, weatherData }) => {
               <button
                 key={day}
                 onClick={() => onScrollToDay(day)}
-                className="flex-shrink-0 w-24 bg-white border border-stone-100 rounded-2xl p-3 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-300"
+                className="flex-shrink-0 w-24 bg-white/80 border border-stone-100 rounded-2xl p-3 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-400 hover:shadow-md"
               >
                 <div className="text-[10px] text-stone-400 font-bold mb-1">
                   {formattedDate} ({dayOfWeek})
@@ -2586,16 +2586,17 @@ const handleCalculateDebts = async () => {
         </div>
       </header>
 
-<main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 scrollbar-hide relative"> {/* 注意這裡 pt-0 */}
+<main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
         {activeTab === "itinerary" && (
           <>
-            {/* 導覽列：現在它有 sticky 屬性，會固定在 main 的頂部 */}
+            {/* 導覽列：具備半透明 bg-[#FDFCF8]/60 與模糊效果 */}
             <DayNavigation 
               days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
               tripData={tripData}
               onScrollToDay={scrollToDay}
             />
 
+            {/* 下方行程列表 ... */}
             {Object.keys(groupedItinerary)
               .sort((a, b) => a - b)
               .map((day) => {
@@ -2604,7 +2605,6 @@ const handleCalculateDebts = async () => {
                   <div
                     key={day}
                     id={`day-section-${day}`}
-                    // 加上 scroll-mt-32 確保跳轉後標題不會被固定的導覽列擋住
                     className="mb-8 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-32"
                   >
                     <div className="flex justify-between items-end mb-4 px-2">
