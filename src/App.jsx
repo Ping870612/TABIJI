@@ -875,6 +875,47 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
+const DayNavigation = ({ days, tripData, onScrollToDay }) => {
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-4 px-2 scrollbar-hide mb-4">
+      {days.map((day) => {
+        const dateStr = ""; // 這裡可以根據 day 計算日期
+        const dateObj = new Date(tripData.startDate);
+        dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
+        const formattedDate = dateObj.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+        const weather = tripData.weather?.[dateObj.toISOString().split('T')[0]];
+
+        return (
+          <button
+            key={day}
+            onClick={() => onScrollToDay(day)}
+            className="flex-shrink-0 w-24 bg-white border border-stone-100 rounded-2xl p-3 shadow-sm active:scale-95 transition-all text-left"
+          >
+            <div className="text-[10px] text-stone-400 font-bold mb-1">{formattedDate}</div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-stone-800">{day}</span>
+              <span className="text-[10px] text-stone-500 font-bold">DAY</span>
+            </div>
+            {weather && (
+              <div className="mt-2 flex items-center gap-1 text-[10px] text-orange-500 font-bold">
+                <span>{weather.temp}</span>
+                <span className="truncate">{weather.condition}</span>
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const scrollToDay = (day) => {
+  const element = document.getElementById(`day-section-${day}`);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+};
+
 const ItineraryCard = ({
   item,
   onSelect,
@@ -2530,17 +2571,24 @@ const handleCalculateDebts = async () => {
       </header>
 
       <main className="flex-1 overflow-y-auto pb-32 px-4 pt-4 scrollbar-hide relative">
-        {activeTab === "itinerary" && (
-          <>
-            {Object.keys(groupedItinerary)
-              .sort((a, b) => a - b)
-              .map((day) => {
-                const dateStr = getDateForDay(day);
-                return (
-                  <div
-                    key={day}
-                    className="mb-8 animate-in fade-in slide-in-from-bottom-5 duration-500"
-                  >
+  {activeTab === "itinerary" && (
+    <>
+
+      <DayNavigation 
+        days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
+        tripData={tripData}
+        onScrollToDay={scrollToDay}
+      />
+{Object.keys(groupedItinerary)
+        .sort((a, b) => a - b)
+        .map((day) => {
+          const dateStr = getDateForDay(day);
+          return (
+            <div
+              key={day}
+              id={`day-section-${day}`} // 2. 務必加上此 ID 才能正確跳轉
+              className="mb-8 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-20" // scroll-mt 是修正跳轉位置
+            >
                     <div className="flex justify-between items-end mb-4 px-2">
                       <div className="flex flex-col">
                         <div className="flex items-baseline gap-2">
