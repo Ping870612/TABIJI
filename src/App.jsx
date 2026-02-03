@@ -729,9 +729,13 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
             他們點擊連結即可直接共同編輯 <b>{tripName}</b>。
           </p>
           <div
-            onClick={() => copyToClipboard(shareText)} // 這裡改成複製完整文案
-            className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
-          >
+  onClick={() => {
+    // 這裡就是關鍵：把「目前的網址」跟「Trip ID」組裝起來
+    const shareLink = `${window.location.origin}${window.location.pathname}?tripId=${tripId}`;
+    copyToClipboard(shareLink);
+  }}
+  className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
+>
             <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
               旅程連結
             </div>
@@ -1498,6 +1502,20 @@ const App = () => {
       showToast("更新失敗", "error");
     }
   };
+
+  useEffect(() => {
+    // 程式一啟動，就檢查網址後面有沒有帶著 tripId
+    const params = new URLSearchParams(window.location.search);
+    const urlTripId = params.get('tripId');
+    
+    if (urlTripId) {
+      // 如果有，就設定進去，網頁就會直接跳轉到該行程
+      setTripId(urlTripId.toUpperCase());
+      
+      // (選用) 讀取完後把網址變回乾淨的樣子，比較美觀
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   // ... 這裡接原本的 copyToClipboard, handleExportExcel 等函式 ...
   const handleDateUpdate = async (field, value) => {
