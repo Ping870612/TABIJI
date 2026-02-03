@@ -729,29 +729,29 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
             他們點擊連結即可直接共同編輯 <b>{tripName}</b>。
           </p>
           <div
+<div
   onClick={() => {
-    // 這裡就是關鍵：把「目前的網址」跟「Trip ID」組裝起來
-    const shareLink = `${window.location.origin}${window.location.pathname}?tripId=${tripId}`;
-    copyToClipboard(shareLink);
+    // 1. 產生連結
+    const link = `${window.location.origin}${window.location.pathname}?tripId=${tripId}`;
+    
+    // 2. 組合您想要的文字格式 (可自行修改 emoji 或文案)
+    const message = `👋 點擊下方連結一起參與 ${tripName} 的行程！✈️\n${link}`;
+    
+    // 3. 執行複製
+    copyToClipboard(message);
   }}
   className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
 >
-            <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
-              旅程連結
-            </div>
-            {/* 畫面顯示代碼比較乾淨，但實際複製的是整段文案 */}
-            <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
-              {tripId}
-            </div>
-            <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
-              <Copy size={12} /> 點擊複製邀請函
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+  <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
+    點擊複製邀請函
+  </div>
+  <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
+    {tripId}
+  </div>
+  <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
+    <Copy size={12} /> 複製文字與連結
+  </div>
+</div>
 
 const LocationInput = ({ value, onChange, placeholder }) => {
   const [suggestions, setSuggestions] = useState([]);
