@@ -1439,9 +1439,33 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
-  const [showAIMenu, setShowAIMenu] = useState(false); // 魔法球開關
-  const [isImportLoading, setIsImportLoading] = useState(false); // 只要留這一個
+  const [localTripName, setLocalTripName] = useState(""); // <-- 確保這行存在
+  const [showAIMenu, setShowAIMenu] = useState(false);    // <-- 確保這行存在
+  const [isImportLoading, setIsImportLoading] = useState(false); 
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  
+  const [activeTab, setActiveTab] = useState("itinerary");
+  const [toast, setToast] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [itemData, setItemData] = useState({});
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showMemberSelect, setShowMemberSelect] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState({
+    isOpen: false,
+    title: "",
+    content: "",
+    isDebtAnalysis: false,
+    isLoading: false
+  });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [firebaseError, setFirebaseError] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1470,25 +1494,6 @@ const App = () => {
       showToast("更新失敗", "error");
     }
   };
-  const [activeTab, setActiveTab] = useState("itinerary");
-  const [toast, setToast] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [itemData, setItemData] = useState({});
-  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [showMemberSelect, setShowMemberSelect] = useState(false);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState({
-    isOpen: false,
-    title: "",
-    content: "",
-    isDebtAnalysis: false,
-  });
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [firebaseError, setFirebaseError] = useState(null);
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -2494,14 +2499,14 @@ const handleCalculateDebts = async () => {
       </header>
 
 <main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
-        {activeTab === "itinerary" && (
-          <>
-            {/* 導覽列：具備半透明 bg-[#FDFCF8]/60 與模糊效果 */}
-            <DayNavigation 
-              days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
-              tripData={tripData}
-              onScrollToDay={scrollToDay}
-            />
+  {/* 檢查這裡：如果 tripData 沒抓到，可能也會空白 */}
+  {activeTab === "itinerary" && tripData && (
+    <>
+      <DayNavigation 
+        days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
+        tripData={tripData}
+        onScrollToDay={scrollToDay}
+      />
 
             {/* 下方行程列表 ... */}
             {Object.keys(groupedItinerary)
