@@ -2575,6 +2575,19 @@ const handleCalculateDebts = async () => {
                   className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 />
               </div>
+
+              <button
+    onClick={(e) => {
+      e.stopPropagation();
+      // 呼叫抓取天氣函式
+      fetchWeather(tripId, tripData.destination, tripData.startDate);
+    }}
+    className="p-1.5 bg-stone-50/50 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-lg transition-colors border border-transparent hover:border-orange-200"
+    title="點擊更新天氣"
+  >
+    <CloudSun size={14} />
+  </button>
+
             </div>
           </div>
 
