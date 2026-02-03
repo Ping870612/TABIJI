@@ -1495,6 +1495,24 @@ const App = () => {
     }
   };
 
+  const handleDateUpdate = async (field, value) => {
+    if (!tripId) return;
+    
+    // 1. 先更新本地畫面 (讓使用者覺得反應很快)
+    setTripData((prev) => ({ ...prev, [field]: value }));
+
+    // 2. 背景默默儲存到 Firebase
+    try {
+      await updateDoc(
+        doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
+        { [field]: value }
+      );
+    } catch (e) {
+      console.error("Date update failed", e);
+      showToast("日期更新失敗", "error");
+    }
+  };
+
   const showToast = (message, type = "success") => setToast({ message, type });
 
   const copyToClipboard = (text) => {
@@ -2417,13 +2435,15 @@ const handleCalculateDebts = async () => {
         </div>
       )}
 
-      <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-5 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
-        <div className="flex justify-between items-start mb-4">
+{/* --- 修改後的 Header (縮短高度 py-3) --- */}
+      <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
+        <div className="flex justify-between items-start mb-2"> {/* mb-4 改 mb-2 */}
           <div className="flex-1 mr-4">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2 group flex-1">
+                {/* 標題加大：text-xl 改為 text-3xl */}
                 <input
-                  className="text-xl font-bold bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 w-full placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all"
+                  className="text-3xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 w-full placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all"
                   value={localTripName}
                   placeholder="點擊輸入旅程名稱..."
                   onChange={(e) => setLocalTripName(e.target.value)}
@@ -2432,8 +2452,10 @@ const handleCalculateDebts = async () => {
                     if (e.key === "Enter") e.target.blur();
                   }}
                 />
-                <Edit size={14} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                <Edit size={18} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </div>
+              
+              {/* 成員頭像區塊保持不變 */}
               <div className="flex -space-x-2 ml-2 flex-shrink-0">
                 {Object.values(tripData.members || {})
                   .slice(0, 3)
@@ -2452,20 +2474,36 @@ const handleCalculateDebts = async () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-3 text-xs text-stone-400 mt-1">
-              <div className="flex items-center gap-1 font-mono">
-                <Calendar size={10} /> 
-                <span>{tripData.startDate || "未設定"}</span>
-                {tripData.endDate && (
-                  <>
-                    <ArrowRight size={10} className="mx-0.5" />
-                    <span>{tripData.endDate}</span>
-                  </>
-                )}
+
+            {/* --- 修改後的日期選擇區 (可點擊修改) --- */}
+            <div className="flex items-center gap-2 text-xs text-stone-400 mt-1 pl-1">
+              <div className="flex items-center gap-2 bg-stone-50/50 hover:bg-stone-100 px-2 py-1 rounded-lg transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
+                <Calendar size={14} className="text-stone-400 group-hover:text-stone-600" />
+                
+                {/* 開始日期 */}
+                <input 
+                  type="date" 
+                  value={tripData.startDate || ""}
+                  onChange={(e) => handleDateUpdate('startDate', e.target.value)}
+                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer"
+                />
+                
+                <ArrowRight size={12} className="text-stone-300" />
+                
+                {/* 結束日期 */}
+                <input 
+                  type="date" 
+                  value={tripData.endDate || ""}
+                  min={tripData.startDate}
+                  onChange={(e) => handleDateUpdate('endDate', e.target.value)}
+                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer"
+                />
               </div>
             </div>
           </div>
-          <div className="flex gap-2 shrink-0">
+
+          {/* 右上角功能按鈕區 (保持不變) */}
+          <div className="flex gap-2 shrink-0 pt-2">
             <button
               onClick={() => setIsShareOpen(true)}
               className="p-2 bg-indigo-50 rounded-full text-indigo-500 hover:bg-indigo-100"
