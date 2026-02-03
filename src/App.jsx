@@ -1100,7 +1100,6 @@ const WelcomeScreen = ({
   const [history, setHistory] = useState([]);
   const [duration, setDuration] = useState(0);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isImportLoading, setIsImportLoading] = useState(false);
 
   useEffect(() => {
     try {
@@ -1440,11 +1439,9 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
-  const [showAIMenu, setShowAIMenu] = useState(false);
-  const [isImportLoading, setIsImportLoading] = useState(false); 
-  const [localTripName, setLocalTripName] = useState("");
-  const [showExportMenu, setShowExportMenu] = useState(false); 
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const [showAIMenu, setShowAIMenu] = useState(false); // 魔法球開關
+  const [isImportLoading, setIsImportLoading] = useState(false); // 只要留這一個
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1484,8 +1481,6 @@ const App = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showMemberSelect, setShowMemberSelect] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isImportLoading, setIsImportLoading] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState({
     isOpen: false,
     title: "",
