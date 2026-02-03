@@ -880,9 +880,9 @@ const WeatherBadge = ({ date, weatherData }) => {
     const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
     return (
-      <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-4 pt-2 px-4 -mx-4 mb-4 border-b border-stone-100/50 shadow-sm">
-        {/* justify-start md:justify-center 確保在手機上靠左滑動，在寬螢幕上置中 */}
-        <div className="flex gap-3 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-stone-200 justify-start md:justify-center">
+     <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-4 pt-2 px-4 -mx-4 mb-4 border-b border-stone-100/50 shadow-sm">
+        {/* 將 class 換成 custom-scrollbar */}
+        <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar justify-start md:justify-center">
           {days.map((day) => {
             const dateObj = new Date(tripData.startDate);
             dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
