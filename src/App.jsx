@@ -752,6 +752,7 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
 const LocationInput = ({ value, onChange, placeholder }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showAIMenu, setShowAIMenu] = useState(false);
   const wrapperRef = useRef(null);
   const debounceTimeout = useRef(null);
 
@@ -2494,96 +2495,6 @@ const handleCalculateDebts = async () => {
             </button>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 w-full">
-          <button
-            onClick={handleAIAnalyze}
-            disabled={isAnalyzing}
-            className="bg-white border border-stone-200 text-stone-600 py-3 rounded-xl shadow-sm hover:border-yellow-400 hover:text-yellow-600 hover:bg-yellow-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold w-full"
-          >
-            {isAnalyzing ? (
-              <Loader2 className="animate-spin" size={14} />
-            ) : (
-              <Sparkles size={14} className="text-yellow-500" />
-            )}
-            智能導遊
-          </button>
-
-          <button
-            onClick={() => setShowOptimizeModal(true)}
-            disabled={isAnalyzing}
-            className="bg-white border border-stone-200 text-stone-600 py-3 rounded-xl shadow-sm hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold w-full"
-          >
-            {isAnalyzing ? (
-              <Loader2 className="animate-spin" size={14} />
-            ) : (
-              <Route size={14} className="text-emerald-500" />
-            )}
-            路線優化
-          </button>
-
-          <button
-            onClick={() => setIsImportOpen(true)}
-            className="bg-white border border-stone-200 text-stone-600 py-3 rounded-xl shadow-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold w-full"
-          >
-            <Upload size={14} /> 匯入行程
-          </button>
-
-          <div className="relative w-full">
-            <button
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                setMenuPos({
-                  top: rect.bottom + 8,
-                  right: window.innerWidth - rect.right,
-                });
-                setShowExportMenu(!showExportMenu);
-              }}
-              className={`bg-white border text-stone-600 py-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold w-full ${
-                showExportMenu
-                  ? "border-stone-800 bg-stone-50"
-                  : "border-stone-200 hover:border-stone-400"
-              }`}
-            >
-              <Download size={14} /> 匯出行程
-            </button>
-
-            {showExportMenu && (
-              <>
-                <div
-                  className="fixed inset-0 z-[60]"
-                  onClick={() => setShowExportMenu(false)}
-                ></div>
-                <div
-                  className="fixed w-36 bg-white rounded-xl shadow-xl border border-stone-100 p-1.5 z-[70] flex flex-col gap-1 animate-in zoom-in-95 duration-200"
-                  style={{
-                    top: menuPos.top,
-                    right: menuPos.right,
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      handleExportExcel();
-                      setShowExportMenu(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-bold text-stone-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-left"
-                  >
-                    <FileSpreadsheet size={16} /> Excel 表格
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleExportImage();
-                      setShowExportMenu(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-bold text-stone-600 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition-colors text-left"
-                  >
-                    <ImageIcon size={16} /> 美圖分享
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
       </header>
 
 <main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
@@ -2811,6 +2722,91 @@ const handleCalculateDebts = async () => {
           <span className="text-[10px] font-medium tracking-wide">記帳</span>
         </button>
       </nav>
+
+      <div className="fixed bottom-28 left-6 z-[60] flex flex-col-reverse items-start gap-3">
+        {/* 主按鈕 */}
+        <button
+          onClick={() => {
+            setShowAIMenu(!showAIMenu);
+            setShowExportMenu(false);
+          }}
+          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
+            showAIMenu ? "bg-stone-800 rotate-45" : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
+        >
+          {isAnalyzing || isImportLoading ? (
+            <Loader2 className="animate-spin text-white" size={24} />
+          ) : (
+            <Sparkles className={`text-white transition-all ${showAIMenu ? "opacity-0" : "opacity-100"}`} size={24} />
+          )}
+          {showAIMenu && <Plus className="text-white absolute rotate-0" size={24} />}
+          {!showAIMenu && !isAnalyzing && (
+            <span className="absolute inset-0 rounded-full bg-indigo-500 animate-ping opacity-20"></span>
+          )}
+        </button>
+
+        {/* 展開後的整合選單 */}
+        {showAIMenu && (
+          <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-5 duration-300">
+            <div className="px-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">AI Tools</div>
+            <button
+              onClick={() => { handleAIAnalyze(); setShowAIMenu(false); }}
+              className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+            >
+              <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><Sparkles size={16} /></div>
+              <span className="text-sm font-bold text-stone-700">智能導遊分析</span>
+            </button>
+            <button
+              onClick={() => { setShowOptimizeModal(true); setShowAIMenu(false); }}
+              className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+            >
+              <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center"><Route size={16} /></div>
+              <span className="text-sm font-bold text-stone-700">路線優化建議</span>
+            </button>
+
+            <div className="px-2 text-[10px] font-black text-stone-400 uppercase tracking-widest mt-2">Files</div>
+            <button
+              onClick={() => { setIsImportOpen(true); setShowAIMenu(false); }}
+              className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+            >
+              <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><Upload size={16} /></div>
+              <span className="text-sm font-bold text-stone-700">匯入行程檔案</span>
+            </button>
+
+            {/* 匯出選單 */}
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setMenuPos({ top: rect.top, left: rect.right + 12 });
+                  setShowExportMenu(!showExportMenu);
+                }}
+                className={`flex items-center gap-3 w-48 bg-white/90 backdrop-blur-md border px-4 py-3 rounded-2xl shadow-xl transition-all ${
+                  showExportMenu ? "border-stone-800 bg-stone-50" : "border-stone-100 hover:bg-stone-50"
+                }`}
+              >
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><Download size={16} /></div>
+                <span className="text-sm font-bold text-stone-700">匯出行程內容</span>
+                <ChevronRight size={14} className={`ml-auto text-stone-300 transition-transform ${showExportMenu ? "rotate-90" : ""}`} />
+              </button>
+
+              {showExportMenu && (
+                <div 
+                  className="fixed bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-left-2 duration-200"
+                  style={{ top: menuPos.top, left: menuPos.left }}
+                >
+                  <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-green-50 rounded-xl transition-colors whitespace-nowrap">
+                    <FileSpreadsheet size={16} /> Excel 表格
+                  </button>
+                  <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-pink-50 rounded-xl transition-colors whitespace-nowrap">
+                    <ImageIcon size={16} /> AI 美圖分享
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {isModalOpen && (
         <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
