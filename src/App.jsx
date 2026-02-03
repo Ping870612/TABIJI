@@ -1441,6 +1441,8 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
+  const [showAIMenu, setShowAIMenu] = useState(false);
+  const [isImportLoading, setIsImportLoading] = useState(false); 
   const [localTripName, setLocalTripName] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
