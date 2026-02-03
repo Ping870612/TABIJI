@@ -2435,14 +2435,16 @@ const handleCalculateDebts = async () => {
         </div>
       )}
 
-{/* --- 修改後的 Header (隱藏輸入框內建的日曆圖示) --- */}
-      <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
+<header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
         <div className="flex justify-between items-start mb-2">
-          <div className="flex-1 mr-4">
+          <div className="flex-1 mr-4 min-w-0"> {/* 這裡加 min-w-0 防止被子元素撐爆 */}
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 group flex-1">
+              
+              {/* 標題與編輯圖示區塊 */}
+              <div className="flex items-center gap-2 group flex-1 min-w-0"> {/* min-w-0 再次確保彈性佈局正常 */}
                 <input
-                  className="text-2xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 w-full placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all"
+                  // 🔴 修改這裡：將 w-full 改為 flex-1 min-w-0
+                  className="text-2xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
                   value={localTripName}
                   placeholder="點擊輸入旅程名稱..."
                   onChange={(e) => setLocalTripName(e.target.value)}
@@ -2473,28 +2475,27 @@ const handleCalculateDebts = async () => {
               </div>
             </div>
 
-            {/* --- 修改重點：在 input class 加入隱藏圖示的語法 --- */}
+            {/* 日期選擇區 (維持上一版的設計) */}
             <div className="flex items-center gap-2 text-xs text-stone-400 mt-1 pl-1">
               <div className="flex items-center gap-2 bg-stone-50/50 hover:bg-stone-100 px-2 py-1 rounded-lg transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
-                {/* 只保留這一個最左邊的圖示 */}
                 <Calendar size={14} className="text-stone-400 group-hover:text-stone-600" />
                 
-                {/* 開始日期：加上 [&::-webkit-calendar-picker-indicator]:hidden */}
                 <input 
                   type="date" 
                   value={tripData.startDate || ""}
                   onChange={(e) => handleDateUpdate('startDate', e.target.value)}
+                  onClick={(e) => e.target.showPicker()}
                   className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 />
                 
                 <ArrowRight size={12} className="text-stone-300" />
                 
-                {/* 結束日期：加上 [&::-webkit-calendar-picker-indicator]:hidden */}
                 <input 
                   type="date" 
                   value={tripData.endDate || ""}
                   min={tripData.startDate}
                   onChange={(e) => handleDateUpdate('endDate', e.target.value)}
+                  onClick={(e) => e.target.showPicker()}
                   className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 />
               </div>
