@@ -2760,8 +2760,8 @@ const handleCalculateDebts = async () => {
           <span className="text-[10px] font-medium tracking-wide">記帳</span>
         </button>
       </nav>
-
-<div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
+{!isModalOpen && (
+        <div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
         {/* 主按鈕 */}
         <button
           onClick={() => {
