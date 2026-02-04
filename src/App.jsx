@@ -1324,9 +1324,7 @@ const App = () => {
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
   const [localTripName, setLocalTripName] = useState("");
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
-  const [isMagicMenuOpen, setIsMagicMenuOpen] = useState(false); // 🟡 新增：魔法球選單開關
+  const [isMagicMenuOpen, setIsMagicMenuOpen] = useState(false); 
 
   useEffect(() => {
     if (tripData?.name) {
@@ -2374,85 +2372,6 @@ const App = () => {
             </button>
           </div>
         </div>
-
-        {/* ↓↓↓↓↓ 修改後的按鈕區塊 (包含下拉選單) ↓↓↓↓↓ */}
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide mask-linear-fade relative">
-          
-          {/* 移除：這裡的 AI 按鈕因為已經放入魔法球，所以這裡可以只留匯入匯出，或是保留作為備用 */}
-          {/* 為了版面乾淨，我們先保留「匯入」與「匯出」，AI 功能交給右下角魔法球 */}
-
-          {/* 群組 2: 檔案操作 (現在變主要操作) */}
-          <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={() => setIsImportOpen(true)}
-              className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-            >
-              <Upload size={14} /> 匯入行程
-            </button>
-
-            {/* 匯出行程 (下拉選單) */}
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  // 1. 計算按鈕在螢幕上的位置
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setMenuPos({
-                    top: rect.bottom + 8, // 在按鈕下方 8px
-                    right: window.innerWidth - rect.right, // 對齊按鈕右邊
-                  });
-                  setShowExportMenu(!showExportMenu);
-                }}
-                className={`bg-white border text-stone-600 px-3 py-2 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap ${
-                  showExportMenu
-                    ? "border-stone-800 bg-stone-50"
-                    : "border-stone-200 hover:border-stone-400"
-                }`}
-              >
-                <Download size={14} /> 匯出行程
-              </button>
-
-              {/* 下拉選單本體 */}
-              {showExportMenu && (
-                <>
-                  {/* 遮罩：點擊空白處關閉 */}
-                  <div
-                    className="fixed inset-0 z-[60]"
-                    onClick={() => setShowExportMenu(false)}
-                  ></div>
-
-                  {/* 選單內容：改用 fixed 定位，這樣就不會被 overflow 切掉了 */}
-                  <div
-                    className="fixed w-36 bg-white rounded-xl shadow-xl border border-stone-100 p-1.5 z-[70] flex flex-col gap-1 animate-in zoom-in-95 duration-200"
-                    style={{
-                      top: menuPos.top,
-                      right: menuPos.right,
-                    }}
-                  >
-                    <button
-                      onClick={() => {
-                        handleExportExcel();
-                        setShowExportMenu(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-bold text-stone-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-left"
-                    >
-                      <FileSpreadsheet size={16} /> Excel 表格
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleExportImage();
-                        setShowExportMenu(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-bold text-stone-600 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition-colors text-left"
-                    >
-                      <ImageIcon size={16} /> 美圖分享
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-        {/* ↑↑↑↑↑ 修改結束 ↑↑↑↑↑ */}
       </header>
 
       <main className="flex-1 overflow-y-auto pb-32 px-4 pt-4 scrollbar-hide relative">
@@ -2710,6 +2629,7 @@ const App = () => {
         {/* AI 選單 (當魔法球打開時顯示) */}
         {isMagicMenuOpen && (
           <div className="flex flex-col gap-3 pointer-events-auto animate-in slide-in-from-bottom-5 fade-in duration-300">
+            {/* 1. 智能導遊 */}
             <button
               onClick={handleAIAnalyze}
               disabled={isAnalyzing}
@@ -2725,6 +2645,7 @@ const App = () => {
               )}
             </button>
             
+            {/* 2. 路線優化 */}
             <button
               onClick={() => {
                 setShowOptimizeModal(true);
@@ -2737,6 +2658,48 @@ const App = () => {
                 路線優化
               </span>
               <Route size={20} className="text-emerald-500" />
+            </button>
+
+            {/* 3. 匯入行程 */}
+            <button
+              onClick={() => {
+                setIsImportOpen(true);
+                setIsMagicMenuOpen(false);
+              }}
+              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-indigo-100 hover:bg-indigo-50 transition-all group"
+            >
+              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
+                匯入行程
+              </span>
+              <Upload size={20} className="text-indigo-500" />
+            </button>
+
+            {/* 4. 匯出 Excel */}
+            <button
+              onClick={() => {
+                handleExportExcel();
+                setIsMagicMenuOpen(false);
+              }}
+              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-green-100 hover:bg-green-50 transition-all group"
+            >
+              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
+                匯出 Excel
+              </span>
+              <FileSpreadsheet size={20} className="text-green-500" />
+            </button>
+
+            {/* 5. 匯出美圖 */}
+            <button
+              onClick={() => {
+                handleExportImage();
+                setIsMagicMenuOpen(false);
+              }}
+              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-pink-100 hover:bg-pink-50 transition-all group"
+            >
+              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
+                分享美圖
+              </span>
+              <ImageIcon size={20} className="text-pink-500" />
             </button>
           </div>
         )}
