@@ -2255,17 +2255,6 @@ const handleCalculateDebts = async () => {
     }
   };
 
-  // --- 記事本核心邏輯 (唯一版本) ---
-const handleNoteImageUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    if (file.size > 1024 * 1024) { showToast("圖片需小於 1MB", "error"); return; }
-    const reader = new FileReader();
-    reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
-    reader.readAsDataURL(file);
-  }
-};
-
 // --- 記事本核心邏輯 ---
 // 1. 上傳圖片轉碼
 const handleNoteImageUpload = (e) => {
