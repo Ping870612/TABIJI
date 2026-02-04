@@ -2251,40 +2251,28 @@ const handleCalculateDebts = async () => {
       showToast("儲存失敗", "error");
     }
   };
-// --- 記事本功能邏輯 ---
 
-// 處理圖片轉 Base64 (讓手機照片能直接變網頁顯示的文字)
+  // --- 記事本核心邏輯 (唯一版本) ---
 const handleNoteImageUpload = (e) => {
   const file = e.target.files[0];
   if (file) {
-    if (file.size > 1024 * 1024) { // 限制 1MB
-      showToast("圖片太大囉，請小於 1MB", "error");
-      return;
-    }
+    if (file.size > 1024 * 1024) { showToast("圖片需小於 1MB", "error"); return; }
     const reader = new FileReader();
     reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
     reader.readAsDataURL(file);
   }
 };
 
-// 送出留言 (支援新增與編輯)
 const handleSaveNote = async () => {
   if (!itemData.noteContent?.trim() && !itemData.noteImage) return;
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  const currentNotes = tripData.notes || [];
-
   try {
-    if (isEditMode) {
-      // 編輯模式
-      const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
-        ...n, 
-        content: itemData.noteContent, 
-        image: itemData.noteImage,
-        isEdited: true 
+    if (isEditMode && editingId) {
+      const updatedNotes = (tripData.notes || []).map(n => n.id === editingId ? { 
+        ...n, content: itemData.noteContent, image: itemData.noteImage, isEdited: true 
       } : n);
       await updateDoc(tripRef, { notes: updatedNotes });
     } else {
-      // 新增模式
       const newNote = {
         id: "note_" + Date.now(),
         content: itemData.noteContent,
@@ -2299,62 +2287,25 @@ const handleSaveNote = async () => {
     }
     setItemData({ ...itemData, noteContent: "", noteImage: null });
     setIsEditMode(false);
+    setEditingId(null);
     showToast("成功！");
   } catch (e) { showToast("出錯了", "error"); }
 };
 
-// 刪除留言
 const deleteNote = async (noteId) => {
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  const updatedNotes = tripData.notes.filter(n => n.id !== noteId);
-  await updateDoc(tripRef, { notes: updatedNotes });
+  await updateDoc(tripRef, { notes: tripData.notes.filter(n => n.id !== noteId) });
   showToast("已刪除");
 };
 
-// 回覆留言
 const handleReplyNote = async (noteId, replyText) => {
   if (!replyText.trim()) return;
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  const updatedNotes = tripData.notes.map(n => {
-    if (n.id === noteId) {
-      const newReply = {
-        id: "rep_" + Date.now(),
-        author: getCurrentUserNickname(),
-        content: replyText,
-        time: Date.now()
-      };
-      return { ...n, replies: [...(n.replies || []), newReply] };
-    }
-    return n;
-  });
+  const updatedNotes = tripData.notes.map(n => n.id === noteId ? { 
+    ...n, replies: [...(n.replies || []), { id: Date.now(), author: getCurrentUserNickname(), content: replyText, time: Date.now() }] 
+  } : n);
   await updateDoc(tripRef, { notes: updatedNotes });
   showToast("回覆成功");
-};
-  
-  // --- 新增：處理記事本留言儲存 ---
-const handleSaveNote = async () => {
-  if (!itemData.noteContent?.trim()) {
-    showToast("請輸入內容", "error");
-    return;
-  }
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  try {
-    const newNote = {
-      id: Date.now().toString(),
-      content: itemData.noteContent,
-      color: itemData.noteColor || '#8B5CF6',
-      author: getCurrentUserNickname(),
-      emoji: tripData.members[user.uid]?.emoji || "👤",
-      time: Date.now(),
-    };
-    await updateDoc(tripRef, {
-      notes: arrayUnion(newNote)
-    });
-    setItemData({ ...itemData, noteContent: "" }); // 清空輸入框
-    showToast("留言已送出");
-  } catch (e) {
-    showToast("留言失敗", "error");
-  }
 };
 
   const deleteItem = async (col, item) => {
