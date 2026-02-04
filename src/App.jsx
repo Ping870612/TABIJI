@@ -2785,28 +2785,64 @@ const handleReplyNote = async (noteId, replyText) => {
             )}
           </>
         )}
+
         {activeTab === "expenses" && (
-          <div className="space-y-4">
+          <div className="space-y-4 px-1 pb-24">
+            {/* 上方卡片：個人支出計算 & AI 按鈕 */}
             <div className="bg-stone-800 text-stone-50 p-6 rounded-2xl shadow-xl relative overflow-hidden flex justify-between items-center">
               <div className="relative z-10">
                 <div className="text-stone-400 text-xs tracking-widest mb-1 uppercase">
-                  Total Expenses
+                  My Personal Spend
                 </div>
                 <div className="text-4xl font-bold font-mono">
                   $
                   {(tripData.expenses || [])
-                    .reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
-                    .toLocaleString()}
+                    .reduce((sum, item) => {
+                      const amount = Number(item.amount) || 0;
+                      const myName = getCurrentUserNickname();
+                      
+                      // 情況 A: 這筆帳有分攤 (只計算屬於我的那一份)
+                      if (item.isSplit && item.splitWith?.length > 0) {
+                        if (item.splitWith.includes(myName)) {
+                          return sum + (amount / item.splitWith.length);
+                        }
+                        return sum; // 有分攤但沒我的份，算 0
+                      } 
+                      // 情況 B: 沒分攤 (如果是我的付款，視為個人全額支出)
+                      else if (item.payer === myName) {
+                        return sum + amount;
+                      }
+                      
+                      return sum;
+                    }, 0)
+                    .toLocaleString(undefined, { maximumFractionDigits: 0 })} 
+                    {/* 小數點四捨五入，保持版面乾淨 */}
+                </div>
+                <div className="text-[10px] text-stone-500 mt-1">
+                  *包含分帳後的預估金額
                 </div>
               </div>
+              
               <button
                 onClick={handleCalculateDebts}
                 className="bg-emerald-500 hover:bg-emerald-400 text-white p-3 rounded-xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
               >
-                <Calculator size={20} /> AI 分帳
+                <Calculator size={20} /> AI 結算
               </button>
             </div>
+
+            {/* 下方列表：顯示與我有關的帳目 */}
             {(tripData.expenses || [])
+              .filter((expense) => {
+                // 過濾邏輯：顯示 (我建立的) 或 (付款人是我) 或 (分帳名單有我)
+                const myNickname = getCurrentUserNickname();
+                const isCreatedByMe = expense.createdBy === user.uid;
+                const isPaidByMe = expense.payer === myNickname;
+                const isInvolved =
+                  expense.isSplit &&
+                  (expense.splitWith || []).includes(myNickname);
+                return isCreatedByMe || isPaidByMe || isInvolved;
+              })
               .sort((a, b) => new Date(b.date) - new Date(a.date))
               .map((expense) => {
                 const expenseIcons = {
@@ -2826,6 +2862,18 @@ const handleReplyNote = async (noteId, replyText) => {
                     shopping: "bg-pink-100 text-pink-600",
                     other: "bg-stone-100 text-stone-600",
                   }[expense.category] || "bg-stone-100 text-stone-600";
+
+                const myNickname = getCurrentUserNickname();
+                // 計算這筆項目「我實際花了多少」
+                let myShare = 0;
+                if (expense.isSplit && expense.splitWith?.length > 0) {
+                   myShare = expense.splitWith.includes(myNickname) 
+                     ? (Number(expense.amount) / expense.splitWith.length) 
+                     : 0;
+                } else if (expense.payer === myNickname) {
+                   myShare = Number(expense.amount);
+                }
+
                 return (
                   <div
                     key={expense.id}
@@ -2842,35 +2890,67 @@ const handleReplyNote = async (noteId, replyText) => {
                         {Icon}
                       </div>
                       <div>
-                        <div className="font-bold text-stone-800">
+                        <div className="font-bold text-stone-800 flex items-center gap-2">
                           {expense.item}
+                          {myShare > 0 && (
+                            <span className="text-[10px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded-md font-normal">
+                              我付: ${Math.round(myShare)}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 mt-1 text-[10px]">
                           <span className="text-stone-400 font-mono">
                             {expense.date}
                           </span>
                           <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
-                            <span className="text-stone-400">付:</span>
+                            <span className="text-stone-400">墊:</span>
                             <span className="font-bold text-stone-600">
                               {expense.payer}
                             </span>
                           </div>
                           {expense.isSplit && (
                             <span className="text-purple-400 border border-purple-100 bg-purple-50 px-1.5 py-0.5 rounded">
-                              分帳
+                              {expense.splitWith.length}人分
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
+                    
                     <div className="flex items-center gap-3">
                       <span className="font-bold font-mono text-stone-800 text-lg">
                         ${Number(expense.amount).toLocaleString()}
                       </span>
+                      
+                      {/* 只有自己建立的項目才顯示刪除按鈕 */}
+                      {expense.createdBy === user.uid && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmConfig({
+                              isOpen: true,
+                              title: "刪除支出",
+                              message: `確定要刪除「${expense.item}」嗎？`,
+                              onConfirm: () => deleteItem("expenses", expense),
+                              onCancel: () => setConfirmConfig({ isOpen: false }),
+                              isDangerous: true,
+                            });
+                          }}
+                          className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
               })}
+              
+            {(tripData.expenses || []).filter(e => e.createdBy === user.uid || e.payer === getCurrentUserNickname() || (e.isSplit && (e.splitWith || []).includes(getCurrentUserNickname()))).length === 0 && (
+               <div className="text-center py-10 text-stone-400 text-xs">
+                 尚無與您相關的支出紀錄
+               </div>
+            )}
           </div>
         )}
 
