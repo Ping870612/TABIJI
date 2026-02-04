@@ -946,37 +946,37 @@ const ItineraryCard = ({
   const typeConfig = {
     sightseeing: {
       icon: <Camera size={15} />,
-      cardStyle: "bg-indigo-50/60 border-indigo-200 hover:border-indigo-300",
+      cardStyle: "", // 移除背景與邊框顏色
       iconColor: "text-indigo-500",
       label: "景點",
     },
     food: {
       icon: <Utensils size={15} />,
-      cardStyle: "bg-orange-50/60 border-orange-200 hover:border-orange-300",
+      cardStyle: "",
       iconColor: "text-orange-500",
       label: "餐廳",
     },
     transport: {
       icon: <Train size={15} />,
-      cardStyle: "bg-emerald-50/60 border-emerald-200 hover:border-emerald-300",
+      cardStyle: "",
       iconColor: "text-emerald-500",
       label: "交通",
     },
     flight: {
       icon: <Plane size={15} />,
-      cardStyle: "bg-sky-50/60 border-sky-200 hover:border-sky-300",
+      cardStyle: "",
       iconColor: "text-sky-500",
       label: "航班",
     },
     accommodation: {
       icon: <Home size={15} />,
-      cardStyle: "bg-rose-50/60 border-rose-200 hover:border-rose-300",
+      cardStyle: "",
       iconColor: "text-rose-500",
       label: "住宿",
     },
     activity: {
       icon: <MapPin size={15} />,
-      cardStyle: "bg-stone-100/60 border-stone-200 hover:border-stone-300",
+      cardStyle: "",
       iconColor: "text-stone-500",
       label: "活動",
     },
@@ -988,20 +988,23 @@ const ItineraryCard = ({
   return (
     <div
       onClick={() => onSelect(item)}
-      className={`rounded-xl p-3 border mb-2 relative group transition-all active:scale-[0.99] cursor-pointer shadow-sm ${config.cardStyle}`}
+      // 修改處：移除了 border, shadow-sm，保留 padding (p-3) 和圓角，加入 hover 效果
+      className={`rounded-xl p-3 mb-1 relative group transition-all active:scale-[0.99] cursor-pointer hover:bg-stone-50 ${config.cardStyle}`}
     >
       <div className="flex justify-between items-start">
         <div className="flex flex-col items-center mr-3 pt-1 min-w-[3rem]">
           <span className="text-sm font-bold text-stone-600 tracking-wider font-mono">
             {item.time}
           </span>
-          <div className="h-full w-[1px] bg-stone-400/20 my-1"></div>
+          {/* 修改處：讓時間軸線稍微淡一點 */}
+          <div className="h-full w-[1px] bg-stone-100 my-1"></div>
         </div>
 
         <div className="flex-1 min-w-0 pr-1">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 min-w-0">
-              <span className={`${config.iconColor} shrink-0 opacity-80`}>
+              {/* Icon 顏色保留 */}
+              <span className={`${config.iconColor} shrink-0 opacity-100`}>
                 {config.icon}
               </span>
               <h3 className="font-bold text-stone-800 text-base sm:text-lg truncate tracking-tight">
@@ -1020,7 +1023,7 @@ const ItineraryCard = ({
           )}
           
           {item.guideInfo && (
-            <div className="text-xs text-stone-600 bg-white/60 p-2 rounded-lg leading-relaxed mb-1 border border-stone-100/50 flex gap-2">
+            <div className="text-xs text-stone-600 bg-stone-50 p-2 rounded-lg leading-relaxed mb-1 flex gap-2">
               <BookOpen
                 size={14}
                 className="text-stone-400 flex-shrink-0 mt-0.5"
@@ -1049,7 +1052,7 @@ const ItineraryCard = ({
         </div>
       </div>
 
-      <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/60 backdrop-blur-sm rounded-lg p-0.5 z-10 shadow-sm border border-stone-100/50">
+      <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-0.5 z-10 shadow-sm border border-stone-100">
         <button
           onClick={(e) => {
             e.stopPropagation();
