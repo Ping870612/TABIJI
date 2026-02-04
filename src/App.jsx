@@ -2266,21 +2266,44 @@ const handleNoteImageUpload = (e) => {
   }
 };
 
+// --- 記事本核心邏輯 ---
+// 1. 上傳圖片轉碼
+const handleNoteImageUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    if (file.size > 1024 * 1024) { showToast("圖片需小於 1MB", "error"); return; }
+    const reader = new FileReader();
+    reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
+    reader.readAsDataURL(file);
+  }
+};
+
+// 2. 送出留言 (支援文字或圖片)
 const handleSaveNote = async () => {
-  if (!itemData.noteContent?.trim() && !itemData.noteImage) return;
+  // 邏輯檢查：只要 文字有內容 OR 有圖片，就可以通過
+  if (!itemData.noteContent?.trim() && !itemData.noteImage) {
+    showToast("請輸入文字或上傳圖片", "error");
+    return;
+  }
+  
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
   try {
     if (isEditMode && editingId) {
+      // 編輯模式
       const updatedNotes = (tripData.notes || []).map(n => n.id === editingId ? { 
-        ...n, content: itemData.noteContent, image: itemData.noteImage, isEdited: true 
+        ...n, 
+        content: itemData.noteContent, 
+        image: itemData.noteImage, 
+        isEdited: true 
       } : n);
       await updateDoc(tripRef, { notes: updatedNotes });
     } else {
+      // 新增模式
       const newNote = {
         id: "note_" + Date.now(),
         content: itemData.noteContent,
         image: itemData.noteImage,
-        color: itemData.noteColor || '#8B5CF6',
+        color: '#8B5CF6', // 移除選擇，統一預設為紫色
         author: getCurrentUserNickname(),
         emoji: tripData.members[user.uid]?.emoji || "👤",
         time: Date.now(),
@@ -2288,6 +2311,7 @@ const handleSaveNote = async () => {
       };
       await updateDoc(tripRef, { notes: arrayUnion(newNote) });
     }
+    // 清空輸入框
     setItemData({ ...itemData, noteContent: "", noteImage: null });
     setIsEditMode(false);
     setEditingId(null);
@@ -2295,12 +2319,14 @@ const handleSaveNote = async () => {
   } catch (e) { showToast("出錯了", "error"); }
 };
 
+// 3. 刪除留言
 const deleteNote = async (noteId) => {
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
   await updateDoc(tripRef, { notes: tripData.notes.filter(n => n.id !== noteId) });
   showToast("已刪除");
 };
 
+// 4. 回覆留言
 const handleReplyNote = async (noteId, replyText) => {
   if (!replyText.trim()) return;
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
@@ -2310,7 +2336,6 @@ const handleReplyNote = async (noteId, replyText) => {
   await updateDoc(tripRef, { notes: updatedNotes });
   showToast("回覆成功");
 };
-
   const deleteItem = async (col, item) => {
     const tripRef = doc(
       db,
@@ -2860,18 +2885,18 @@ const handleReplyNote = async (noteId, replyText) => {
           </div>
         )}
 
-        {activeTab === "notes" && (
+{activeTab === "notes" && (
   <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
-    {/* 留言區 */}
+    {/* 留言輸入區 */}
     <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
       <textarea
-        placeholder="想分享什麼？(支援貼上表情符號)"
+        placeholder="想分享什麼？(可貼 Emoji)"
         className="w-full bg-stone-50 p-4 rounded-2xl text-sm outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-none"
         value={itemData.noteContent || ""}
         onChange={(e) => setItemData({...itemData, noteContent: e.target.value})}
       />
       
-      {/* 圖片預覽 */}
+      {/* 圖片預覽區 */}
       {itemData.noteImage && (
         <div className="relative mt-2 w-20 h-20">
           <img src={itemData.noteImage} className="w-full h-full object-cover rounded-xl border" />
@@ -2880,58 +2905,51 @@ const handleReplyNote = async (noteId, replyText) => {
       )}
 
       <div className="flex justify-between items-center mt-3">
-        <div className="flex gap-2">
-          <label className="cursor-pointer p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors">
+        {/* 左側：只剩下相機按鈕 */}
+        <div>
+          <label className="cursor-pointer p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors inline-flex items-center justify-center">
             <Camera size={20} />
             <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
           </label>
-          <div className="flex gap-1.5 items-center ml-2">
-            {['#8B5CF6', '#F59E0B', '#3B82F6'].map(c => (
-              <button key={c} onClick={() => setItemData({...itemData, noteColor: c})} className={`w-5 h-5 rounded-full border-2 ${itemData.noteColor === c ? 'border-stone-800' : 'border-white'}`} style={{backgroundColor: c}} />
-            ))}
-          </div>
         </div>
-        <button onClick={handleSaveNote} className="bg-stone-800 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-md">
+
+        {/* 右側：送出按鈕 */}
+        <button onClick={handleSaveNote} className="bg-stone-800 text-white px-6 py-2 rounded-xl text-sm font-bold active:scale-95 transition-transform">
           {isEditMode ? "更新" : "送出"}
         </button>
       </div>
     </div>
 
-    {/* 列表 - 最新在最上面 */}
-    <div className="space-y-4 pb-20">
-      {(tripData.notes || []).sort((a, b) => b.time - a.time).map((note) => (
-        <div key={note.id} className="bg-white p-4 rounded-2xl border-l-4 shadow-sm" style={{ borderLeftColor: note.color }}>
+    {/* 留言列表 */}
+    <div className="space-y-4 pb-24">
+      {(tripData.notes || []).slice().sort((a, b) => b.time - a.time).map((note) => (
+        <div key={note.id} className="bg-white p-4 rounded-2xl border-l-4 shadow-sm" style={{ borderLeftColor: note.color || '#8B5CF6' }}>
           <div className="flex items-center gap-2 mb-2">
             <UserBadge nickname={note.author} emoji={note.emoji} size="sm" />
-            <span className="font-bold text-xs text-stone-700">{note.author}</span>
-            <span className="text-[10px] text-stone-300 ml-auto">
-              {new Date(note.time).toLocaleDateString()} {note.isEdited && "(已編輯)"}
-            </span>
-            <div className="flex gap-1 ml-2">
-              <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({noteContent: note.content, noteImage: note.image, noteColor: note.color}); }} className="p-1 text-stone-300 hover:text-stone-600"><Edit size={14}/></button>
-              <button onClick={() => deleteNote(note.id)} className="p-1 text-stone-300 hover:text-red-400"><Trash2 size={14}/></button>
+            <span className="font-bold text-[11px] text-stone-700">{note.author}</span>
+            <span className="text-[9px] text-stone-300 ml-auto">{new Date(note.time).toLocaleString()}</span>
+            
+            {/* 編輯與刪除按鈕 (只顯示給自己或可以設為公開) */}
+            <div className="flex gap-1 ml-1">
+              <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({noteContent: note.content, noteImage: note.image}); }} className="p-1 text-stone-200 hover:text-stone-500"><Edit size={12}/></button>
+              <button onClick={() => deleteNote(note.id)} className="p-1 text-stone-200 hover:text-red-400"><Trash2 size={12}/></button>
             </div>
           </div>
           
           <p className="text-sm text-stone-600 whitespace-pre-wrap">{note.content}</p>
-          {note.image && <img src={note.image} className="mt-3 rounded-xl w-full max-h-60 object-cover" />}
+          {note.image && <img src={note.image} className="mt-2 rounded-xl w-full max-h-60 object-cover" />}
           
-          {/* 回覆顯示區 */}
-          <div className="mt-3 pl-4 border-l-2 border-stone-100 space-y-2">
-            {(note.replies || []).map(r => (
-              <div key={r.id} className="text-xs">
-                <span className="font-bold text-stone-800">{r.author}: </span>
-                <span className="text-stone-500">{r.content}</span>
-              </div>
+          {/* 回覆區 */}
+          <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
+            {(note.replies || []).map((r, i) => (
+              <div key={i} className="text-[11px]"><span className="font-bold text-stone-800">{r.author}:</span> <span className="text-stone-500">{r.content}</span></div>
             ))}
-            <div className="flex gap-2 mt-2">
-              <input 
-                type="text" 
-                placeholder="輸入回覆..." 
-                className="flex-1 bg-stone-50 text-[10px] p-2 rounded-lg outline-none"
-                onKeyDown={(e) => { if(e.key === 'Enter') { handleReplyNote(note.id, e.target.value); e.target.value = ''; } }}
-              />
-            </div>
+            <input 
+              type="text" 
+              placeholder="回覆旅伴..." 
+              className="w-full bg-stone-50 text-[10px] p-2 rounded-lg outline-none"
+              onKeyDown={(e) => { if(e.key === 'Enter') { handleReplyNote(note.id, e.target.value); e.target.value = ''; } }}
+            />
           </div>
         </div>
       ))}
