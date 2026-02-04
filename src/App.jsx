@@ -2251,6 +2251,111 @@ const handleCalculateDebts = async () => {
       showToast("儲存失敗", "error");
     }
   };
+// --- 記事本功能邏輯 ---
+
+// 處理圖片轉 Base64 (讓手機照片能直接變網頁顯示的文字)
+const handleNoteImageUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    if (file.size > 1024 * 1024) { // 限制 1MB
+      showToast("圖片太大囉，請小於 1MB", "error");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
+    reader.readAsDataURL(file);
+  }
+};
+
+// 送出留言 (支援新增與編輯)
+const handleSaveNote = async () => {
+  if (!itemData.noteContent?.trim() && !itemData.noteImage) return;
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  const currentNotes = tripData.notes || [];
+
+  try {
+    if (isEditMode) {
+      // 編輯模式
+      const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
+        ...n, 
+        content: itemData.noteContent, 
+        image: itemData.noteImage,
+        isEdited: true 
+      } : n);
+      await updateDoc(tripRef, { notes: updatedNotes });
+    } else {
+      // 新增模式
+      const newNote = {
+        id: "note_" + Date.now(),
+        content: itemData.noteContent,
+        image: itemData.noteImage,
+        color: itemData.noteColor || '#8B5CF6',
+        author: getCurrentUserNickname(),
+        emoji: tripData.members[user.uid]?.emoji || "👤",
+        time: Date.now(),
+        replies: []
+      };
+      await updateDoc(tripRef, { notes: arrayUnion(newNote) });
+    }
+    setItemData({ ...itemData, noteContent: "", noteImage: null });
+    setIsEditMode(false);
+    showToast("成功！");
+  } catch (e) { showToast("出錯了", "error"); }
+};
+
+// 刪除留言
+const deleteNote = async (noteId) => {
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  const updatedNotes = tripData.notes.filter(n => n.id !== noteId);
+  await updateDoc(tripRef, { notes: updatedNotes });
+  showToast("已刪除");
+};
+
+// 回覆留言
+const handleReplyNote = async (noteId, replyText) => {
+  if (!replyText.trim()) return;
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  const updatedNotes = tripData.notes.map(n => {
+    if (n.id === noteId) {
+      const newReply = {
+        id: "rep_" + Date.now(),
+        author: getCurrentUserNickname(),
+        content: replyText,
+        time: Date.now()
+      };
+      return { ...n, replies: [...(n.replies || []), newReply] };
+    }
+    return n;
+  });
+  await updateDoc(tripRef, { notes: updatedNotes });
+  showToast("回覆成功");
+};
+  
+  // --- 新增：處理記事本留言儲存 ---
+const handleSaveNote = async () => {
+  if (!itemData.noteContent?.trim()) {
+    showToast("請輸入內容", "error");
+    return;
+  }
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  try {
+    const newNote = {
+      id: Date.now().toString(),
+      content: itemData.noteContent,
+      color: itemData.noteColor || '#8B5CF6',
+      author: getCurrentUserNickname(),
+      emoji: tripData.members[user.uid]?.emoji || "👤",
+      time: Date.now(),
+    };
+    await updateDoc(tripRef, {
+      notes: arrayUnion(newNote)
+    });
+    setItemData({ ...itemData, noteContent: "" }); // 清空輸入框
+    showToast("留言已送出");
+  } catch (e) {
+    showToast("留言失敗", "error");
+  }
+};
 
   const deleteItem = async (col, item) => {
     const tripRef = doc(
@@ -2800,6 +2905,87 @@ const handleCalculateDebts = async () => {
               })}
           </div>
         )}
+
+        {activeTab === "notes" && (
+  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
+    {/* 留言區 */}
+    <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
+      <textarea
+        placeholder="想分享什麼？(支援貼上表情符號)"
+        className="w-full bg-stone-50 p-4 rounded-2xl text-sm outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-none"
+        value={itemData.noteContent || ""}
+        onChange={(e) => setItemData({...itemData, noteContent: e.target.value})}
+      />
+      
+      {/* 圖片預覽 */}
+      {itemData.noteImage && (
+        <div className="relative mt-2 w-20 h-20">
+          <img src={itemData.noteImage} className="w-full h-full object-cover rounded-xl border" />
+          <button onClick={() => setItemData({...itemData, noteImage: null})} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center mt-3">
+        <div className="flex gap-2">
+          <label className="cursor-pointer p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors">
+            <Camera size={20} />
+            <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
+          </label>
+          <div className="flex gap-1.5 items-center ml-2">
+            {['#8B5CF6', '#F59E0B', '#3B82F6'].map(c => (
+              <button key={c} onClick={() => setItemData({...itemData, noteColor: c})} className={`w-5 h-5 rounded-full border-2 ${itemData.noteColor === c ? 'border-stone-800' : 'border-white'}`} style={{backgroundColor: c}} />
+            ))}
+          </div>
+        </div>
+        <button onClick={handleSaveNote} className="bg-stone-800 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-md">
+          {isEditMode ? "更新" : "送出"}
+        </button>
+      </div>
+    </div>
+
+    {/* 列表 - 最新在最上面 */}
+    <div className="space-y-4 pb-20">
+      {(tripData.notes || []).sort((a, b) => b.time - a.time).map((note) => (
+        <div key={note.id} className="bg-white p-4 rounded-2xl border-l-4 shadow-sm" style={{ borderLeftColor: note.color }}>
+          <div className="flex items-center gap-2 mb-2">
+            <UserBadge nickname={note.author} emoji={note.emoji} size="sm" />
+            <span className="font-bold text-xs text-stone-700">{note.author}</span>
+            <span className="text-[10px] text-stone-300 ml-auto">
+              {new Date(note.time).toLocaleDateString()} {note.isEdited && "(已編輯)"}
+            </span>
+            <div className="flex gap-1 ml-2">
+              <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({noteContent: note.content, noteImage: note.image, noteColor: note.color}); }} className="p-1 text-stone-300 hover:text-stone-600"><Edit size={14}/></button>
+              <button onClick={() => deleteNote(note.id)} className="p-1 text-stone-300 hover:text-red-400"><Trash2 size={14}/></button>
+            </div>
+          </div>
+          
+          <p className="text-sm text-stone-600 whitespace-pre-wrap">{note.content}</p>
+          {note.image && <img src={note.image} className="mt-3 rounded-xl w-full max-h-60 object-cover" />}
+          
+          {/* 回覆顯示區 */}
+          <div className="mt-3 pl-4 border-l-2 border-stone-100 space-y-2">
+            {(note.replies || []).map(r => (
+              <div key={r.id} className="text-xs">
+                <span className="font-bold text-stone-800">{r.author}: </span>
+                <span className="text-stone-500">{r.content}</span>
+              </div>
+            ))}
+            <div className="flex gap-2 mt-2">
+              <input 
+                type="text" 
+                placeholder="輸入回覆..." 
+                className="flex-1 bg-stone-50 text-[10px] p-2 rounded-lg outline-none"
+                onKeyDown={(e) => { if(e.key === 'Enter') { handleReplyNote(note.id, e.target.value); e.target.value = ''; } }}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+        
       </main>
 
       <button
@@ -2824,31 +3010,34 @@ const handleCalculateDebts = async () => {
         <Plus size={24} />
       </button>
 
-      <nav className="absolute bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
-        <button
-          onClick={() => setActiveTab("itinerary")}
-          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-            activeTab === "itinerary"
-              ? "text-stone-800 bg-stone-100"
-              : "text-stone-400 hover:text-stone-600"
-          }`}
-        >
-          <Calendar size={20} />
-          <span className="text-[10px] font-medium tracking-wide">行程</span>
-        </button>
-        <div className="w-[1px] h-6 bg-stone-200"></div>
-        <button
-          onClick={() => setActiveTab("expenses")}
-          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-            activeTab === "expenses"
-              ? "text-stone-800 bg-stone-100"
-              : "text-stone-400 hover:text-stone-600"
-          }`}
-        >
-          <CreditCard size={20} />
-          <span className="text-[10px] font-medium tracking-wide">記帳</span>
-        </button>
-      </nav>
+<nav className="absolute bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
+  {/* 原有的行程按鈕 */}
+  <button onClick={() => setActiveTab("itinerary")} className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 ${activeTab === "itinerary" ? "text-stone-800 bg-stone-100" : "text-stone-400"}`}>
+    <Calendar size={20} />
+    <span className="text-[10px] font-medium tracking-wide">行程</span>
+  </button>
+
+  <div className="w-[1px] h-6 bg-stone-200"></div>
+
+  {/* 原有的記帳按鈕 */}
+  <button onClick={() => setActiveTab("expenses")} className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 ${activeTab === "expenses" ? "text-stone-800 bg-stone-100" : "text-stone-400"}`}>
+    <CreditCard size={20} />
+    <span className="text-[10px] font-medium tracking-wide">記帳</span>
+  </button>
+
+  <div className="w-[1px] h-6 bg-stone-200"></div>
+
+  {/* 🚀 新增：記事本按鈕 */}
+  <button
+    onClick={() => setActiveTab("notes")}
+    className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+      activeTab === "notes" ? "text-stone-800 bg-stone-100" : "text-stone-400 hover:text-stone-600"
+    }`}
+  >
+    <BookOpen size={20} />
+    <span className="text-[10px] font-medium tracking-wide">記事本</span>
+  </button>
+</nav>
 
       {!isModalOpen && (
         <div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
