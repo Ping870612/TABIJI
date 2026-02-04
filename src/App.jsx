@@ -1,3 +1,35 @@
+Skip to content
+Ping870612
+TABIJI
+Repository navigation
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security
+1
+ (1)
+Insights
+Settings
+TABIJI/src
+/App.jsx
+Go to file
+t
+Ping870612
+Ping870612
+App.jsx
+3327e79
+ · 
+16 hours ago
+TABIJI/src
+/App.jsx
+
+Code
+
+Blame
+  const deleteItem = async (col, item) => {
 import React, { useState, useEffect, useRef } from "react";
 import {
   MapPin,
@@ -47,8 +79,6 @@ import {
   ShoppingBag,
   MoreHorizontal,
   ArrowRightLeft,
-  StickyNote,
-  Smile,
 } from "lucide-react";
 
 // --- Firebase Imports ---
@@ -117,6 +147,7 @@ async function callGeminiAPI(parts) {
 async function callImagenAPI(imagePrompt) {
   try {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || firebaseConfig.apiKey;
+    
     if (!apiKey) {
       console.error("未找到 API Key");
       return null;
@@ -146,6 +177,7 @@ async function callImagenAPI(imagePrompt) {
 
     const data = await response.json();
     const base64Image = data.predictions?.[0]?.bytesBase64Encoded;
+    
     return base64Image ? `data:image/png;base64,${base64Image}` : null;
   } catch (error) {
     console.error("Imagen Error:", error);
@@ -227,9 +259,25 @@ const SetupGuide = ({ error }) => (
         預設的測試金鑰在外部環境無法使用。請依照以下步驟設定您自己的 Firebase
         專案。
       </p>
+
       <div className="bg-red-50 text-red-600 p-4 rounded-xl text-[10px] font-mono mb-6 overflow-x-auto border border-red-100">
         錯誤訊息: {error?.message || "Unknown Connection Error"}
       </div>
+
+      <ol className="text-sm text-stone-600 space-y-3 list-decimal pl-5 mb-8">
+        <li>前往 Firebase Console 並建立新專案。</li>
+        <li>
+          建立 Web App 並複製 <code>firebaseConfig</code>。
+        </li>
+        <li>
+          回到程式碼，取代 <code>firebaseConfig</code> 變數。
+        </li>
+        <li>
+          開啟 <strong>Authentication</strong> (匿名登入) 與{" "}
+          <strong>Firestore</strong> (Test mode)。
+        </li>
+      </ol>
+
       <button
         onClick={() => window.location.reload()}
         className="w-full bg-stone-800 text-white px-6 py-4 rounded-xl font-bold hover:bg-stone-700 transition-colors"
@@ -365,33 +413,34 @@ const AIAnalysisModal = ({
 const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   if (!isOpen || !item) return null;
 
-  const typeConfig = {
+const typeConfig = {
     sightseeing: {
-      icon: <Camera size={24} />,
-      bg: "bg-indigo-100 text-indigo-600",
+      icon: <Camera size={14} />,
+      bg: "bg-stone-100 text-stone-600", // 原本是 indigo
       label: "景點",
     },
     food: {
-      icon: <Utensils size={24} />,
-      bg: "bg-orange-100 text-orange-600",
+      icon: <Utensils size={14} />,
+      bg: "bg-stone-100 text-stone-600", // 原本是 orange
       label: "餐廳",
     },
     transport: {
-      icon: <Train size={24} />,
-      bg: "bg-emerald-100 text-emerald-600",
+      icon: <Train size={14} />,
+      bg: "bg-stone-100 text-stone-600", // 原本是 emerald
       label: "交通",
     },
     flight: {
-      icon: <Plane size={24} />,
-      bg: "bg-sky-100 text-sky-600",
+      icon: <Plane size={14} />,
+      bg: "bg-stone-100 text-stone-600", // 原本是 sky
       label: "航班",
     },
     activity: {
-      icon: <MapPin size={24} />,
-      bg: "bg-stone-100 text-stone-600",
+      icon: <MapPin size={14} />,
+      bg: "bg-stone-100 text-stone-600", // 原本是 stone (維持不變)
       label: "活動",
     },
   };
+  
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
@@ -406,7 +455,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
         </button>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4 border-b border-stone-100 pb-4">
-            <div className={`p-4 rounded-2xl ${config.bg} shadow-sm`}>
+            <div className={`p-4 rounded-2xl ${config.bgIcon} shadow-sm`}>
               {config.icon}
             </div>
             <div>
@@ -472,6 +521,61 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// --- 新增元件：成員選擇視窗 ---
+const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="absolute inset-0 z-[90] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+        <div className="text-center mb-6">
+          <h3 className="text-xl font-bold text-stone-800 mb-2">
+            歡迎回來！
+          </h3>
+          <p className="text-sm text-stone-500">
+            這個行程已經有成員了，請問您是...？
+          </p>
+        </div>
+        
+        <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+          {Object.entries(members).map(([uid, member]) => (
+            <button
+              key={uid}
+              onClick={() => onSelect(uid, member)}
+              className="w-full flex items-center gap-4 p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition-all active:scale-95 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl shadow-sm border border-stone-100">
+                {member.emoji}
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-stone-800 group-hover:text-indigo-600 transition-colors">
+                  我是 {member.nickname}
+                </div>
+                <div className="text-[10px] text-stone-400">
+                  點擊以繼承此身分
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="relative flex py-2 items-center mb-4">
+          <div className="flex-grow border-t border-stone-100"></div>
+          <span className="flex-shrink mx-4 text-stone-300 text-xs">或是</span>
+          <div className="flex-grow border-t border-stone-100"></div>
+        </div>
+
+        <button
+          onClick={onCreateNew}
+          className="w-full bg-stone-800 text-white font-bold py-3 rounded-xl hover:bg-stone-700 transition-all shadow-lg"
+        >
+          我是新成員 (建立新檔案)
+        </button>
       </div>
     </div>
   );
@@ -644,20 +748,31 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
             <br />
             他們只需在首頁輸入代碼即可共同編輯 <b>{tripName}</b>。
           </p>
+          
+          {/* ↓↓↓ 重點修改區 ↓↓↓ */}
           <div
-            onClick={() => copyToClipboard(tripId)}
+            onClick={() => {
+              // 1. 取得完整網址
+              const link = `${window.location.origin}${window.location.pathname}?tripId=${tripId}`;
+              // 2. 組合邀請訊息
+              const message = `👋 點擊下方連結一起參與 ${tripName} 的行程！✈️\n${link}`;
+              // 3. 複製
+              copyToClipboard(message);
+            }}
             className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
           >
             <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
-              旅程代碼
+              點擊複製邀請函
             </div>
             <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
               {tripId}
             </div>
             <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
-              <Copy size={12} /> 點擊複製
+              <Copy size={12} /> 複製文字與連結
             </div>
           </div>
+          {/* ↑↑↑ 修改結束 ↑↑↑ */}
+          
         </div>
       </div>
     </div>
@@ -751,26 +866,20 @@ const LocationInput = ({ value, onChange, placeholder }) => {
   );
 };
 
+// 修改後的 Tag 元件：統一使用素色樣式
 const Tag = ({ type, text }) => {
-  const styles = {
-    mustEat: "bg-orange-50 text-orange-700 border-orange-200",
-    mustBuy: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    reservation: "bg-red-50 text-red-700 border-red-200",
-    story: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    default: "bg-stone-100 text-stone-600 border-stone-200",
-  };
+  // 不管是什麼 type，全部統一用這個灰色樣式
+  const style = "bg-stone-100 text-stone-600 border-stone-200";
+  
   return (
     <span
-      className={`text-[10px] px-2 py-1 rounded-md border ${
-        styles[type] || styles.default
-      } font-medium inline-block mr-1 mb-1 tracking-wide`}
+      className={`text-[10px] px-2 py-1 rounded-md border ${style} font-medium inline-block mr-1 mb-1 tracking-wide`}
     >
       {typeof text === "string" ? text : String(text || "")}
     </span>
   );
 };
 
-// 🟡 復原：這是列表中的天氣小徽章
 const WeatherBadge = ({ date, weatherData }) => {
   if (!date || !weatherData || !weatherData[date]) return null;
   const info = weatherData[date];
@@ -791,43 +900,61 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
-// 🟡 復原：這是頂部的天氣大卡片
-const HeroWeatherCard = ({ startDate, destination, weatherData }) => {
-  if (!startDate || !weatherData || !weatherData[startDate]) return null;
-  const info = weatherData[startDate];
-  let Icon = Sun;
-  if (info.condition.includes("Rain") || info.condition.includes("雨"))
-    Icon = CloudRain;
-  else if (info.condition.includes("Cloud") || info.condition.includes("雲"))
-    Icon = CloudSun;
-  else if (info.condition.includes("Wind") || info.condition.includes("風"))
-    Icon = Wind;
+// --- 更新後的導覽列元件 (半透明毛玻璃版) ---
+  const DayNavigation = ({ days, tripData, onScrollToDay }) => {
+    const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
-  return (
-    <div className="mb-6 mx-2 p-6 bg-gradient-to-br from-[#4facfe] to-[#00f2fe] rounded-[2rem] text-white shadow-xl relative overflow-hidden animate-in slide-in-from-top-5 duration-700">
-      <div className="relative z-10 flex justify-between items-center">
-        <div>
-          <div className="text-white/80 text-xs font-bold tracking-widest uppercase mb-1">
-            Current Weather
-          </div>
-          <div className="text-3xl font-bold">{destination}</div>
-          <div className="text-sm font-medium opacity-90 mt-1">
-            {startDate} • {info.condition}
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-5xl font-bold tracking-tighter">
-            {info.temp.replace("°C", "")}°
-          </div>
+    return (
+      <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-4 pt-2 px-4 -mx-4 mb-4 border-b border-stone-100/50 shadow-sm">
+        {/* 將 class 換成 custom-scrollbar */}
+        <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar justify-start md:justify-center">
+          {days.map((day) => {
+            const dateObj = new Date(tripData.startDate);
+            dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
+            
+            const formattedDate = dateObj.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+            const dayOfWeek = weekdays[dateObj.getDay()];
+            
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            const dateKey = `${y}-${m}-${d}`;
+            
+            const weather = tripData.weather?.[dateKey];
+
+            return (
+              <button
+                key={day}
+                onClick={() => onScrollToDay(day)}
+                className="flex-shrink-0 w-24 bg-white/80 border border-stone-100 rounded-2xl p-3 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-400 hover:shadow-md"
+              >
+                <div className="text-[10px] text-stone-400 font-bold mb-1">
+                  {formattedDate} ({dayOfWeek})
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-black text-stone-800">{day}</span>
+                  <span className="text-[10px] text-stone-500 font-bold">DAY</span>
+                </div>
+                {weather ? (
+                  <div className="mt-2 flex items-center gap-1 text-[9px] text-orange-500 font-bold">
+                    <Sun size={10} />
+                    <span className="truncate">{weather.temp} {weather.condition}</span>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-[9px] text-stone-200 font-bold italic">無天氣資訊</div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
-      <Icon
-        size={120}
-        className="absolute -bottom-4 -right-4 text-white/20 rotate-12"
-      />
-      <div className="absolute top-0 left-0 w-full h-full bg-white/10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 to-transparent"></div>
-    </div>
-  );
+    );
+  };
+const scrollToDay = (day) => {
+  const element = document.getElementById(`day-section-${day}`);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 };
 
 const ItineraryCard = ({
@@ -840,64 +967,82 @@ const ItineraryCard = ({
 }) => {
   const typeConfig = {
     sightseeing: {
-      icon: <Camera size={14} />,
-      bg: "bg-indigo-100 text-indigo-600",
+      icon: <Camera size={15} />,
+      cardStyle: "bg-indigo-50/60 border-indigo-200 hover:border-indigo-300",
+      iconColor: "text-indigo-500",
       label: "景點",
     },
     food: {
-      icon: <Utensils size={14} />,
-      bg: "bg-orange-100 text-orange-600",
+      icon: <Utensils size={15} />,
+      cardStyle: "bg-orange-50/60 border-orange-200 hover:border-orange-300",
+      iconColor: "text-orange-500",
       label: "餐廳",
     },
     transport: {
-      icon: <Train size={14} />,
-      bg: "bg-emerald-100 text-emerald-600",
+      icon: <Train size={15} />,
+      cardStyle: "bg-emerald-50/60 border-emerald-200 hover:border-emerald-300",
+      iconColor: "text-emerald-500",
       label: "交通",
     },
     flight: {
-      icon: <Plane size={14} />,
-      bg: "bg-sky-100 text-sky-600",
+      icon: <Plane size={15} />,
+      cardStyle: "bg-sky-50/60 border-sky-200 hover:border-sky-300",
+      iconColor: "text-sky-500",
       label: "航班",
     },
+    accommodation: {
+      icon: <Home size={15} />,
+      cardStyle: "bg-rose-50/60 border-rose-200 hover:border-rose-300",
+      iconColor: "text-rose-500",
+      label: "住宿",
+    },
     activity: {
-      icon: <MapPin size={14} />,
-      bg: "bg-stone-100 text-stone-600",
+      icon: <MapPin size={15} />,
+      cardStyle: "bg-stone-100/60 border-stone-200 hover:border-stone-300",
+      iconColor: "text-stone-500",
       label: "活動",
     },
   };
+
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
   return (
     <div
       onClick={() => onSelect(item)}
-      className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-stone-100 mb-3 relative group transition-all active:scale-[0.99] cursor-pointer hover:shadow-md`}
+      className={`rounded-xl p-3 border mb-2 relative group transition-all active:scale-[0.99] cursor-pointer shadow-sm ${config.cardStyle}`}
     >
       <div className="flex justify-between items-start">
-        <div className="flex flex-col items-center mr-4 pt-1 min-w-[3.5rem]">
-          <span className="text-sm font-bold text-stone-800 tracking-wider font-mono">
+        <div className="flex flex-col items-center mr-3 pt-1 min-w-[3rem]">
+          <span className="text-sm font-bold text-stone-600 tracking-wider font-mono">
             {item.time}
           </span>
-          <div className="h-full w-[1px] bg-stone-100 my-2"></div>
+          <div className="h-full w-[1px] bg-stone-400/20 my-1"></div>
         </div>
-        <div className="flex-1 min-w-0 pr-20">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`p-1.5 rounded-lg ${config.bgIcon}`}>
-              {config.icon}
-            </span>
-            <h3 className="font-bold text-stone-800 text-lg truncate tracking-tight">
-              {item.location}
-            </h3>
+
+        <div className="flex-1 min-w-0 pr-1">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`${config.iconColor} shrink-0 opacity-80`}>
+                {config.icon}
+              </span>
+              <h3 className="font-bold text-stone-800 text-base sm:text-lg truncate tracking-tight">
+                {item.location}
+              </h3>
+            </div>
+            <div className="w-16 shrink-0"></div>
           </div>
+
           {(item.tags || []).length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2 mt-1">
+            <div className="flex flex-wrap gap-1 mb-1.5 mt-0.5">
               {item.tags.map((tag, i) => (
                 <Tag key={i} type={tag.type} text={tag.text} />
               ))}
             </div>
           )}
+          
           {item.guideInfo && (
-            <div className="text-xs text-stone-500 bg-stone-50 p-2 rounded-lg leading-relaxed mb-2 border border-stone-100 flex gap-2">
+            <div className="text-xs text-stone-600 bg-white/60 p-2 rounded-lg leading-relaxed mb-1 border border-stone-100/50 flex gap-2">
               <BookOpen
                 size={14}
                 className="text-stone-400 flex-shrink-0 mt-0.5"
@@ -905,57 +1050,62 @@ const ItineraryCard = ({
               {item.guideInfo}
             </div>
           )}
+          
           {item.notes && !item.guideInfo && (
-            <p className="text-stone-400 text-xs mt-1 line-clamp-2">
+            <p className="text-stone-500 text-xs mt-0.5 line-clamp-2 leading-snug opacity-80">
               {item.notes}
             </p>
           )}
+
           {author.nickname && (
-            <div className="flex items-center gap-1 mt-2 justify-end opacity-50 text-[10px]">
-              <span className="text-stone-400">added by</span>
+            <div className="flex items-center gap-1 mt-1 justify-end opacity-40 text-[10px]">
+              <span className="text-stone-500">by</span>
               <UserBadge
                 nickname={author.nickname}
                 emoji={author.emoji}
                 color={author.color}
+                size="sm"
               />
             </div>
           )}
         </div>
       </div>
-      <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+
+      <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/60 backdrop-blur-sm rounded-lg p-0.5 z-10 shadow-sm border border-stone-100/50">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onMap(item.location);
           }}
-          className="p-2 text-stone-300 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+          className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+          title="導航"
         >
-          <Navigation size={16} />
+          <Navigation size={14} />
         </button>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onEdit(item);
           }}
-          className="p-2 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
+          className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+          title="編輯"
         >
-          <Edit size={16} />
+          <Edit size={14} />
         </button>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDelete(item);
           }}
-          className="p-2 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded-full transition-colors"
+          className="p-1.5 text-stone-400 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+          title="刪除"
         >
-          <Trash2 size={16} />
+          <Trash2 size={14} />
         </button>
       </div>
     </div>
   );
 };
-
-// ↓↓↓↓↓ 請複製這整段 WelcomeScreen (包含前面的 const 和最後的 };) ↓↓↓↓↓
 
 const WelcomeScreen = ({
   onCreate,
@@ -996,7 +1146,6 @@ const WelcomeScreen = ({
     } else setDuration(0);
   }, [newTripData.startDate, newTripData.endDate]);
 
-  // 修改後的日期變更函式 (手機版優化：不強求彈出日曆)
   const handleStartDateChange = (e) => {
     const val = e.target.value;
     setNewTripData((prev) => {
@@ -1005,7 +1154,6 @@ const WelcomeScreen = ({
       return newData;
     });
 
-    // 手機版對策：選完出發日後，聚焦到回程框，引導視覺
     if (val) {
       setTimeout(() => {
         const endInput = document.getElementById("endDateInput");
@@ -1014,7 +1162,6 @@ const WelcomeScreen = ({
     }
   };
 
-  // 快速天數設定 (這是手機版一次選完的關鍵)
   const setQuickDuration = (days) => {
     if (!newTripData.startDate) {
       showToast("請先選擇出發日期", "error");
@@ -1115,7 +1262,6 @@ const WelcomeScreen = ({
               />
             </div>
 
-            {/* 🟢 修改後：手機版優化的日期選擇區 */}
             <div className="space-y-3">
               <div className="flex justify-between items-end px-1">
                 <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">
@@ -1130,7 +1276,6 @@ const WelcomeScreen = ({
 
               <div className="bg-stone-50 border border-stone-200 rounded-2xl p-1 focus-within:ring-2 focus-within:ring-stone-800 focus-within:border-stone-800 transition-all shadow-sm">
                 <div className="flex items-center divide-x divide-stone-200">
-                  {/* 出發日 */}
                   <div className="flex-1 px-3 py-3 relative group">
                     <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
                       DEPART
@@ -1143,12 +1288,10 @@ const WelcomeScreen = ({
                     />
                   </div>
 
-                  {/* 裝飾箭頭 */}
                   <div className="px-2 text-stone-300">
                     <ArrowRight size={16} />
                   </div>
 
-                  {/* 回程日 */}
                   <div className="flex-1 px-3 py-3 relative group">
                     <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
                       RETURN
@@ -1171,7 +1314,6 @@ const WelcomeScreen = ({
                 </div>
               </div>
 
-              {/* 🟢 快速按鈕區：這就是你要的「一次選完」功能 */}
               {newTripData.startDate && (
                 <div className="animate-in slide-in-from-top-2 fade-in duration-300">
                   <div className="flex items-center gap-2 mb-2 px-1">
@@ -1320,12 +1462,49 @@ const WelcomeScreen = ({
 };
 
 const App = () => {
+  // --- 1. 狀態定義 (請全部集中在這裡，不要穿插函式) ---
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
   const [localTripName, setLocalTripName] = useState("");
-  const [isMagicMenuOpen, setIsMagicMenuOpen] = useState(false); 
+  const [showExportMenu, setShowExportMenu] = useState(false); 
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  
+  // ★ 補回缺失的 showAIMenu
+  const [showAIMenu, setShowAIMenu] = useState(false);
 
+  const [activeTab, setActiveTab] = useState("itinerary");
+  const [toast, setToast] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [itemData, setItemData] = useState({});
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showMemberSelect, setShowMemberSelect] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  
+  // ★ 確保 isImportLoading 在這裡定義
+  const [isImportLoading, setIsImportLoading] = useState(false);
+  
+  const [aiAnalysisResult, setAiAnalysisResult] = useState({
+    isOpen: false,
+    title: "",
+    content: "",
+    isDebtAnalysis: false,
+  });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [firebaseError, setFirebaseError] = useState(null);
+  const [posterTheme, setPosterTheme] = useState(null);
+  const [transportMode, setTransportMode] = useState("driving");
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
+
+  // --- 2. 輔助函式 (定義在 State 之後，確保能讀取到上面的變數) ---
+  const showToast = (message, type = "success") => setToast({ message, type });
+
+  // --- 3. Effects ---
   useEffect(() => {
     if (tripData?.name) {
       setLocalTripName(tripData.name);
@@ -1344,28 +1523,39 @@ const App = () => {
       showToast("更新失敗", "error");
     }
   };
-  const [activeTab, setActiveTab] = useState("itinerary");
-  const [toast, setToast] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [itemData, setItemData] = useState({});
-  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isImportLoading, setIsImportLoading] = useState(false);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState({
-    isOpen: false,
-    title: "",
-    content: "",
-    isDebtAnalysis: false,
-  });
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [firebaseError, setFirebaseError] = useState(null);
 
-  const showToast = (message, type = "success") => setToast({ message, type });
+  useEffect(() => {
+    // 程式一啟動，就檢查網址後面有沒有帶著 tripId
+    const params = new URLSearchParams(window.location.search);
+    const urlTripId = params.get('tripId');
+    
+    if (urlTripId) {
+      // 如果有，就設定進去，網頁就會直接跳轉到該行程
+      setTripId(urlTripId.toUpperCase());
+      
+      // (選用) 讀取完後把網址變回乾淨的樣子，比較美觀
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // ... 這裡接原本的 copyToClipboard, handleExportExcel 等函式 ...
+  const handleDateUpdate = async (field, value) => {
+    if (!tripId) return;
+    
+    // 1. 先更新本地畫面 (讓使用者覺得反應很快)
+    setTripData((prev) => ({ ...prev, [field]: value }));
+
+    // 2. 背景默默儲存到 Firebase
+    try {
+      await updateDoc(
+        doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
+        { [field]: value }
+      );
+    } catch (e) {
+      console.error("Date update failed", e);
+      showToast("日期更新失敗", "error");
+    }
+  };
 
   const copyToClipboard = (text) => {
     const textArea = document.createElement("textarea");
@@ -1379,11 +1569,11 @@ const App = () => {
     textArea.select();
     try {
       const successful = document.execCommand("copy");
-      if (successful) showToast("代碼已複製");
+      if (successful) showToast("已複製");
       else
         navigator.clipboard
           .writeText(text)
-          .then(() => showToast("代碼已複製"))
+          .then(() => showToast("已複製"))
           .catch(() => showToast("複製失敗", "error"));
     } catch (err) {
       showToast("複製失敗", "error");
@@ -1391,11 +1581,6 @@ const App = () => {
     document.body.removeChild(textArea);
   };
 
-  // ==========================================
-  // ↓↓↓↓↓ 新增功能：匯出 Excel 與 美圖 ↓↓↓↓↓
-  // ==========================================
-
-  // 1. 匯出 Excel (使用 CDN 載入的 window.XLSX)
   const handleExportExcel = () => {
     if (!tripData?.itinerary?.length) {
       showToast("行程是空的，無法匯出", "error");
@@ -1407,18 +1592,16 @@ const App = () => {
       return;
     }
 
-    // 整理資料
     const data = tripData.itinerary
       .sort((a, b) => a.day - b.day || a.time.localeCompare(b.time))
       .map((item) => ({
-        Day: `Day ${item.day}`,
-        時間: item.time,
-        地點: item.location,
-        分類: item.category,
-        備註: item.guideInfo || item.notes || "",
+        "Day": `Day ${item.day}`,
+        "時間": item.time,
+        "地點": item.location,
+        "分類": item.category,
+        "備註": item.guideInfo || item.notes || "",
       }));
 
-    // 產生 Excel
     const ws = window.XLSX.utils.json_to_sheet(data);
     const wb = window.XLSX.utils.book_new();
     window.XLSX.utils.book_append_sheet(wb, ws, "行程表");
@@ -1426,16 +1609,11 @@ const App = () => {
     showToast("Excel 下載成功！");
   };
 
-  // 2. 匯出美圖 (包含 AI 設計邏輯)
-  const [posterTheme, setPosterTheme] = useState(null); // 存 AI 設計的主題
-
-  // ↓↓↓↓↓ 修改後的 handleExportImage (支援 Imagen 3) ↓↓↓↓↓
   const handleExportImage = async () => {
     if (!tripData?.itinerary?.length) return;
-    setIsAnalyzing(true); // 開始轉圈圈
+    setIsAnalyzing(true);
 
     try {
-      // 1. 【大腦】請 Gemini 1.5 Flash 根據行程寫出「繪圖指令」
       const prompt = `
         你是一位旅遊手帳設計師。針對行程 "${tripData.name}" (${tripData.destination})，請設計一個簡約風格的插畫指令。
         請回傳 JSON (不要 Markdown): 
@@ -1447,59 +1625,53 @@ const App = () => {
           "quote": "一句短語"
         }
       `;
-
-      // 呼叫原本的文字 AI
+      
       const res = await callGeminiAPI([{ text: prompt }]);
       if (!res) throw new Error("AI Text Failed");
-
-      // 解析 JSON
+      
       let cleanJson = res;
-      const firstBracket = res.indexOf("{");
-      const lastBracket = res.lastIndexOf("}");
+      const firstBracket = res.indexOf('{');
+      const lastBracket = res.lastIndexOf('}');
       if (firstBracket !== -1 && lastBracket !== -1) {
         cleanJson = res.substring(firstBracket, lastBracket + 1);
       }
       const theme = JSON.parse(cleanJson);
 
-      // 2. 【畫家】使用 Imagen 3 畫圖
       let aiImageUrl = await callImagenAPI(theme.imagePrompt);
-
-      // 如果 Imagen 失敗 (例如 Key 有問題)，自動切換到 Pollinations (免費備案)
+      
       if (!aiImageUrl) {
         console.log("切換至 Pollinations 備用繪圖引擎");
         const encoded = encodeURIComponent(theme.imagePrompt);
         aiImageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=768&height=1024&nologo=true&seed=${Math.random()}`;
       }
 
-      // 設定主題
       setPosterTheme({ ...theme, bgImage: aiImageUrl });
 
-      // 3. 【合成】等待圖片載入
       await new Promise((resolve) => {
         const img = new Image();
         img.src = aiImageUrl;
-        img.crossOrigin = "anonymous"; // 允許跨域
+        img.crossOrigin = "anonymous";
         img.onload = resolve;
-        img.onerror = resolve;
+        img.onerror = resolve; 
       });
+      
+      await new Promise(r => setTimeout(r, 1500));
 
-      // 給瀏覽器一點時間渲染 DOM
-      await new Promise((r) => setTimeout(r, 1500));
-
-      // 4. 截圖下載
       const element = document.getElementById("hidden-poster-area");
       if (element && window.html2canvas) {
         const canvas = await window.html2canvas(element, {
-          scale: 3,
-          useCORS: true,
+          scale: 3, 
+          useCORS: true, 
           allowTaint: true,
           backgroundColor: null,
-          scrollX: 0,
-          scrollY: 0,
-          x: 0,
+          scrollX: 0, 
+          scrollY: 0, 
+          x: 0, 
           y: 0,
+          width: element.offsetWidth,
+          height: element.offsetHeight,
         });
-
+        
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
         link.download = `${tripData.name}_精美海報.png`;
@@ -1514,8 +1686,7 @@ const App = () => {
       setPosterTheme(null);
     }
   };
-  // ↑↑↑↑↑ 新增功能結束 ↑↑↑↑↑
-
+  
   const addToHistory = (id, data) => {
     try {
       const current = JSON.parse(
@@ -1561,8 +1732,17 @@ const App = () => {
           const data = docSnap.data();
           setTripData(data);
           addToHistory(tripId, data);
-          if (!data.members || !data.members[user.uid])
-            setShowProfileSetup(true);
+          
+          if (!data.members || !data.members[user.uid]) {
+            if (data.members && Object.keys(data.members).length > 0) {
+              setShowMemberSelect(true);
+            } else {
+              setShowProfileSetup(true);
+            }
+          } else {
+            setShowMemberSelect(false);
+            setShowProfileSetup(false);
+          }
         } else {
           showToast("找不到旅程", "error");
           setTripId(null);
@@ -1583,7 +1763,6 @@ const App = () => {
       endDate,
       itinerary: [],
       expenses: [],
-      notes: [], // 初始化記事本
       createdBy: user.uid,
       weather: {},
       members: {},
@@ -1613,7 +1792,6 @@ const App = () => {
       endDate: importData.endDate || "",
       itinerary: processedItinerary,
       expenses: [],
-      notes: [], // 初始化記事本
       createdBy: user.uid,
       weather: {},
       members: {},
@@ -1648,19 +1826,40 @@ const App = () => {
     showToast(`歡迎加入，${profileData.nickname}！`);
   };
 
-  const getCurrentUserNickname = () =>
-    tripData && user && tripData.members && tripData.members[user.uid]
-      ? tripData.members[user.uid].nickname
-      : "我";
+  const handleJoinAsMember = async (targetUid, targetMemberData) => {
+    if (!user || !tripId) return;
+    setShowMemberSelect(false);
+    
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    
+    const newMembers = { ...(tripData.members || {}) };
+    delete newMembers[targetUid];
+    newMembers[user.uid] = targetMemberData;
+    
+    const newItinerary = (tripData.itinerary || []).map(item => {
+      if (item.createdBy === targetUid) {
+        return { ...item, createdBy: user.uid };
+      }
+      return item;
+    });
+
+    try {
+      await updateDoc(tripRef, { 
+        members: newMembers,
+        itinerary: newItinerary
+      });
+      showToast(`身分已轉移！歡迎回來，${targetMemberData.nickname}`);
+    } catch (e) {
+      console.error(e);
+      showToast("身分轉移失敗", "error");
+    }
+  };
 
   const handleFileImport = async (file) => {
-    // 開啟全螢幕動畫
     setIsImportLoading(true);
-    // 關閉上傳視窗 (這樣背景就只剩動畫，比較乾淨)
     setIsImportOpen(false);
 
     try {
-      // 使用 Promise 包裝 FileReader，確保程式會「等待」它讀完
       const base64Data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -1669,7 +1868,7 @@ const App = () => {
       });
 
       const prompt = `這是一份旅遊行程表。請分析並回傳 JSON Array：- "day": 數字 - "time": "HH:MM" - "location": 地點 - "category": "sightseeing|food|transport|flight" - "notes": 備註`;
-
+      
       const payload = [
         { text: prompt },
         {
@@ -1680,9 +1879,8 @@ const App = () => {
         },
       ];
 
-      // 呼叫 AI (這時候動畫持續在跑)
       const resText = await callGeminiAPI(payload);
-
+      
       if (!resText) throw new Error("AI analysis failed");
 
       const cleanJson = resText.replace(/```json|```/g, "").trim();
@@ -1698,36 +1896,96 @@ const App = () => {
       );
 
       showToast(`成功匯入 ${newItems.length} 個行程！`);
+
     } catch (e) {
       console.error(e);
       showToast("匯入失敗或無法判讀檔案", "error");
-      // 失敗時把視窗開回來讓使用者重試
-      setIsImportOpen(true);
+      setIsImportOpen(true); 
     } finally {
-      // 無論成功失敗，最後才關閉動畫
       setIsImportLoading(false);
     }
   };
 
+// --- 1. 新增：天氣代碼轉換表 (將數字轉為中文) ---
+  const getWeatherDesc = (code) => {
+    const codes = {
+      0: "晴朗 ☀️", 1: "晴朗 ☀️", 2: "多雲 ⛅", 3: "陰天 ☁️",
+      45: "霧 🌫️", 48: "霧 🌫️",
+      51: "毛毛雨 🌧️", 53: "毛毛雨 🌧️", 55: "毛毛雨 🌧️",
+      61: "下雨 ☔", 63: "下雨 ☔", 65: "豪大雨 ⛈️",
+      71: "下雪 ❄️", 73: "下雪 ❄️", 75: "暴雪 ❄️",
+      80: "陣雨 🌦️", 81: "陣雨 🌦️", 82: "強陣雨 ⛈️",
+      95: "雷雨 ⚡", 96: "雷雨 ⚡", 99: "雷雨 ⚡"
+    };
+    return codes[code] || "多雲";
+  };
+
+  // --- 2. 修改：改用 Open-Meteo 真實氣象 API ---
   const fetchWeather = async (id, destination, startDate) => {
-    if (!destination || !startDate) return;
+    if (!destination || !startDate) {
+      showToast("無法更新：缺少地點或日期", "error");
+      return;
+    }
+
+    showToast("正在連線氣象衛星抓取資料...", "success");
+
     try {
-      const res = await callGeminiAPI([
-        {
-          text: `預測 ${destination} ${startDate} 起 7 天天氣。回傳 JSON Array: [{"date": "YYYY-MM-DD", "temp": "25°C", "condition": "晴朗"}]`,
-        },
-      ]);
-      if (res) {
-        const weatherMap = {};
-        JSON.parse(res.replace(/```json|```/g, "").trim()).forEach((d) => {
-          if (d.date) weatherMap[d.date] = d;
-        });
-        await updateDoc(
-          doc(db, "artifacts", appId, "public", "data", "travel_trips", id),
-          { weather: weatherMap }
-        );
+      // 第一步：將「地名」轉為「經緯度」 (使用 OpenStreetMap)
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`
+      );
+      const geoData = await geoRes.json();
+
+      if (!geoData || geoData.length === 0) {
+        throw new Error("找不到這個地點");
       }
-    } catch (e) {}
+
+      const { lat, lon } = geoData[0];
+
+      // 第二步：利用經緯度，向 Open-Meteo 查詢天氣
+      // 計算結束日期 (往後抓 7 天)
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      const endDateStr = end.toISOString().split('T')[0];
+
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${startDate}&end_date=${endDateStr}`;
+      
+      const weatherRes = await fetch(weatherUrl);
+      const weatherData = await weatherRes.json();
+
+      if (!weatherData.daily) {
+        throw new Error("無法取得氣象資料");
+      }
+
+      // 第三步：整理資料格式
+      const weatherMap = {};
+      const { time, weathercode, temperature_2m_max, temperature_2m_min } = weatherData.daily;
+
+      time.forEach((date, index) => {
+        const minT = Math.round(temperature_2m_min[index]);
+        const maxT = Math.round(temperature_2m_max[index]);
+        const code = weathercode[index];
+        
+        weatherMap[date] = {
+          date: date,
+          temp: `${minT}~${maxT}°C`,
+          condition: getWeatherDesc(code)
+        };
+      });
+
+      // 第四步：存回 Firebase
+      await updateDoc(
+        doc(db, "artifacts", appId, "public", "data", "travel_trips", id),
+        { weather: weatherMap }
+      );
+
+      showToast(`成功更新 ${destination} 的氣象！`);
+
+    } catch (e) {
+      console.error(e);
+      showToast("更新失敗：找不到地點或服務忙碌", "error");
+    }
   };
 
   const handleAIAnalyze = async () => {
@@ -1735,15 +1993,10 @@ const App = () => {
       showToast("行程是空的", "error");
       return;
     }
-
-    // 開啟全螢幕 AI 動畫
+    
     setIsAnalyzing(true);
-    // 關閉魔法選單
-    setIsMagicMenuOpen(false);
 
     try {
-      // --- 修改重點開始 ---
-      // 我們修改了 Prompt，增加了「規則 2」
       const res = await callGeminiAPI([
         {
           text: `分析以下旅遊行程 JSON：${JSON.stringify(
@@ -1757,7 +2010,6 @@ const App = () => {
           3. "tags": [{"type":"mustEat"|"mustBuy"|"reservation"|"story", "text":"標籤"}]`,
         },
       ]);
-      // --- 修改重點結束 ---
 
       if (!res) throw new Error("AI Failed");
 
@@ -1766,9 +2018,7 @@ const App = () => {
 
       const newItinerary = tripData.itinerary.map((item) => {
         const enrichment = enrichedData.find((e) => e.id === item.id);
-
-        // 如果 AI 回傳有資料，就更新；
-        // 如果 AI 回傳 guideInfo 是空字串，UI 只要檢查到是空字串就不會顯示
+        
         return enrichment ? { ...item, ...enrichment } : item;
       });
 
@@ -1786,34 +2036,23 @@ const App = () => {
     }
   };
 
-  // --- 新增：路線優化相關狀態 ---
-  const [transportMode, setTransportMode] = useState("driving");
-  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
-
-  // --- 新增：路線優化執行邏輯 ---
   const executeOptimize = async () => {
     if (!tripData?.itinerary?.length) {
       showToast("行程是空的", "error");
       return;
     }
-
-    setIsAnalyzing(true); // 開啟 AI 動畫
-
+    
+    setIsAnalyzing(true);
+    
     try {
-      // 抓每一天原本的第一個時間點
-      const days = [...new Set(tripData.itinerary.map((i) => i.day))];
+      const days = [...new Set(tripData.itinerary.map(i => i.day))];
       const dayStartTimes = {};
-      days.forEach((day) => {
-        const items = tripData.itinerary
-          .filter((i) => i.day === day)
-          .sort((a, b) => a.time.localeCompare(b.time));
+      days.forEach(day => {
+        const items = tripData.itinerary.filter(i => i.day === day).sort((a, b) => a.time.localeCompare(b.time));
         if (items.length > 0) dayStartTimes[day] = items[0].time;
       });
 
-      const modeText =
-        transportMode === "driving"
-          ? "開車(Driving)"
-          : "大眾運輸(Public Transit)";
+      const modeText = transportMode === "driving" ? "開車(Driving)" : "大眾運輸(Public Transit)";
 
       const res = await callGeminiAPI([
         {
@@ -1822,9 +2061,7 @@ const App = () => {
           請根據以下規則重新安排行程順序：
           1. 移動方式：${modeText}。
           2. 目標：最小化交通時間，讓路線最順暢。
-          3. **時間重算**：請以每一天的「起始時間」(${JSON.stringify(
-            dayStartTimes
-          )}) 為準，根據景點停留時間(假設每站1.5小時)加上交通時間，重新計算每個景點的 "time"。
+          3. **時間重算**：請以每一天的「起始時間」(${JSON.stringify(dayStartTimes)}) 為準，根據景點停留時間(假設每站1.5小時)加上交通時間，重新計算每個景點的 "time"。
           4. 只能調整同一天內的順序，不要跨天移動。
           
           輸入 JSON: ${JSON.stringify(
@@ -1837,16 +2074,16 @@ const App = () => {
           )}。
           
           回傳 JSON Array (包含 id, day, time)。
-          **注意：嚴禁包含任何說明文字、前言或後記，只能回傳純 JSON 資料，以 [ 開頭並以 ] 結尾。**`,
+          **注意：嚴禁包含任何說明文字、前言或後記，只能回傳純 JSON 資料，以 [ 開頭並以 ] 結尾。**`
         },
       ]);
 
       if (!res) throw new Error("AI Failed");
-
+      
       let cleanJson = res;
-      const firstBracket = res.indexOf("[");
-      const lastBracket = res.lastIndexOf("]");
-
+      const firstBracket = res.indexOf('[');
+      const lastBracket = res.lastIndexOf(']');
+      
       if (firstBracket !== -1 && lastBracket !== -1) {
         cleanJson = res.substring(firstBracket, lastBracket + 1);
       } else {
@@ -1863,9 +2100,7 @@ const App = () => {
 
       const finalItinerary = [
         ...newItinerary,
-        ...tripData.itinerary.filter(
-          (i) => !newItinerary.find((n) => n.id === i.id)
-        ),
+        ...tripData.itinerary.filter((i) => !newItinerary.find((n) => n.id === i.id))
       ];
 
       await updateDoc(
@@ -1873,9 +2108,7 @@ const App = () => {
         { itinerary: finalItinerary }
       );
 
-      showToast(
-        `已根據${transportMode === "driving" ? "開車" : "大眾運輸"}路線優化完畢！`
-      );
+      showToast(`已根據${transportMode === "driving" ? "開車" : "大眾運輸"}路線優化完畢！`);
     } catch (e) {
       console.error(e);
       showToast("優化失敗，請稍後再試", "error");
@@ -1884,7 +2117,6 @@ const App = () => {
     }
   };
 
-  // --- 新增：優化設定視窗元件 ---
   const OptimizeModal = () => {
     if (!showOptimizeModal) return null;
     return (
@@ -1896,7 +2128,7 @@ const App = () => {
           <p className="text-sm text-stone-500 mb-6 text-center leading-relaxed">
             AI 將重新排序景點並計算時間。
           </p>
-
+          
           <div className="flex gap-3 mb-6">
             <button
               onClick={() => setTransportMode("driving")}
@@ -1932,7 +2164,6 @@ const App = () => {
             <button
               onClick={() => {
                 setShowOptimizeModal(false);
-                setIsMagicMenuOpen(false); // 關閉魔法選單
                 executeOptimize();
               }}
               className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium hover:bg-stone-700 transition-colors shadow-lg"
@@ -1945,11 +2176,33 @@ const App = () => {
     );
   };
 
-  const handleCalculateDebts = async () => {
+const handleCalculateDebts = async () => {
+    // 1. 基礎檢查：是否有資料
     if (!tripData?.expenses?.length) {
       showToast("沒有支出紀錄", "error");
       return;
     }
+
+    // 2. 進階檢查：是否包含有效的數字金額
+    // 我們檢查是否至少有一筆資料的 amount 轉成數字後大於 0
+    const validExpenses = tripData.expenses.filter((item) => {
+      const amount = parseFloat(item.amount);
+      return !isNaN(amount) && amount > 0;
+    });
+
+    // 如果沒有任何有效的金額資料，直接報錯，不呼叫 AI
+    if (validExpenses.length === 0) {
+      setAiAnalysisResult({
+        isOpen: true,
+        title: "計算失敗",
+        content: "原因：偵測不到有效的金額數字。\n請檢查您的支出紀錄，確保「金額」欄位皆為大於 0 的數字。",
+        isDebtAnalysis: false, // 設定為 false 以顯示純文字訊息
+        isLoading: false,
+      });
+      return;
+    }
+
+    // 3. 通過檢查，開始呼叫 AI
     setAiAnalysisResult({
       isOpen: true,
       title: "AI 分帳計算",
@@ -1957,15 +2210,19 @@ const App = () => {
       isDebtAnalysis: true,
       isLoading: true,
     });
+
     try {
+      // 只傳送有效的支出資料給 AI，減少 token 消耗並提高準確度
       const res = await callGeminiAPI([
         {
           text: `計算旅遊記帳 JSON: ${JSON.stringify(
-            tripData.expenses
+            validExpenses
           )}。回傳純 JSON Array: [{"from": "付款人", "to": "收款人", "amount": 整數金額}]。金額請四捨五入。`,
         },
       ]);
+
       if (!res) throw new Error("AI Failed");
+
       setAiAnalysisResult((prev) => ({
         ...prev,
         content: res,
@@ -1974,8 +2231,9 @@ const App = () => {
     } catch (e) {
       setAiAnalysisResult((prev) => ({
         ...prev,
-        content: "計算失敗",
+        content: "計算失敗，請稍後再試。",
         isLoading: false,
+        isDebtAnalysis: false,
       }));
     }
   };
@@ -1991,32 +2249,17 @@ const App = () => {
       tripId
     );
     try {
-      // 根據 activeTab 選擇要儲存的陣列
       const list =
-        activeTab === "itinerary"
-          ? tripData.itinerary
-          : activeTab === "expenses"
-          ? tripData.expenses
-          : tripData.notes || []; // 新增 notes
-
+        activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
       const newItemData = {
         ...itemData,
         id: isEditMode ? editingId : Date.now().toString(),
         category:
           itemData.category ||
-          (activeTab === "itinerary"
-            ? "sightseeing"
-            : activeTab === "expenses"
-            ? "other"
-            : "note"), // Default category
+          (activeTab === "itinerary" ? "sightseeing" : "other"),
         createdBy: user.uid,
-        date:
-          itemData.date ||
-          (activeTab === "notes"
-            ? new Date().toISOString()
-            : new Date().toISOString().split("T")[0]),
+        date: itemData.date || new Date().toISOString().split("T")[0],
       };
-
       if (isEditMode)
         await updateDoc(tripRef, {
           [activeTab]: list.map((i) =>
@@ -2027,7 +2270,6 @@ const App = () => {
       setIsModalOpen(false);
       showToast(isEditMode ? "已更新" : "已新增");
     } catch (e) {
-      console.error(e);
       showToast("儲存失敗", "error");
     }
   };
@@ -2042,9 +2284,8 @@ const App = () => {
       "travel_trips",
       tripId
     );
-    // col 可以是 'itinerary', 'expenses', 'notes'
     await updateDoc(tripRef, {
-      [col]: (tripData[col] || []).filter((i) => i.id !== item.id),
+      [col]: tripData[col].filter((i) => i.id !== item.id),
     });
     setConfirmConfig({ isOpen: false });
     showToast("已刪除");
@@ -2056,7 +2297,6 @@ const App = () => {
       await deleteDoc(
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId)
       );
-      // Remove from local history
       const currentHistory = JSON.parse(
         localStorage.getItem("myTravelHistory") || "[]"
       );
@@ -2085,15 +2325,10 @@ const App = () => {
     return d.toISOString().split("T")[0];
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setItemData({ ...itemData, image: reader.result });
-    };
-    reader.readAsDataURL(file);
-  };
+  const getCurrentUserNickname = () =>
+    tripData && user && tripData.members && tripData.members[user.uid]
+      ? tripData.members[user.uid].nickname
+      : "我";
 
   if (firebaseError) return <SetupGuide error={firebaseError} />;
   if (!user)
@@ -2127,136 +2362,16 @@ const App = () => {
       />
 
       <OptimizeModal />
-
-      {(isAnalyzing ||
-        isImportLoading ||
-        (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
-        <div className="absolute inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
-          <div className="relative mb-6">
-            <div className="w-20 h-20 border-4 border-indigo-100 rounded-full animate-spin"></div>
-            <div className="w-20 h-20 border-4 border-indigo-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Sparkles className="text-indigo-500 animate-pulse" size={32} />
-            </div>
-          </div>
-          <h3 className="text-xl font-bold text-stone-800 tracking-widest animate-pulse mb-2">
-            AI 正在思考中...
-          </h3>
-        </div>
-      )}
-
-      {/* ↓↓↓↓↓ 修改版：簡約手帳 / 票券風格 ↓↓↓↓↓ */}
-      {posterTheme && (
-        <div
-          id="hidden-poster-area"
-          className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
-          style={{
-            minHeight: "800px",
-            zIndex: -50,
-            visibility: "visible",
-            backgroundColor: posterTheme.themeColor || "#fffbf0", // AI 決定的底色
-            color: "#333", // 文字統一深色比較清楚
-          }}
-        >
-          {/* 1. 外框裝飾 (票券感) */}
-          <div
-            className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
-            style={{ borderColor: posterTheme.borderColor || "#333" }}
-          >
-            {/* 2. 頂部插圖區 (Sticker) */}
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
-                  Boarding Pass
-                </div>
-                <h1
-                  className="text-4xl font-serif font-black leading-tight text-stone-800"
-                  style={{ color: posterTheme.borderColor }}
-                >
-                  {posterTheme.title}
-                </h1>
-                <div className="mt-2 text-sm font-bold text-stone-500 flex gap-2 items-center">
-                  <span>{tripData.destination}</span>
-                  <div className="w-10 h-[1px] bg-stone-300"></div>
-                  <span>{tripData.startDate}</span>
-                </div>
-              </div>
-
-              {/* ★ AI 插圖 (右上角裝飾) ★ */}
-              <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
-                {/* 透過 mix-blend-multiply 把白底變透明，看起來像貼紙 */}
-                <img
-                  src={posterTheme.bgImage}
-                  alt="Sticker"
-                  className="w-full h-full object-contain mix-blend-multiply"
-                />
-              </div>
-            </div>
-
-            {/* 3. 中間分隔線 (虛線) */}
-            <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
-              {/* 左右兩個半圓缺口，模仿票券 */}
-              <div
-                className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
-                style={{ backgroundColor: posterTheme.themeColor }}
-              ></div>
-              <div
-                className="absolute -right-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
-                style={{ backgroundColor: posterTheme.themeColor }}
-              ></div>
-            </div>
-
-            {/* 4. 行程列表 (簡約清單) */}
-            <div className="flex-1 space-y-6 mt-2">
-              {Object.keys(groupedItinerary)
-                .sort((a, b) => a - b)
-                .slice(0, 6) // 手帳版可以放多一點點
-                .map((day) => (
-                  <div key={day} className="flex gap-4">
-                    {/* Day 圓圈標籤 */}
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
-                      style={{
-                        backgroundColor: posterTheme.borderColor || "#333",
-                      }}
-                    >
-                      {day}
-                    </div>
-
-                    {/* 行程內容 */}
-                    <div className="flex-1 space-y-2 pt-1">
-                      {groupedItinerary[day]
-                        .sort((a, b) => a.time.localeCompare(b.time))
-                        .map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex gap-3 text-sm items-baseline border-b border-stone-200 pb-1 last:border-0"
-                          >
-                            <span className="font-mono text-stone-400 text-xs shrink-0">
-                              {item.time}
-                            </span>
-                            <span className="font-bold text-stone-700 truncate">
-                              {item.location}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* 5. 底部金句 */}
-            <div className="mt-8 pt-4 border-t border-stone-200 text-center">
-              <p className="font-serif italic text-stone-500 text-sm">
-                "{posterTheme.quote}"
-              </p>
-              <div className="mt-2 text-[9px] tracking-widest opacity-30 uppercase font-bold">
-                Design by Tabiji
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
+      <MemberSelectModal 
+        isOpen={showMemberSelect}
+        members={tripData?.members || {}} 
+        onSelect={handleJoinAsMember}
+        onCreateNew={() => {
+          setShowMemberSelect(false);
+          setShowProfileSetup(true);
+        }}
+      />
 
       <ProfileSetupModal
         isOpen={showProfileSetup}
@@ -2287,13 +2402,147 @@ const App = () => {
         members={tripData.members}
       />
 
-      <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-5 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1 mr-4">
+      {(isAnalyzing || isImportLoading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
+        <div className="absolute inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <div className="relative mb-6">
+            <div className="w-20 h-20 border-4 border-indigo-100 rounded-full animate-spin"></div>
+            <div className="w-20 h-20 border-4 border-indigo-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="text-indigo-500 animate-pulse" size={32} />
+            </div>
+          </div>
+          <h3 className="text-xl font-bold text-stone-800 tracking-widest animate-pulse mb-2">
+            AI 正在思考中...
+          </h3>
+        </div>
+      )}
+
+      {posterTheme && (
+        <div
+          id="hidden-poster-area"
+          className="absolute top-0 left-0 w-[450px] font-sans flex flex-col p-6"
+          style={{
+            height: "auto",
+            minHeight: "800px",
+            zIndex: -50,
+            visibility: "visible",
+            backgroundColor: posterTheme.themeColor || "#fffbf0",
+            color: "#333",
+            overflow: "visible",
+          }}
+        >
+          <div
+            className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
+            style={{ borderColor: posterTheme.borderColor || "#333" }}
+          >
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <div className="text-xs font-bold tracking-[0.3em] uppercase text-stone-400 mb-2">
+                  Boarding Pass
+                </div>
+                <h1
+                  className="text-4xl font-serif font-black leading-tight text-stone-800"
+                  style={{ color: posterTheme.borderColor }}
+                >
+                  {posterTheme.title}
+                </h1>
+                <div className="mt-2 text-sm font-bold text-stone-500 flex gap-2 items-center">
+                  <span>{tripData.destination}</span>
+                  <div className="w-10 h-[1px] bg-stone-300"></div>
+                  <span>{tripData.startDate}</span>
+                </div>
+              </div>
+              <div className="w-32 h-32 relative -mt-4 -mr-4 rotate-12 filter drop-shadow-md transition-all">
+                <img
+                  src={posterTheme.bgImage}
+                  alt="Sticker"
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-contain mix-blend-multiply"
+                />
+              </div>
+            </div>
+
+            <div className="w-full border-t-2 border-dashed border-stone-300 my-4 relative">
+              <div
+                className="absolute -left-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
+                style={{ backgroundColor: posterTheme.themeColor }}
+              ></div>
+              <div
+                className="absolute -right-[34px] -top-3 w-6 h-6 rounded-full bg-stone-100/0"
+                style={{ backgroundColor: posterTheme.themeColor }}
+              ></div>
+            </div>
+
+            <div className="flex-1 space-y-6 mt-2">
+              {Object.keys(groupedItinerary)
+                .sort((a, b) => a - b)
+                .slice(0, 6)
+                .map((day) => (
+                  <div key={day} className="flex gap-4">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
+                      style={{ backgroundColor: posterTheme.borderColor || "#333" }}
+                    >
+                      {day}
+                    </div>
+
+                    <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
+                      {groupedItinerary[day]
+                        .sort((a, b) => a.time.localeCompare(b.time))
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex gap-3 items-start border-b border-stone-200 pb-2 mb-1 last:border-0"
+                            style={{ lineHeight: "1.5" }}
+                          >
+                            <span className="font-mono text-stone-400 text-[10px] shrink-0 mt-1">
+                              {item.time}
+                            </span>
+                            <div className="flex-1 flex flex-col min-w-0">
+                              <span
+                                className="font-bold text-stone-700 text-[12px] break-words"
+                                style={{
+                                  wordBreak: "break-word",
+                                  display: "block",
+                                }}
+                              >
+                                {item.location}
+                              </span>
+                              {item.notes && (
+                                <span className="text-[9px] text-stone-500 font-normal mt-0.5 break-words opacity-80 leading-snug">
+                                  {item.notes}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-stone-200 text-center">
+              <p className="font-serif italic text-stone-500 text-sm">
+                "{posterTheme.quote}"
+              </p>
+              <div className="mt-2 text-[9px] tracking-widest opacity-30 uppercase font-bold">
+                Design by Tabiji
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex-1 mr-4 min-w-0"> {/* 這裡加 min-w-0 防止被子元素撐爆 */}
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 group flex-1">
+              
+              {/* 標題與編輯圖示區塊 */}
+              <div className="flex items-center gap-2 group flex-1 min-w-0"> {/* min-w-0 再次確保彈性佈局正常 */}
                 <input
-                  className="text-xl font-bold bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 w-full placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all"
+                  // 🔴 修改這裡：將 w-full 改為 flex-1 min-w-0
+                  className="text-3xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
                   value={localTripName}
                   placeholder="點擊輸入旅程名稱..."
                   onChange={(e) => setLocalTripName(e.target.value)}
@@ -2302,12 +2551,9 @@ const App = () => {
                     if (e.key === "Enter") e.target.blur();
                   }}
                 />
-                <Edit
-                  size={14}
-                  className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                />
+                <Edit size={18} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </div>
-              {/* Feature 1: Member Avatars next to title */}
+              
               <div className="flex -space-x-2 ml-2 flex-shrink-0">
                 {Object.values(tripData.members || {})
                   .slice(0, 3)
@@ -2327,27 +2573,53 @@ const App = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-stone-400 mt-1">
-              <div className="flex items-center gap-1 font-mono">
-                <Calendar size={10} />
-                <span>{tripData.startDate || "未設定"}</span>
-                {tripData.endDate && (
-                  <>
-                    <ArrowRight size={10} className="mx-0.5" />
-                    <span>{tripData.endDate}</span>
-                  </>
-                )}
+            {/* 日期選擇區 (維持上一版的設計) */}
+            <div className="flex items-center gap-2 text-xs text-stone-400 mt-1 pl-1">
+              <div className="flex items-center gap-2 bg-stone-50/50 hover:bg-stone-100 px-2 py-1 rounded-lg transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
+                <Calendar size={14} className="text-stone-400 group-hover:text-stone-600" />
+                
+                <input 
+                  type="date" 
+                  value={tripData.startDate || ""}
+                  onChange={(e) => handleDateUpdate('startDate', e.target.value)}
+                  onClick={(e) => e.target.showPicker()}
+                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                />
+                
+                <ArrowRight size={12} className="text-stone-300" />
+                
+                <input 
+                  type="date" 
+                  value={tripData.endDate || ""}
+                  min={tripData.startDate}
+                  onChange={(e) => handleDateUpdate('endDate', e.target.value)}
+                  onClick={(e) => e.target.showPicker()}
+                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                />
               </div>
+
+              <button
+    onClick={(e) => {
+      e.stopPropagation();
+      // 呼叫抓取天氣函式
+      fetchWeather(tripId, tripData.destination, tripData.startDate);
+    }}
+    className="p-1.5 bg-stone-50/50 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-lg transition-colors border border-transparent hover:border-orange-200"
+    title="點擊更新天氣"
+  >
+    <CloudSun size={14} />
+  </button>
+
             </div>
           </div>
-          <div className="flex gap-2 shrink-0">
+
+          <div className="flex gap-2 shrink-0 pt-2">
             <button
               onClick={() => setIsShareOpen(true)}
               className="p-2 bg-indigo-50 rounded-full text-indigo-500 hover:bg-indigo-100"
             >
               <Share2 size={18} />
             </button>
-            {/* Feature 3: Delete Trip Button */}
             <button
               onClick={() =>
                 setConfirmConfig({
@@ -2374,18 +2646,17 @@ const App = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-32 px-4 pt-4 scrollbar-hide relative">
-        {activeTab === "itinerary" && (
+      <main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
+        {/* 檢查這裡：如果 tripData 沒抓到，可能也會空白 */}
+        {activeTab === "itinerary" && tripData && (
           <>
-            {/* 🟡 復原：頂部大張天氣卡片 */}
-            {tripData.weather && tripData.startDate && (
-              <HeroWeatherCard
-                startDate={tripData.startDate}
-                destination={tripData.destination}
-                weatherData={tripData.weather}
-              />
-            )}
+            <DayNavigation 
+              days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
+              tripData={tripData}
+              onScrollToDay={scrollToDay}
+            />
 
+            {/* 下方行程列表 ... */}
             {Object.keys(groupedItinerary)
               .sort((a, b) => a - b)
               .map((day) => {
@@ -2393,7 +2664,8 @@ const App = () => {
                 return (
                   <div
                     key={day}
-                    className="mb-8 animate-in fade-in slide-in-from-bottom-5 duration-500"
+                    id={`day-section-${day}`}
+                    className="mb-8 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-32"
                   >
                     <div className="flex justify-between items-end mb-4 px-2">
                       <div className="flex flex-col">
@@ -2462,78 +2734,6 @@ const App = () => {
             )}
           </>
         )}
-
-        {/* 🟡 新增：記事本頁面 */}
-        {activeTab === "notes" && (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            {(tripData.notes || []).length === 0 && (
-              <div className="text-center py-20 opacity-30 flex flex-col items-center">
-                <StickyNote className="w-16 h-16 mb-4 text-stone-300" />
-                <p className="tracking-widest text-stone-400">寫點什麼吧...</p>
-              </div>
-            )}
-            {(tripData.notes || [])
-              .sort(
-                (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-              )
-              .map((note) => {
-                const author = tripData.members?.[note.createdBy] || {};
-                return (
-                  <div
-                    key={note.id}
-                    className="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md transition-all relative group"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-3">
-                        <UserBadge
-                          nickname={author.nickname}
-                          emoji={author.emoji}
-                          size="md"
-                        />
-                        <div>
-                          <div className="text-sm font-bold text-stone-800">
-                            {author.nickname || "未知旅伴"}
-                          </div>
-                          <div className="text-[10px] text-stone-400 font-mono">
-                            {new Date(note.createdAt).toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-2xl">{note.emoji}</div>
-                    </div>
-                    <p className="text-stone-700 text-sm whitespace-pre-wrap leading-relaxed mb-3">
-                      {note.content}
-                    </p>
-                    {note.image && (
-                      <div className="rounded-xl overflow-hidden border border-stone-100">
-                        <img
-                          src={note.image}
-                          alt="Note Attachment"
-                          className="w-full object-cover max-h-64"
-                        />
-                      </div>
-                    )}
-                    <button
-                      onClick={() =>
-                        setConfirmConfig({
-                          isOpen: true,
-                          title: "刪除記事",
-                          message: "確定要刪除這則筆記嗎？",
-                          onConfirm: () => deleteItem("notes", note),
-                          onCancel: () => setConfirmConfig({ isOpen: false }),
-                          isDangerous: true,
-                        })
-                      }
-                      className="absolute bottom-4 right-4 p-2 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                );
-              })}
-          </div>
-        )}
-
         {activeTab === "expenses" && (
           <div className="space-y-4">
             <div className="bg-stone-800 text-stone-50 p-6 rounded-2xl shadow-xl relative overflow-hidden flex justify-between items-center">
@@ -2624,124 +2824,19 @@ const App = () => {
         )}
       </main>
 
-      {/* 🟡 復原：魔法球按鈕區域 */}
-      <div className="absolute bottom-44 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none">
-        {/* AI 選單 (當魔法球打開時顯示) */}
-        {isMagicMenuOpen && (
-          <div className="flex flex-col gap-3 pointer-events-auto animate-in slide-in-from-bottom-5 fade-in duration-300">
-            {/* 1. 智能導遊 */}
-            <button
-              onClick={handleAIAnalyze}
-              disabled={isAnalyzing}
-              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-yellow-100 hover:bg-yellow-50 transition-all group"
-            >
-              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
-                智能導遊
-              </span>
-              {isAnalyzing ? (
-                <Loader2 className="animate-spin text-yellow-500" size={20} />
-              ) : (
-                <Sparkles size={20} className="text-yellow-500" />
-              )}
-            </button>
-            
-            {/* 2. 路線優化 */}
-            <button
-              onClick={() => {
-                setShowOptimizeModal(true);
-                setIsMagicMenuOpen(false);
-              }}
-              disabled={isAnalyzing}
-              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-emerald-100 hover:bg-emerald-50 transition-all group"
-            >
-              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
-                路線優化
-              </span>
-              <Route size={20} className="text-emerald-500" />
-            </button>
-
-            {/* 3. 匯入行程 */}
-            <button
-              onClick={() => {
-                setIsImportOpen(true);
-                setIsMagicMenuOpen(false);
-              }}
-              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-indigo-100 hover:bg-indigo-50 transition-all group"
-            >
-              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
-                匯入行程
-              </span>
-              <Upload size={20} className="text-indigo-500" />
-            </button>
-
-            {/* 4. 匯出 Excel */}
-            <button
-              onClick={() => {
-                handleExportExcel();
-                setIsMagicMenuOpen(false);
-              }}
-              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-green-100 hover:bg-green-50 transition-all group"
-            >
-              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
-                匯出 Excel
-              </span>
-              <FileSpreadsheet size={20} className="text-green-500" />
-            </button>
-
-            {/* 5. 匯出美圖 */}
-            <button
-              onClick={() => {
-                handleExportImage();
-                setIsMagicMenuOpen(false);
-              }}
-              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-pink-100 hover:bg-pink-50 transition-all group"
-            >
-              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
-                分享美圖
-              </span>
-              <ImageIcon size={20} className="text-pink-500" />
-            </button>
-          </div>
-        )}
-
-        {/* 魔法球本體 */}
-        <button
-          onClick={() => setIsMagicMenuOpen(!isMagicMenuOpen)}
-          className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all transform hover:scale-110 pointer-events-auto ${
-            isMagicMenuOpen
-              ? "bg-white text-stone-800 rotate-45"
-              : "bg-gradient-to-tr from-indigo-500 to-purple-500 text-white"
-          }`}
-        >
-          {isMagicMenuOpen ? (
-            <Plus size={24} />
-          ) : (
-            <Sparkles size={24} className="animate-pulse" />
-          )}
-        </button>
-      </div>
-
       <button
         onClick={() => {
           setIsEditMode(false);
           setEditingId(null);
-          // 根據不同 Tab 設定不同的初始值
           setItemData(
             activeTab === "itinerary"
               ? { day: 1, time: "10:00", category: "sightseeing" }
-              : activeTab === "expenses"
-              ? {
+              : {
                   payer: getCurrentUserNickname(),
                   date: new Date().toISOString().split("T")[0],
                   isSplit: false,
                   splitWith: [],
                   category: "food",
-                }
-              : {
-                  // Notes 初始值
-                  content: "",
-                  emoji: "😊",
-                  image: null,
                 }
           );
           setIsModalOpen(true);
@@ -2763,23 +2858,7 @@ const App = () => {
           <Calendar size={20} />
           <span className="text-[10px] font-medium tracking-wide">行程</span>
         </button>
-
         <div className="w-[1px] h-6 bg-stone-200"></div>
-
-        <button
-          onClick={() => setActiveTab("notes")}
-          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-            activeTab === "notes"
-              ? "text-stone-800 bg-stone-100"
-              : "text-stone-400 hover:text-stone-600"
-          }`}
-        >
-          <StickyNote size={20} />
-          <span className="text-[10px] font-medium tracking-wide">記事本</span>
-        </button>
-
-        <div className="w-[1px] h-6 bg-stone-200"></div>
-
         <button
           onClick={() => setActiveTab("expenses")}
           className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
@@ -2793,6 +2872,90 @@ const App = () => {
         </button>
       </nav>
 
+      {!isModalOpen && (
+        <div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
+          
+          {/* 主按鈕 */}
+          <button
+            onClick={() => {
+              setShowAIMenu(!showAIMenu);
+              setShowExportMenu(false);
+            }}
+            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
+              showAIMenu ? "bg-stone-800 rotate-45" : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+          >
+            {isAnalyzing || (typeof isImportLoading !== 'undefined' && isImportLoading) ? (
+              <Loader2 className="animate-spin text-white" size={24} />
+            ) : (
+              <Sparkles className={`text-white transition-all ${showAIMenu ? "opacity-0" : "opacity-100"}`} size={24} />
+            )}
+            {showAIMenu && <Plus className="text-white absolute rotate-0" size={24} />}
+          </button>
+
+          {/* 展開後的選單 */}
+          {showAIMenu && (
+            <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-5 duration-300 items-end">
+              <div className="px-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">AI Tools</div>
+              <button
+                onClick={() => { handleAIAnalyze(); setShowAIMenu(false); }}
+                className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+              >
+                <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><Sparkles size={16} /></div>
+                <span className="text-sm font-bold text-stone-700">智能導遊分析</span>
+              </button>
+              <button
+                onClick={() => { setShowOptimizeModal(true); setShowAIMenu(false); }}
+                className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+              >
+                <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center"><Route size={16} /></div>
+                <span className="text-sm font-bold text-stone-700">路線優化建議</span>
+              </button>
+
+              <div className="px-2 text-[10px] font-black text-stone-400 uppercase tracking-widest mt-2">Files</div>
+              <button
+                onClick={() => { setIsImportOpen(true); setShowAIMenu(false); }}
+                className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+              >
+                <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><Upload size={16} /></div>
+                <span className="text-sm font-bold text-stone-700">匯入行程檔案</span>
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setMenuPos({ top: rect.top - 10, left: rect.left - 160 });
+                    setShowExportMenu(!showExportMenu);
+                  }}
+                  className={`flex items-center gap-3 w-48 bg-white/90 backdrop-blur-md border px-4 py-3 rounded-2xl shadow-xl transition-all ${
+                    showExportMenu ? "border-stone-800 bg-stone-50" : "border-stone-100 hover:bg-stone-50"
+                  }`}
+                >
+                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><Download size={16} /></div>
+                  <span className="text-sm font-bold text-stone-700">匯出行程內容</span>
+                  <ChevronRight size={14} className={`ml-auto text-stone-300 transition-transform ${showExportMenu ? "rotate-90" : ""}`} />
+                </button>
+
+                {showExportMenu && (
+                  <div 
+                    className="fixed bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-right-2 duration-200"
+                    style={{ top: menuPos.top, left: menuPos.left }}
+                  >
+                    <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-green-50 rounded-xl transition-colors whitespace-nowrap">
+                      <FileSpreadsheet size={16} /> Excel 表格
+                    </button>
+                    <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-pink-50 rounded-xl transition-colors whitespace-nowrap">
+                      <ImageIcon size={16} /> AI 美圖分享
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {isModalOpen && (
         <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div className="bg-[#FDFCF8] w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col">
@@ -2801,14 +2964,12 @@ const App = () => {
                 ? "編輯內容"
                 : activeTab === "itinerary"
                 ? "新增行程"
-                : activeTab === "expenses"
-                ? "新增支出"
-                : "寫新筆記"}
+                : "新增支出"}
             </h3>
+            
             <div className="space-y-4 overflow-y-auto scrollbar-hide px-1 flex-1">
               {activeTab === "itinerary" ? (
                 <>
-                  {/* 行程輸入區 (未變動) */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
@@ -2856,32 +3017,18 @@ const App = () => {
                       }
                     />
                   </div>
+                  
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       Category
                     </label>
                     <div className="flex gap-2 flex-wrap">
                       {[
-                        {
-                          id: "sightseeing",
-                          icon: <Camera size={16} />,
-                          label: "景點",
-                        },
-                        {
-                          id: "food",
-                          icon: <Utensils size={16} />,
-                          label: "餐廳",
-                        },
-                        {
-                          id: "transport",
-                          icon: <Train size={16} />,
-                          label: "交通",
-                        },
-                        {
-                          id: "flight",
-                          icon: <Plane size={16} />,
-                          label: "航班",
-                        },
+                        { id: "sightseeing", icon: <Camera size={16} />, label: "景點" },
+                        { id: "food", icon: <Utensils size={16} />, label: "餐廳" },
+                        { id: "transport", icon: <Train size={16} />, label: "交通" },
+                        { id: "flight", icon: <Plane size={16} />, label: "航班" },
+                        { id: "accommodation", icon: <Home size={16} />, label: "住宿" },
                       ].map((cat) => (
                         <button
                           key={cat.id}
@@ -2899,6 +3046,7 @@ const App = () => {
                       ))}
                     </div>
                   </div>
+
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       {itemData.category === "flight"
@@ -2915,9 +3063,8 @@ const App = () => {
                     />
                   </div>
                 </>
-              ) : activeTab === "expenses" ? (
+              ) : (
                 <>
-                  {/* 記帳輸入區 (未變動) */}
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       消費項目
@@ -2932,37 +3079,18 @@ const App = () => {
                       className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400"
                     />
                   </div>
+                  
                   <div>
                     <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
                       分類
                     </label>
                     <div className="flex gap-2 flex-wrap">
                       {[
-                        {
-                          id: "food",
-                          label: "飲食",
-                          icon: <Utensils size={16} />,
-                        },
-                        {
-                          id: "transport",
-                          label: "交通",
-                          icon: <Train size={16} />,
-                        },
-                        {
-                          id: "accommodation",
-                          label: "住宿",
-                          icon: <Home size={16} />,
-                        },
-                        {
-                          id: "shopping",
-                          label: "購物",
-                          icon: <ShoppingBag size={16} />,
-                        },
-                        {
-                          id: "other",
-                          label: "其他",
-                          icon: <MoreHorizontal size={16} />,
-                        },
+                        { id: "food", label: "飲食", icon: <Utensils size={16} /> },
+                        { id: "transport", label: "交通", icon: <Train size={16} /> },
+                        { id: "accommodation", label: "住宿", icon: <Home size={16} /> },
+                        { id: "shopping", label: "購物", icon: <ShoppingBag size={16} /> },
+                        { id: "other", label: "其他", icon: <MoreHorizontal size={16} /> },
                       ].map((cat) => (
                         <button
                           key={cat.id}
@@ -2980,6 +3108,7 @@ const App = () => {
                       ))}
                     </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
@@ -3107,113 +3236,6 @@ const App = () => {
                     )}
                   </div>
                 </>
-              ) : (
-                // 🟡 新增：記事本輸入區
-                <>
-                  <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-2 block">
-                      現在的心情
-                    </label>
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                      {[
-                        "😊",
-                        "😎",
-                        "😍",
-                        "🥳",
-                        "🤯",
-                        "😴",
-                        "😭",
-                        "🍜",
-                        "🍺",
-                        "📸",
-                        "✈️",
-                        "🌸",
-                        "🎉",
-                      ].map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => setItemData({ ...itemData, emoji })}
-                          className={`text-2xl p-2 rounded-xl border flex-shrink-0 transition-all ${
-                            itemData.emoji === emoji
-                              ? "bg-stone-100 border-stone-400 scale-110"
-                              : "bg-white border-stone-100 hover:bg-stone-50"
-                          }`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
-                      內容
-                    </label>
-                    <textarea
-                      rows="4"
-                      placeholder="寫下你的回憶..."
-                      value={itemData.content || ""}
-                      onChange={(e) =>
-                        setItemData({ ...itemData, content: e.target.value })
-                      }
-                      className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors resize-none leading-relaxed"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
-                      照片 (選填)
-                    </label>
-                    <div className="relative group">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="note-image-upload"
-                      />
-                      <label
-                        htmlFor="note-image-upload"
-                        className={`w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                          itemData.image
-                            ? "border-transparent"
-                            : "border-stone-200 hover:bg-stone-50"
-                        }`}
-                      >
-                        {itemData.image ? (
-                          <div className="relative w-full h-full">
-                            <img
-                              src={itemData.image}
-                              alt="Preview"
-                              className="w-full h-full object-cover rounded-xl"
-                            />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
-                              <span className="text-white text-xs font-bold flex items-center gap-1">
-                                <ImageIcon size={14} /> 更換照片
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <ImageIcon size={24} className="text-stone-300" />
-                            <span className="text-xs text-stone-400 mt-2 font-bold">
-                              點擊上傳照片
-                            </span>
-                          </>
-                        )}
-                      </label>
-                      {itemData.image && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setItemData({ ...itemData, image: null });
-                          }}
-                          className="absolute -top-2 -right-2 bg-white text-stone-400 p-1 rounded-full shadow-md hover:text-red-500"
-                        >
-                          <XCircle size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </>
               )}
             </div>
             <div className="flex gap-3 mt-8 shrink-0">
@@ -3233,8 +3255,10 @@ const App = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
 
 export default App;
+ 
