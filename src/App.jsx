@@ -1,35 +1,3 @@
-Skip to content
-Ping870612
-TABIJI
-Repository navigation
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-1
- (1)
-Insights
-Settings
-TABIJI/src
-/App.jsx
-Go to file
-t
-Ping870612
-Ping870612
-App.jsx
-3327e79
- · 
-16 hours ago
-TABIJI/src
-/App.jsx
-
-Code
-
-Blame
-  const deleteItem = async (col, item) => {
 import React, { useState, useEffect, useRef } from "react";
 import {
   MapPin,
@@ -413,30 +381,35 @@ const AIAnalysisModal = ({
 const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   if (!isOpen || !item) return null;
 
-const typeConfig = {
+  const typeConfig = {
     sightseeing: {
-      icon: <Camera size={14} />,
-      bg: "bg-stone-100 text-stone-600", // 原本是 indigo
+      icon: <Camera size={24} />,
+      bgIcon: "bg-indigo-100 text-indigo-600",
       label: "景點",
     },
     food: {
-      icon: <Utensils size={14} />,
-      bg: "bg-stone-100 text-stone-600", // 原本是 orange
+      icon: <Utensils size={24} />,
+      bgIcon: "bg-orange-100 text-orange-600",
       label: "餐廳",
     },
     transport: {
-      icon: <Train size={14} />,
-      bg: "bg-stone-100 text-stone-600", // 原本是 emerald
+      icon: <Train size={24} />,
+      bgIcon: "bg-emerald-100 text-emerald-600",
       label: "交通",
     },
     flight: {
-      icon: <Plane size={14} />,
-      bg: "bg-stone-100 text-stone-600", // 原本是 sky
+      icon: <Plane size={24} />,
+      bgIcon: "bg-sky-100 text-sky-600",
       label: "航班",
     },
+    accommodation: {
+      icon: <Home size={24} />,
+      bgIcon: "bg-rose-100 text-rose-600",
+      label: "住宿",
+    },
     activity: {
-      icon: <MapPin size={14} />,
-      bg: "bg-stone-100 text-stone-600", // 原本是 stone (維持不變)
+      icon: <MapPin size={24} />,
+      bgIcon: "bg-stone-100 text-stone-600",
       label: "活動",
     },
   };
@@ -866,14 +839,19 @@ const LocationInput = ({ value, onChange, placeholder }) => {
   );
 };
 
-// 修改後的 Tag 元件：統一使用素色樣式
 const Tag = ({ type, text }) => {
-  // 不管是什麼 type，全部統一用這個灰色樣式
-  const style = "bg-stone-100 text-stone-600 border-stone-200";
-  
+  const styles = {
+    mustEat: "bg-orange-50 text-orange-700 border-orange-200",
+    mustBuy: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    reservation: "bg-red-50 text-red-700 border-red-200",
+    story: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    default: "bg-stone-100 text-stone-600 border-stone-200",
+  };
   return (
     <span
-      className={`text-[10px] px-2 py-1 rounded-md border ${style} font-medium inline-block mr-1 mb-1 tracking-wide`}
+      className={`text-[10px] px-2 py-1 rounded-md border ${
+        styles[type] || styles.default
+      } font-medium inline-block mr-1 mb-1 tracking-wide`}
     >
       {typeof text === "string" ? text : String(text || "")}
     </span>
@@ -3261,4 +3239,3 @@ const handleCalculateDebts = async () => {
 };
 
 export default App;
- 
