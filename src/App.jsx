@@ -47,8 +47,8 @@ import {
   ShoppingBag,
   MoreHorizontal,
   ArrowRightLeft,
-  StickyNote, // 新增：記事本圖示
-  Smile,      // 新增：表情符號圖示
+  StickyNote,
+  Smile,
 } from "lucide-react";
 
 // --- Firebase Imports ---
@@ -84,7 +84,6 @@ const firebaseConfig = {
 };
 
 // --- 初始化 Firebase ---
-// 修正: 檢查是否已經初始化過，避免 Hot Reload 導致 Duplicate App Error
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -771,6 +770,7 @@ const Tag = ({ type, text }) => {
   );
 };
 
+// 🟡 復原：這是列表中的天氣小徽章
 const WeatherBadge = ({ date, weatherData }) => {
   if (!date || !weatherData || !weatherData[date]) return null;
   const info = weatherData[date];
@@ -787,6 +787,45 @@ const WeatherBadge = ({ date, weatherData }) => {
       <span>
         {info.temp} {info.condition}
       </span>
+    </div>
+  );
+};
+
+// 🟡 復原：這是頂部的天氣大卡片
+const HeroWeatherCard = ({ startDate, destination, weatherData }) => {
+  if (!startDate || !weatherData || !weatherData[startDate]) return null;
+  const info = weatherData[startDate];
+  let Icon = Sun;
+  if (info.condition.includes("Rain") || info.condition.includes("雨"))
+    Icon = CloudRain;
+  else if (info.condition.includes("Cloud") || info.condition.includes("雲"))
+    Icon = CloudSun;
+  else if (info.condition.includes("Wind") || info.condition.includes("風"))
+    Icon = Wind;
+
+  return (
+    <div className="mb-6 mx-2 p-6 bg-gradient-to-br from-[#4facfe] to-[#00f2fe] rounded-[2rem] text-white shadow-xl relative overflow-hidden animate-in slide-in-from-top-5 duration-700">
+      <div className="relative z-10 flex justify-between items-center">
+        <div>
+          <div className="text-white/80 text-xs font-bold tracking-widest uppercase mb-1">
+            Current Weather
+          </div>
+          <div className="text-3xl font-bold">{destination}</div>
+          <div className="text-sm font-medium opacity-90 mt-1">
+            {startDate} • {info.condition}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-5xl font-bold tracking-tighter">
+            {info.temp.replace("°C", "")}°
+          </div>
+        </div>
+      </div>
+      <Icon
+        size={120}
+        className="absolute -bottom-4 -right-4 text-white/20 rotate-12"
+      />
+      <div className="absolute top-0 left-0 w-full h-full bg-white/10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 to-transparent"></div>
     </div>
   );
 };
@@ -1287,6 +1326,7 @@ const App = () => {
   const [localTripName, setLocalTripName] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const [isMagicMenuOpen, setIsMagicMenuOpen] = useState(false); // 🟡 新增：魔法球選單開關
 
   useEffect(() => {
     if (tripData?.name) {
@@ -1700,6 +1740,8 @@ const App = () => {
 
     // 開啟全螢幕 AI 動畫
     setIsAnalyzing(true);
+    // 關閉魔法選單
+    setIsMagicMenuOpen(false);
 
     try {
       // --- 修改重點開始 ---
@@ -1892,6 +1934,7 @@ const App = () => {
             <button
               onClick={() => {
                 setShowOptimizeModal(false);
+                setIsMagicMenuOpen(false); // 關閉魔法選單
                 executeOptimize();
               }}
               className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium hover:bg-stone-700 transition-colors shadow-lg"
@@ -2334,38 +2377,11 @@ const App = () => {
 
         {/* ↓↓↓↓↓ 修改後的按鈕區塊 (包含下拉選單) ↓↓↓↓↓ */}
         <div className="flex items-center gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide mask-linear-fade relative">
-          {/* 群組 1: 智能功能 */}
-          <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={handleAIAnalyze}
-              disabled={isAnalyzing}
-              className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-yellow-400 hover:text-yellow-600 hover:bg-yellow-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-            >
-              {isAnalyzing ? (
-                <Loader2 className="animate-spin" size={14} />
-              ) : (
-                <Sparkles size={14} className="text-yellow-500" />
-              )}
-              智能導遊
-            </button>
+          
+          {/* 移除：這裡的 AI 按鈕因為已經放入魔法球，所以這裡可以只留匯入匯出，或是保留作為備用 */}
+          {/* 為了版面乾淨，我們先保留「匯入」與「匯出」，AI 功能交給右下角魔法球 */}
 
-            <button
-              onClick={() => setShowOptimizeModal(true)}
-              disabled={isAnalyzing}
-              className="bg-white border border-stone-200 text-stone-600 px-3 py-2 rounded-xl shadow-sm hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs font-bold whitespace-nowrap"
-            >
-              {isAnalyzing ? (
-                <Loader2 className="animate-spin" size={14} />
-              ) : (
-                <Route size={14} className="text-emerald-500" />
-              )}
-              路線優化
-            </button>
-          </div>
-
-          <div className="w-[1px] h-6 bg-stone-200 flex-shrink-0"></div>
-
-          {/* 群組 2: 檔案操作 */}
+          {/* 群組 2: 檔案操作 (現在變主要操作) */}
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => setIsImportOpen(true)}
@@ -2442,6 +2458,15 @@ const App = () => {
       <main className="flex-1 overflow-y-auto pb-32 px-4 pt-4 scrollbar-hide relative">
         {activeTab === "itinerary" && (
           <>
+            {/* 🟡 復原：頂部大張天氣卡片 */}
+            {tripData.weather && tripData.startDate && (
+              <HeroWeatherCard
+                startDate={tripData.startDate}
+                destination={tripData.destination}
+                weatherData={tripData.weather}
+              />
+            )}
+
             {Object.keys(groupedItinerary)
               .sort((a, b) => a - b)
               .map((day) => {
@@ -2680,6 +2705,59 @@ const App = () => {
         )}
       </main>
 
+      {/* 🟡 復原：魔法球按鈕區域 */}
+      <div className="absolute bottom-44 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none">
+        {/* AI 選單 (當魔法球打開時顯示) */}
+        {isMagicMenuOpen && (
+          <div className="flex flex-col gap-3 pointer-events-auto animate-in slide-in-from-bottom-5 fade-in duration-300">
+            <button
+              onClick={handleAIAnalyze}
+              disabled={isAnalyzing}
+              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-yellow-100 hover:bg-yellow-50 transition-all group"
+            >
+              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
+                智能導遊
+              </span>
+              {isAnalyzing ? (
+                <Loader2 className="animate-spin text-yellow-500" size={20} />
+              ) : (
+                <Sparkles size={20} className="text-yellow-500" />
+              )}
+            </button>
+            
+            <button
+              onClick={() => {
+                setShowOptimizeModal(true);
+                setIsMagicMenuOpen(false);
+              }}
+              disabled={isAnalyzing}
+              className="flex items-center gap-3 bg-white text-stone-600 px-4 py-3 rounded-full shadow-lg border border-emerald-100 hover:bg-emerald-50 transition-all group"
+            >
+              <span className="text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-stone-800 text-white px-2 py-1 rounded-md absolute right-14">
+                路線優化
+              </span>
+              <Route size={20} className="text-emerald-500" />
+            </button>
+          </div>
+        )}
+
+        {/* 魔法球本體 */}
+        <button
+          onClick={() => setIsMagicMenuOpen(!isMagicMenuOpen)}
+          className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all transform hover:scale-110 pointer-events-auto ${
+            isMagicMenuOpen
+              ? "bg-white text-stone-800 rotate-45"
+              : "bg-gradient-to-tr from-indigo-500 to-purple-500 text-white"
+          }`}
+        >
+          {isMagicMenuOpen ? (
+            <Plus size={24} />
+          ) : (
+            <Sparkles size={24} className="animate-pulse" />
+          )}
+        </button>
+      </div>
+
       <button
         onClick={() => {
           setIsEditMode(false);
@@ -2710,7 +2788,6 @@ const App = () => {
         <Plus size={24} />
       </button>
 
-      {/* 🟡 修改：底部導航欄，新增中間的記事本按鈕 */}
       <nav className="absolute bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
         <button
           onClick={() => setActiveTab("itinerary")}
