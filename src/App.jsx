@@ -3052,33 +3052,59 @@ const handleReplyNote = async (noteId, replyText) => {
       </button>
 
 <nav className="absolute bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
-  {/* 原有的行程按鈕 */}
-  <button onClick={() => setActiveTab("itinerary")} className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 ${activeTab === "itinerary" ? "text-stone-800 bg-stone-100" : "text-stone-400"}`}>
-    <Calendar size={20} />
-    <span className="text-[10px] font-medium tracking-wide">行程</span>
-  </button>
-
-  <div className="w-[1px] h-6 bg-stone-200"></div>
-
-  {/* 原有的記帳按鈕 */}
-  <button onClick={() => setActiveTab("expenses")} className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 ${activeTab === "expenses" ? "text-stone-800 bg-stone-100" : "text-stone-400"}`}>
-    <CreditCard size={20} />
-    <span className="text-[10px] font-medium tracking-wide">記帳</span>
-  </button>
-
-  <div className="w-[1px] h-6 bg-stone-200"></div>
-
-  {/* 🚀 新增：記事本按鈕 */}
-  <button
-    onClick={() => setActiveTab("notes")}
-    className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-      activeTab === "notes" ? "text-stone-800 bg-stone-100" : "text-stone-400 hover:text-stone-600"
-    }`}
-  >
-    <BookOpen size={20} />
-    <span className="text-[10px] font-medium tracking-wide">記事本</span>
-  </button>
-</nav>
+        <button
+          onClick={() => {
+            setActiveTab("itinerary");
+            setIsEditMode(false); // 切換時重置編輯模式
+            setEditingId(null);   // 清空編輯 ID
+            setItemData({});      // 清空暫存資料
+          }}
+          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+            activeTab === "itinerary"
+              ? "text-stone-800 bg-stone-100"
+              : "text-stone-400 hover:text-stone-600"
+          }`}
+        >
+          <Calendar size={20} />
+          <span className="text-[10px] font-medium tracking-wide">行程</span>
+        </button>
+        <div className="w-[1px] h-6 bg-stone-200"></div>
+        <button
+          onClick={() => {
+            setActiveTab("expenses");
+            setIsEditMode(false); // 切換時重置編輯模式
+            setEditingId(null);
+            setItemData({});
+          }}
+          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+            activeTab === "expenses"
+              ? "text-stone-800 bg-stone-100"
+              : "text-stone-400 hover:text-stone-600"
+          }`}
+        >
+          <CreditCard size={20} />
+          <span className="text-[10px] font-medium tracking-wide">記帳</span>
+        </button>
+        
+        <div className="w-[1px] h-6 bg-stone-200"></div>
+        
+        <button
+          onClick={() => {
+            setActiveTab("notes");
+            setIsEditMode(false); // 切換時重置編輯模式
+            setEditingId(null);
+            setItemData({});
+          }}
+          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+            activeTab === "notes"
+              ? "text-stone-800 bg-stone-100"
+              : "text-stone-400 hover:text-stone-600"
+          }`}
+        >
+          <BookOpen size={20} />
+          <span className="text-[10px] font-medium tracking-wide">記事本</span>
+        </button>
+      </nav>
 
       {!isModalOpen && (
         <div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
