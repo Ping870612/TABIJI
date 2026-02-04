@@ -937,37 +937,31 @@ const ItineraryCard = ({
     sightseeing: {
       icon: <Camera size={15} />,
       cardStyle: "bg-indigo-50/60 border-indigo-200 hover:border-indigo-300",
-      iconColor: "text-indigo-500",
       label: "景點",
     },
     food: {
       icon: <Utensils size={15} />,
       cardStyle: "bg-orange-50/60 border-orange-200 hover:border-orange-300",
-      iconColor: "text-orange-500",
       label: "餐廳",
     },
     transport: {
       icon: <Train size={15} />,
       cardStyle: "bg-emerald-50/60 border-emerald-200 hover:border-emerald-300",
-      iconColor: "text-emerald-500",
       label: "交通",
     },
     flight: {
       icon: <Plane size={15} />,
       cardStyle: "bg-sky-50/60 border-sky-200 hover:border-sky-300",
-      iconColor: "text-sky-500",
       label: "航班",
     },
     accommodation: {
       icon: <Home size={15} />,
       cardStyle: "bg-rose-50/60 border-rose-200 hover:border-rose-300",
-      iconColor: "text-rose-500",
       label: "住宿",
     },
     activity: {
       icon: <MapPin size={15} />,
       cardStyle: "bg-stone-100/60 border-stone-200 hover:border-stone-300",
-      iconColor: "text-stone-500",
       label: "活動",
     },
   };
@@ -976,10 +970,10 @@ const ItineraryCard = ({
   const author = members?.[item.createdBy] || {};
 
   return (
-    <div
-      onClick={() => onSelect(item)}
-      className={`rounded-xl p-3 border mb-2 relative group transition-all active:scale-[0.99] cursor-pointer shadow-sm ${config.cardStyle}`}
-    >
+<div
+  onClick={() => onSelect(item)}
+  className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-stone-100 mb-3 relative group transition-all active:scale-[0.99] cursor-pointer hover:shadow-md`}
+>
       <div className="flex justify-between items-start">
         <div className="flex flex-col items-center mr-3 pt-1 min-w-[3rem]">
           <span className="text-sm font-bold text-stone-600 tracking-wider font-mono">
