@@ -2856,6 +2856,26 @@ const handleReplyNote = async (noteId, replyText) => {
                     .toLocaleString(undefined, { maximumFractionDigits: 0 })} 
                     {/* 小數點四捨五入，保持版面乾淨 */}
                 </div>
+
+                <button
+        onClick={() => {
+          setIsEditMode(false);
+          setEditingId(null);
+          // 設定新增支出的預設值
+          setItemData({
+            payer: getCurrentUserNickname(),
+            date: new Date().toISOString().split("T")[0],
+            isSplit: false,
+            splitWith: [],
+            category: "food",
+          });
+          setIsModalOpen(true);
+        }}
+        className="bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/10"
+      >
+        <Plus size={20} />
+        <span className="text-xs font-bold">記一筆</span>
+      </button>
                 <div className="text-[10px] text-stone-500 mt-1">
                   *包含分帳後的預估金額
                 </div>
