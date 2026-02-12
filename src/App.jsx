@@ -2219,58 +2219,79 @@ const handleCalculateDebts = async () => {
     }
   };
 
+//
+// 修改 handleSaveItem 函式，確保所有欄位都有預設值
 const handleSaveItem = async () => {
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  
-  try {
-    // 根據目前的頁籤 (行程或支出) 準備安全的資料
-    let safeData = {};
-    
-    if (activeTab === "itinerary") {
-      safeData = {
+    const tripRef = doc(
+      db,
+      "artifacts",
+      appId,
+      "public",
+      "data",
+      "travel_trips",
+      tripId
+    );
+
+    try {
+      // 1. 區分目前是 "行程(itinerary)" 還是 "記帳(expenses)"
+      const list =
+        activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
+
+      // 2. 建立 "乾淨" 的資料物件 (Sanitized Data)
+      let safeData = {};
+      const commonFields = {
         id: isEditMode ? editingId : Date.now().toString(),
-        day: itemData.day || 1,
-        time: itemData.time || "10:00",
-        location: itemData.location || "", // 確保不是 undefined
-        category: itemData.category || "sightseeing",
-        notes: itemData.notes || "",      // 確保不是 undefined
-        guideInfo: itemData.guideInfo || "", 
-        tags: itemData.tags || [],
         createdBy: user.uid,
       };
-    } else {
-      safeData = {
-        id: isEditMode ? editingId : Date.now().toString(),
-        item: itemData.item || "",        // 確保不是 undefined
-        amount: Number(itemData.amount) || 0,
-        category: itemData.category || "other",
-        date: itemData.date || new Date().toISOString().split("T")[0],
-        payer: itemData.payer || getCurrentUserNickname(),
-        isSplit: !!itemData.isSplit,
-        splitWith: itemData.splitWith || [],
-        createdBy: user.uid,
-      };
-    }
 
-    const list = activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
+      if (activeTab === "itinerary") {
+        // --- 行程資料 ---
+        safeData = {
+          ...commonFields,
+          // 使用 || "" 確保如果欄位是 undefined，會自動變成空字串
+          day: itemData.day || 1,
+          time: itemData.time || "10:00",
+          location: itemData.location || "", 
+          category: itemData.category || "sightseeing",
+          notes: itemData.notes || "",
+          guideInfo: itemData.guideInfo || "", // AI 導遊欄位也要預設空字串
+          tags: itemData.tags || [],
+        };
+      } else {
+        // --- 記帳資料 ---
+        safeData = {
+          ...commonFields,
+          item: itemData.item || "",
+          // 金額轉為數字，避免存入空字串或 undefined
+          amount: Number(itemData.amount) || 0,
+          category: itemData.category || "other",
+          date: itemData.date || new Date().toISOString().split("T")[0],
+          payer: itemData.payer || getCurrentUserNickname(),
+          isSplit: !!itemData.isSplit, // 強制轉為布林值 (true/false)
+          splitWith: itemData.splitWith || [],
+        };
+      }
 
-    if (isEditMode) {
-      await updateDoc(tripRef, {
-        [activeTab]: list.map((i) => (i.id === editingId ? safeData : i)),
-      });
-    } else {
-      await updateDoc(tripRef, { 
-        [activeTab]: arrayUnion(safeData) 
-      });
+      // 3. 執行儲存
+      if (isEditMode) {
+        // 編輯模式：更新陣列中對應 ID 的項目
+        await updateDoc(tripRef, {
+          [activeTab]: list.map((i) =>
+            i.id === editingId ? { ...i, ...safeData } : i
+          ),
+        });
+      } else {
+        // 新增模式：使用 arrayUnion 加入新項目 (現在 safeData 很乾淨，不會報錯了)
+        await updateDoc(tripRef, { [activeTab]: arrayUnion(safeData) });
+      }
+
+      setIsModalOpen(false);
+      showToast(isEditMode ? "已更新" : "已新增");
+    } catch (e) {
+      console.error(e);
+      showToast("儲存失敗: " + e.message, "error");
     }
-    
-    setIsModalOpen(false);
-    showToast(isEditMode ? "已更新" : "已新增");
-  } catch (e) {
-    console.error("Save Error:", e);
-    showToast("儲存失敗: " + e.message, "error");
-  }
-};
+  };
 
 // --- 記事本核心邏輯 ---
 // 1. 上傳圖片轉碼
@@ -3023,7 +3044,7 @@ const handleReplyNote = async (noteId, replyText) => {
     {/* 留言輸入區 */}
     <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
       <textarea
-        placeholder="想分享什麼？(可貼 Emoji)"
+        placeholder="想分享什麼？"
         className="w-full bg-stone-50 p-4 rounded-2xl text-sm outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-none"
         value={itemData.noteContent || ""}
         onChange={(e) => setItemData({...itemData, noteContent: e.target.value})}
