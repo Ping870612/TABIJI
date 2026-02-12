@@ -2219,7 +2219,23 @@ const handleCalculateDebts = async () => {
     }
   };
 
-  const handleSaveItem = async () => {
+// --- 修改後的 handleSaveItem ---
+const handleSaveItem = async () => {
+  // 1. 檢查基本條件
+  if (!tripId) {
+    showToast("錯誤：找不到旅程 ID", "error");
+    return;
+  }
+  if (!user) {
+    showToast("錯誤：使用者未登入", "error");
+    return;
+  }
+
+  // 2. 鎖定按鈕避免重複點擊
+  const saveButton = document.getElementById("save-btn");
+  if(saveButton) saveButton.disabled = true;
+
+  try {
     const tripRef = doc(
       db,
       "artifacts",
@@ -2229,31 +2245,53 @@ const handleCalculateDebts = async () => {
       "travel_trips",
       tripId
     );
-    try {
-      const list =
-        activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
-      const newItemData = {
-        ...itemData,
-        id: isEditMode ? editingId : Date.now().toString(),
-        category:
-          itemData.category ||
-          (activeTab === "itinerary" ? "sightseeing" : "other"),
-        createdBy: user.uid,
-        date: itemData.date || new Date().toISOString().split("T")[0],
-      };
-      if (isEditMode)
-        await updateDoc(tripRef, {
-          [activeTab]: list.map((i) =>
-            i.id === editingId ? { ...i, ...newItemData } : i
-          ),
-        });
-      else await updateDoc(tripRef, { [activeTab]: arrayUnion(newItemData) });
-      setIsModalOpen(false);
-      showToast(isEditMode ? "已更新" : "已新增");
-    } catch (e) {
-      showToast("儲存失敗", "error");
+
+    // 取得目前的清單 (如果是編輯模式需要用到)
+    // 加上 || [] 避免 undefined 錯誤
+    const currentList =
+      activeTab === "itinerary" 
+        ? (tripData.itinerary || []) 
+        : (tripData.expenses || []);
+
+    const newItemData = {
+      ...itemData,
+      id: isEditMode ? editingId : Date.now().toString(),
+      category:
+        itemData.category ||
+        (activeTab === "itinerary" ? "sightseeing" : "other"),
+      createdBy: user.uid,
+      // 確保日期格式正確
+      date: itemData.date || new Date().toISOString().split("T")[0], 
+    };
+
+    console.log("準備儲存資料:", newItemData); // 用於除錯
+
+    if (isEditMode) {
+      // 編輯模式：更新陣列中特定的項目
+      const updatedList = currentList.map((i) =>
+        i.id === editingId ? { ...i, ...newItemData } : i
+      );
+      
+      await updateDoc(tripRef, {
+        [activeTab]: updatedList,
+      });
+    } else {
+      // 新增模式：使用 arrayUnion 加入新項目
+      await updateDoc(tripRef, { 
+        [activeTab]: arrayUnion(newItemData) 
+      });
     }
-  };
+
+    setIsModalOpen(false);
+    showToast(isEditMode ? "已更新" : "已新增成功！");
+    
+  } catch (e) {
+    console.error("儲存失敗詳細原因:", e);
+    showToast("儲存失敗: " + e.message, "error");
+  } finally {
+    if(saveButton) saveButton.disabled = false;
+  }
+};
 
 // --- 記事本核心邏輯 ---
 // 1. 上傳圖片轉碼
@@ -3029,27 +3067,30 @@ const handleReplyNote = async (noteId, replyText) => {
         
       </main>
 
-      <button
-        onClick={() => {
-          setIsEditMode(false);
-          setEditingId(null);
-          setItemData(
-            activeTab === "itinerary"
-              ? { day: 1, time: "10:00", category: "sightseeing" }
-              : {
-                  payer: getCurrentUserNickname(),
-                  date: new Date().toISOString().split("T")[0],
-                  isSplit: false,
-                  splitWith: [],
-                  category: "food",
-                }
-          );
-          setIsModalOpen(true);
-        }}
-        className="absolute bottom-28 right-6 bg-stone-800 text-white p-4 rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 z-40 hover:bg-stone-700"
-      >
-        <Plus size={24} />
-      </button>
+    {/* 修改：只在行程頁面 (itinerary) 顯示 */}
+{activeTab === "itinerary" && (
+  <button
+    onClick={() => {
+      setIsEditMode(false);
+      setEditingId(null);
+      setItemData(
+        activeTab === "itinerary"
+          ? { day: 1, time: "10:00", category: "sightseeing" }
+          : {
+              payer: getCurrentUserNickname(),
+              date: new Date().toISOString().split("T")[0],
+              isSplit: false,
+              splitWith: [],
+              category: "food",
+            }
+      );
+      setIsModalOpen(true);
+    }}
+    className="absolute bottom-28 right-6 bg-stone-800 text-white p-4 rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 z-40 hover:bg-stone-700"
+  >
+    <Plus size={24} />
+  </button>
+)}
 
 <nav className="absolute bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
         <button
@@ -3106,7 +3147,7 @@ const handleReplyNote = async (noteId, replyText) => {
         </button>
       </nav>
 
-      {!isModalOpen && (
+      {!isModalOpen && activeTab === "itinerary" && (
         <div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
           
           {/* 主按鈕 */}
