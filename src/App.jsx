@@ -2305,9 +2305,11 @@ const handleNoteImageUpload = (e) => {
   }
 };
 
-// --- 改良後的 handleSaveNote (修復記事本無法儲存的問題) ---
+// [請完整替換 src/App.jsx 中的 handleSaveNote 函式]
+
 const handleSaveNote = async () => {
-  // 1. 檢查內容：必須有文字或圖片
+  // 1. 檢查內容：必須有文字或圖片 (防止送出空白)
+  // 使用 ?. 避免 noteContent 為 undefined 時報錯
   if (!itemData.noteContent?.trim() && !itemData.noteImage) {
     showToast("請輸入文字或上傳圖片", "error");
     return;
@@ -2319,7 +2321,7 @@ const handleSaveNote = async () => {
     return;
   }
 
-  // 3. 取得資料庫參照 (確保路徑正確)
+  // 3. 取得資料庫參照
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
   
   try {
@@ -2328,8 +2330,9 @@ const handleSaveNote = async () => {
       const currentNotes = tripData.notes || [];
       const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
         ...n, 
-        content: itemData.noteContent, 
-        image: itemData.noteImage, 
+        // 編輯時也要確保欄位有值
+        content: itemData.noteContent || "", 
+        image: itemData.noteImage || null, 
         isEdited: true 
       } : n);
       
@@ -2339,7 +2342,7 @@ const handleSaveNote = async () => {
     } else {
       // --- 新增模式 ---
       
-      // 安全地取得頭像 Emoji (避免因為沒有 members 資料而崩潰)
+      // 安全地取得頭像 Emoji
       let userEmoji = "👤";
       if (tripData.members && tripData.members[user.uid] && tripData.members[user.uid].emoji) {
         userEmoji = tripData.members[user.uid].emoji;
@@ -2347,14 +2350,19 @@ const handleSaveNote = async () => {
 
       const newNote = {
         id: "note_" + Date.now(),
-        content: itemData.noteContent,
-        image: itemData.noteImage,
+        // ★★★ 關鍵修正：加上 || "" 和 || null 確保不是 undefined ★★★
+        content: itemData.noteContent || "", 
+        image: itemData.noteImage || null,   
+        
         color: '#8B5CF6', // 預設紫色
         author: getCurrentUserNickname(),
-        emoji: userEmoji, // 使用上面安全取得的 emoji
+        emoji: userEmoji,
         time: Date.now(),
         replies: []
       };
+
+      // Debug 用：印出檢查，確認沒有 undefined
+      console.log("準備送出的留言:", newNote);
 
       // 使用 arrayUnion 寫入資料庫
       await updateDoc(tripRef, { notes: arrayUnion(newNote) });
@@ -2367,12 +2375,10 @@ const handleSaveNote = async () => {
     setEditingId(null);
     
   } catch (e) { 
-    // 顯示具體錯誤，方便除錯
     console.error("記事本儲存失敗:", e);
     showToast("留言失敗: " + (e.message || "未知錯誤"), "error"); 
   }
 };
-
 // 3. 刪除留言
 const deleteNote = async (noteId) => {
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
