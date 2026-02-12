@@ -214,6 +214,38 @@ const ConfirmModal = ({
   );
 };
 
+// --- 新增：自動將文字中的網址轉為連結的元件 ---
+const LinkText = ({ text }) => {
+  if (!text) return null;
+
+  // 使用正則表達式分割文字與網址
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+
+  return (
+    <span>
+      {parts.map((part, i) => {
+        // 如果這個片段符合網址格式
+        if (part.match(/https?:\/\/[^\s]+/)) {
+          return (
+            <a
+              key={i}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 hover:text-indigo-800 hover:underline break-all"
+              onClick={(e) => e.stopPropagation()} // 避免觸發卡片點擊
+            >
+              {part}
+            </a>
+          );
+        }
+        // 普通文字
+        return part;
+      })}
+    </span>
+  );
+};
+
 const SetupGuide = ({ error }) => (
   <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 p-8 text-center font-sans">
     <div className="bg-white p-8 rounded-3xl shadow-xl max-w-lg border border-stone-100 text-left">
@@ -472,14 +504,15 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
               </p>
             </div>
           )}
-          {item.notes && (
-            <div>
-              <h4 className="text-sm font-bold text-stone-700 mb-2">備註</h4>
-              <p className="text-sm text-stone-600 bg-stone-50 p-4 rounded-xl border border-stone-100 leading-relaxed whitespace-pre-wrap">
-                {item.notes}
-              </p>
-            </div>
-          )}
+{item.notes && (
+  <div>
+    <h4 className="text-sm font-bold text-stone-700 mb-2">備註</h4>
+    <div className="text-sm text-stone-600 bg-stone-50 p-4 rounded-xl border border-stone-100 leading-relaxed whitespace-pre-wrap">
+      {/* 使用剛剛建立的 LinkText 元件 */}
+      <LinkText text={item.notes} />
+    </div>
+  </div>
+)}
           {author.nickname && (
             <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-stone-100 text-xs text-stone-400">
               <span>Added by</span>
@@ -1032,11 +1065,11 @@ const ItineraryCard = ({
             </div>
           )}
           
-          {item.notes && !item.guideInfo && (
-            <p className="text-stone-500 text-xs mt-0.5 line-clamp-2 leading-snug opacity-80">
-              {item.notes}
-            </p>
-          )}
+{item.notes && !item.guideInfo && (
+  <div className="text-stone-400 text-xs mt-1 line-clamp-2">
+    <LinkText text={item.notes} />
+  </div>
+)}
 
           {author.nickname && (
             <div className="flex items-center gap-1 mt-1 justify-end opacity-40 text-[10px]">
