@@ -2305,45 +2305,72 @@ const handleNoteImageUpload = (e) => {
   }
 };
 
-// 2. 送出留言 (支援文字或圖片)
+// --- 改良後的 handleSaveNote (修復記事本無法儲存的問題) ---
 const handleSaveNote = async () => {
-  // 邏輯檢查：只要 文字有內容 OR 有圖片，就可以通過
+  // 1. 檢查內容：必須有文字或圖片
   if (!itemData.noteContent?.trim() && !itemData.noteImage) {
     showToast("請輸入文字或上傳圖片", "error");
     return;
   }
   
+  // 2. 檢查登入狀態與旅程ID
+  if (!user || !tripId) {
+    showToast("錯誤：無法確認使用者或旅程 ID", "error");
+    return;
+  }
+
+  // 3. 取得資料庫參照 (確保路徑正確)
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  
   try {
     if (isEditMode && editingId) {
-      // 編輯模式
-      const updatedNotes = (tripData.notes || []).map(n => n.id === editingId ? { 
+      // --- 編輯模式 ---
+      const currentNotes = tripData.notes || [];
+      const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
         ...n, 
         content: itemData.noteContent, 
         image: itemData.noteImage, 
         isEdited: true 
       } : n);
+      
       await updateDoc(tripRef, { notes: updatedNotes });
+      showToast("更新成功！");
+
     } else {
-      // 新增模式
+      // --- 新增模式 ---
+      
+      // 安全地取得頭像 Emoji (避免因為沒有 members 資料而崩潰)
+      let userEmoji = "👤";
+      if (tripData.members && tripData.members[user.uid] && tripData.members[user.uid].emoji) {
+        userEmoji = tripData.members[user.uid].emoji;
+      }
+
       const newNote = {
         id: "note_" + Date.now(),
         content: itemData.noteContent,
         image: itemData.noteImage,
-        color: '#8B5CF6', // 移除選擇，統一預設為紫色
+        color: '#8B5CF6', // 預設紫色
         author: getCurrentUserNickname(),
-        emoji: tripData.members[user.uid]?.emoji || "👤",
+        emoji: userEmoji, // 使用上面安全取得的 emoji
         time: Date.now(),
         replies: []
       };
+
+      // 使用 arrayUnion 寫入資料庫
       await updateDoc(tripRef, { notes: arrayUnion(newNote) });
+      showToast("留言發送成功！");
     }
-    // 清空輸入框
+    
+    // 4. 清空輸入框與重置狀態
     setItemData({ ...itemData, noteContent: "", noteImage: null });
     setIsEditMode(false);
     setEditingId(null);
-    showToast("成功！");
-  } catch (e) { showToast("出錯了", "error"); }
+    
+  } catch (e) { 
+    // 顯示具體錯誤，方便除錯
+    console.error("記事本儲存失敗:", e);
+    showToast("留言失敗: " + (e.message || "未知錯誤"), "error"); 
+  }
 };
 
 // 3. 刪除留言
