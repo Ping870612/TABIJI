@@ -2219,77 +2219,56 @@ const handleCalculateDebts = async () => {
     }
   };
 
-// --- 修改後的 handleSaveItem ---
 const handleSaveItem = async () => {
-  // 1. 檢查基本條件
-  if (!tripId) {
-    showToast("錯誤：找不到旅程 ID", "error");
-    return;
-  }
-  if (!user) {
-    showToast("錯誤：使用者未登入", "error");
-    return;
-  }
-
-  // 2. 鎖定按鈕避免重複點擊
-  const saveButton = document.getElementById("save-btn");
-  if(saveButton) saveButton.disabled = true;
-
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  
   try {
-    const tripRef = doc(
-      db,
-      "artifacts",
-      appId,
-      "public",
-      "data",
-      "travel_trips",
-      tripId
-    );
-
-    // 取得目前的清單 (如果是編輯模式需要用到)
-    // 加上 || [] 避免 undefined 錯誤
-    const currentList =
-      activeTab === "itinerary" 
-        ? (tripData.itinerary || []) 
-        : (tripData.expenses || []);
-
-    const newItemData = {
-      ...itemData,
-      id: isEditMode ? editingId : Date.now().toString(),
-      category:
-        itemData.category ||
-        (activeTab === "itinerary" ? "sightseeing" : "other"),
-      createdBy: user.uid,
-      // 確保日期格式正確
-      date: itemData.date || new Date().toISOString().split("T")[0], 
-    };
-
-    console.log("準備儲存資料:", newItemData); // 用於除錯
-
-    if (isEditMode) {
-      // 編輯模式：更新陣列中特定的項目
-      const updatedList = currentList.map((i) =>
-        i.id === editingId ? { ...i, ...newItemData } : i
-      );
-      
-      await updateDoc(tripRef, {
-        [activeTab]: updatedList,
-      });
+    // 根據目前的頁籤 (行程或支出) 準備安全的資料
+    let safeData = {};
+    
+    if (activeTab === "itinerary") {
+      safeData = {
+        id: isEditMode ? editingId : Date.now().toString(),
+        day: itemData.day || 1,
+        time: itemData.time || "10:00",
+        location: itemData.location || "", // 確保不是 undefined
+        category: itemData.category || "sightseeing",
+        notes: itemData.notes || "",      // 確保不是 undefined
+        guideInfo: itemData.guideInfo || "", 
+        tags: itemData.tags || [],
+        createdBy: user.uid,
+      };
     } else {
-      // 新增模式：使用 arrayUnion 加入新項目
-      await updateDoc(tripRef, { 
-        [activeTab]: arrayUnion(newItemData) 
-      });
+      safeData = {
+        id: isEditMode ? editingId : Date.now().toString(),
+        item: itemData.item || "",        // 確保不是 undefined
+        amount: Number(itemData.amount) || 0,
+        category: itemData.category || "other",
+        date: itemData.date || new Date().toISOString().split("T")[0],
+        payer: itemData.payer || getCurrentUserNickname(),
+        isSplit: !!itemData.isSplit,
+        splitWith: itemData.splitWith || [],
+        createdBy: user.uid,
+      };
     }
 
-    setIsModalOpen(false);
-    showToast(isEditMode ? "已更新" : "已新增成功！");
+    const list = activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
+
+    if (isEditMode) {
+      await updateDoc(tripRef, {
+        [activeTab]: list.map((i) => (i.id === editingId ? safeData : i)),
+      });
+    } else {
+      await updateDoc(tripRef, { 
+        [activeTab]: arrayUnion(safeData) 
+      });
+    }
     
+    setIsModalOpen(false);
+    showToast(isEditMode ? "已更新" : "已新增");
   } catch (e) {
-    console.error("儲存失敗詳細原因:", e);
+    console.error("Save Error:", e);
     showToast("儲存失敗: " + e.message, "error");
-  } finally {
-    if(saveButton) saveButton.disabled = false;
   }
 };
 
