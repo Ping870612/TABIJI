@@ -3129,13 +3129,20 @@ const handleReplyNote = async (noteId, replyText) => {
             </div>
           </div>
           
-          <p className="text-sm text-stone-600 whitespace-pre-wrap">{note.content}</p>
+          <div className="text-sm text-stone-600 whitespace-pre-wrap">
+  <LinkText text={note.content} />
+</div>
           {note.image && <img src={note.image} className="mt-2 rounded-xl w-full max-h-60 object-cover" />}
           
           {/* 回覆區 */}
           <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
             {(note.replies || []).map((r, i) => (
-              <div key={i} className="text-[11px]"><span className="font-bold text-stone-800">{r.author}:</span> <span className="text-stone-500">{r.content}</span></div>
+              <div key={i} className="text-[11px]">
+  <span className="font-bold text-stone-800">{r.author}:</span>{" "}
+  <span className="text-stone-500">
+    <LinkText text={r.content} />
+  </span>
+</div>
             ))}
             <input 
               type="text" 
