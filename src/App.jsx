@@ -2510,7 +2510,7 @@ const handleReplyNote = async (noteId, replyText) => {
     );
 
   return (
-    <div className="flex flex-col h-screen bg-[#FDFCF8] font-sans max-w-md mx-auto shadow-2xl relative text-stone-800">
+    <div className="flex flex-col h-[100dvh] bg-[#FDFCF8] font-sans max-w-md mx-auto shadow-2xl relative text-stone-800">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <ConfirmModal {...confirmConfig} />
       <ShareModal
@@ -3204,13 +3204,13 @@ const handleReplyNote = async (noteId, replyText) => {
       );
       setIsModalOpen(true);
     }}
-    className="absolute bottom-28 right-6 bg-stone-800 text-white p-4 rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 z-40 hover:bg-stone-700"
+    className="absolute bottom-[calc(7rem+env(safe-area-inset-bottom))] right-6 bg-stone-800 text-white p-4 rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 z-40 hover:bg-stone-700"
   >
     <Plus size={24} />
   </button>
 )}
 
-<nav className="absolute bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
+<nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
         <button
           onClick={() => {
             setActiveTab("itinerary");
