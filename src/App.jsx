@@ -2702,7 +2702,7 @@ const handleReplyNote = async (noteId, replyText) => {
               <div className="flex items-center gap-2 group flex-1 min-w-0">
                 <input
                   // 🔴 修改：將 text-3xl 改成 text-4xl 放大標題
-                  className="text-4xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
+                  className="text-5xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
                   value={localTripName}
                   placeholder="點擊輸入旅程名稱..."
                   onChange={(e) => setLocalTripName(e.target.value)}
@@ -2740,7 +2740,7 @@ const handleReplyNote = async (noteId, replyText) => {
               <div className="relative flex items-center gap-1 bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
                 <Calendar size={10} className="text-stone-400 group-hover:text-stone-600" />
                 {/* 用 span 顯示文字，強制縮小到 text-[9px] */}
-                <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
+                <span className="font-mono text-[11px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
                   {tripData.startDate || "出發日"}
                 </span>
                 {/* 透明的 input 覆蓋在上面，負責觸發手機日期鍵盤 */}
