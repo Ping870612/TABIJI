@@ -3,6 +3,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  background-color: #FDFCF8;
+}
+
 /* 若要自定義滾動條樣式，可保留以下設定 */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
