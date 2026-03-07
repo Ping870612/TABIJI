@@ -542,14 +542,22 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   );
 };
 
-// --- 新增元件：成員選擇視窗 ---
-const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew }) => {
+// --- 修改：歡迎回來視窗 (加入右上角 X 按鈕) ---
+const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew, onClose }) => {
   if (!isOpen) return null;
 
   return (
     <div className="absolute inset-0 z-[90] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-        <div className="text-center mb-6">
+      <div className="bg-white w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+        {/* 新增：右上角關閉按鈕 */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 bg-stone-50 rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors z-10"
+        >
+          <X size={16} />
+        </button>
+
+        <div className="text-center mb-6 mt-2">
           <h3 className="text-xl font-bold text-stone-800 mb-2">
             歡迎回來！
           </h3>
@@ -597,39 +605,50 @@ const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew }) => {
   );
 };
 
-const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "" }) => {
+// --- 修改：建立旅者檔案視窗 (加入返回鈕與重複頭貼阻擋) ---
+const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, onBack }) => {
+  const animals = [
+    "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", 
+    "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔",
+  ];
+  
+  // 計算出已經被選走的動物頭貼
+  const takenEmojis = Object.values(members).map(m => m.emoji);
+  
+  // 初始化時，自動避開已經被選走的動物，找到第一個可用的
   const [nickname, setNickname] = useState(initialName);
   const [selectedEmoji, setSelectedEmoji] = useState("🐶");
-  const animals = [
-    "🐶",
-    "🐱",
-    "🐭",
-    "🐹",
-    "🐰",
-    "🦊",
-    "🐻",
-    "🐼",
-    "🐨",
-    "🐯",
-    "🦁",
-    "🐮",
-    "🐷",
-    "🐸",
-    "🐵",
-    "🐔",
-  ];
+
+  useEffect(() => {
+    if (isOpen) {
+      setNickname(initialName);
+      const firstAvailable = animals.find(a => !takenEmojis.includes(a)) || "🐶";
+      setSelectedEmoji(firstAvailable);
+    }
+  }, [isOpen, members]); // 依賴 isOpen 來重置狀態
 
   if (!isOpen) return null;
 
   return (
     <div className="absolute inset-0 z-[80] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-        <div className="text-center mb-6">
-          <h3 className="text-xl font-bold text-stone-800 mb-2">
-            建立您的旅者檔案
-          </h3>
-          <p className="text-sm text-stone-500">選擇一個動物代表你吧！</p>
+        
+        {/* 頂部標題與返回按鈕 */}
+        <div className="relative flex items-center justify-center mb-6">
+          <button 
+            onClick={onBack}
+            className="absolute left-0 p-2 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-600 transition-colors -ml-2"
+          >
+            <ChevronRight className="rotate-180" size={20} />
+          </button>
+          <div className="text-center">
+            <h3 className="text-xl font-bold text-stone-800 mb-1">
+              建立旅者檔案
+            </h3>
+            <p className="text-xs text-stone-500">選擇一個動物代表你吧！</p>
+          </div>
         </div>
+
         <div className="space-y-6">
           <div className="flex justify-center">
             <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center text-4xl shadow-lg transition-transform hover:scale-105">
@@ -654,26 +673,31 @@ const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "" }) => {
               選擇動物
             </label>
             <div className="grid grid-cols-4 gap-2">
-              {animals.map((a) => (
-                <button
-                  key={a}
-                  onClick={() => setSelectedEmoji(a)}
-                  className={`text-2xl p-2 rounded-xl transition-all ${
-                    selectedEmoji === a
-                      ? "bg-stone-200 scale-110 shadow-sm"
-                      : "hover:bg-stone-100"
-                  }`}
-                >
-                  {a}
-                </button>
-              ))}
+              {animals.map((a) => {
+                const isTaken = takenEmojis.includes(a);
+                return (
+                  <button
+                    key={a}
+                    onClick={() => !isTaken && setSelectedEmoji(a)}
+                    disabled={isTaken}
+                    title={isTaken ? "已經被選走囉" : ""}
+                    className={`text-2xl p-2 rounded-xl transition-all ${
+                      isTaken
+                        ? "opacity-20 cursor-not-allowed grayscale bg-stone-50" // 已被選走的樣式
+                        : selectedEmoji === a
+                        ? "bg-stone-200 scale-110 shadow-sm"
+                        : "hover:bg-stone-100"
+                    }`}
+                  >
+                    {a}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <button
-            onClick={() =>
-              nickname && onSubmit({ nickname, emoji: selectedEmoji })
-            }
-            disabled={!nickname}
+            onClick={() => nickname && onSubmit({ nickname, emoji: selectedEmoji })}
+            disabled={!nickname || takenEmojis.includes(selectedEmoji)}
             className="w-full bg-stone-800 text-white font-bold py-3 rounded-xl hover:bg-stone-700 transition-all disabled:opacity-50"
           >
             開始旅程
@@ -2533,8 +2557,7 @@ const handleReplyNote = async (noteId, replyText) => {
       />
 
       <OptimizeModal />
-      
-      <MemberSelectModal 
+<MemberSelectModal 
         isOpen={showMemberSelect}
         members={tripData?.members || {}} 
         onSelect={handleJoinAsMember}
@@ -2542,12 +2565,28 @@ const handleReplyNote = async (noteId, replyText) => {
           setShowMemberSelect(false);
           setShowProfileSetup(true);
         }}
+        // 加入 onClose 讓 X 按鈕生效 (清空 tripId 退回首頁)
+        onClose={() => setTripId(null)}
       />
 
       <ProfileSetupModal
         isOpen={showProfileSetup}
         onSubmit={handleProfileSubmit}
         initialName=""
+        // 傳入 members 來比對重複頭貼
+        members={tripData?.members || {}}
+        // 判斷按返回時該去哪裡
+        onBack={() => {
+          if (Object.keys(tripData?.members || {}).length > 0) {
+            // 情況 A：如果是被邀請進來的，退回歡迎回來視窗
+            setShowProfileSetup(false);
+            setShowMemberSelect(true);
+          } else {
+            // 情況 B：如果是新建行程的，退回建立新旅程頁面 (清空 tripId 退回首頁)
+            setShowProfileSetup(false);
+            setTripId(null);
+          }
+        }}
       />
       <FileImportModal
         isOpen={isImportOpen}
