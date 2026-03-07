@@ -911,14 +911,13 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
-// --- 更新後的導覽列元件 (半透明毛玻璃版) ---
+// --- 更新後的導覽列元件 (半透明毛玻璃版 - 縮小優化版) ---
   const DayNavigation = ({ days, tripData, onScrollToDay }) => {
     const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
     return (
-      <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-4 pt-2 px-4 -mx-4 mb-4 border-b border-stone-100/50 shadow-sm">
-        {/* 將 class 換成 custom-scrollbar */}
-        <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar justify-start md:justify-center">
+      <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-2 pt-1 px-4 -mx-4 mb-2 border-b border-stone-100/50 shadow-sm">
+        <div className="flex gap-2 overflow-x-auto py-1 custom-scrollbar justify-start md:justify-center">
           {days.map((day) => {
             const dateObj = new Date(tripData.startDate);
             dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
@@ -937,22 +936,23 @@ const WeatherBadge = ({ date, weatherData }) => {
               <button
                 key={day}
                 onClick={() => onScrollToDay(day)}
-                className="flex-shrink-0 w-24 bg-white/80 border border-stone-100 rounded-2xl p-3 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-400 hover:shadow-md"
+                // 修改：縮小寬度為 w-20，padding 為 p-2，圓角為 rounded-xl
+                className="flex-shrink-0 w-20 bg-white/80 border border-stone-100 rounded-xl p-2 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-400 hover:shadow-md"
               >
-                <div className="text-[10px] text-stone-400 font-bold mb-1">
+                <div className="text-[9px] text-stone-400 font-bold mb-0.5 truncate">
                   {formattedDate} ({dayOfWeek})
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-stone-800">{day}</span>
-                  <span className="text-[10px] text-stone-500 font-bold">DAY</span>
+                  <span className="text-xl font-black text-stone-800 leading-none">{day}</span>
+                  <span className="text-[9px] text-stone-500 font-bold leading-none">DAY</span>
                 </div>
                 {weather ? (
-                  <div className="mt-2 flex items-center gap-1 text-[9px] text-orange-500 font-bold">
+                  <div className="mt-1 flex items-center gap-0.5 text-[8px] text-orange-500 font-bold">
                     <Sun size={10} />
-                    <span className="truncate">{weather.temp} {weather.condition}</span>
+                    <span className="truncate">{weather.temp}</span>
                   </div>
                 ) : (
-                  <div className="mt-2 text-[9px] text-stone-200 font-bold italic">無天氣資訊</div>
+                  <div className="mt-1 text-[8px] text-stone-200 font-bold italic leading-none">無資訊</div>
                 )}
               </button>
             );
@@ -2728,20 +2728,21 @@ const handleReplyNote = async (noteId, replyText) => {
               </div>
             </div>
 
-            {/* 日期選擇區 (維持上一版的設計) */}
-            <div className="flex items-center gap-2 text-xs text-stone-400 mt-1 pl-1">
-              <div className="flex items-center gap-2 bg-stone-50/50 hover:bg-stone-100 px-2 py-1 rounded-lg transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
-                <Calendar size={14} className="text-stone-400 group-hover:text-stone-600" />
+{/* 日期選擇區 (縮小優化版) */}
+            <div className="flex items-center gap-2 text-[10px] text-stone-400 mt-1 pl-1">
+              <div className="flex items-center gap-1.5 bg-stone-50/50 hover:bg-stone-100 px-1.5 py-1 rounded-md transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
+                <Calendar size={12} className="text-stone-400 group-hover:text-stone-600" />
                 
                 <input 
                   type="date" 
                   value={tripData.startDate || ""}
                   onChange={(e) => handleDateUpdate('startDate', e.target.value)}
                   onClick={(e) => e.target.showPicker()}
-                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                  // 修改：字體改為 text-[10px]，寬度變窄 w-20
+                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-20 text-[10px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden leading-none"
                 />
                 
-                <ArrowRight size={12} className="text-stone-300" />
+                <ArrowRight size={10} className="text-stone-300" />
                 
                 <input 
                   type="date" 
@@ -2749,22 +2750,20 @@ const handleReplyNote = async (noteId, replyText) => {
                   min={tripData.startDate}
                   onChange={(e) => handleDateUpdate('endDate', e.target.value)}
                   onClick={(e) => e.target.showPicker()}
-                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-24 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-20 text-[10px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden leading-none"
                 />
               </div>
 
               <button
-    onClick={(e) => {
-      e.stopPropagation();
-      // 呼叫抓取天氣函式
-      fetchWeather(tripId, tripData.destination, tripData.startDate);
-    }}
-    className="p-1.5 bg-stone-50/50 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-lg transition-colors border border-transparent hover:border-orange-200"
-    title="點擊更新天氣"
-  >
-    <CloudSun size={14} />
-  </button>
-
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fetchWeather(tripId, tripData.destination, tripData.startDate);
+                }}
+                className="p-1 bg-stone-50/50 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-md transition-colors border border-transparent hover:border-orange-200"
+                title="點擊更新天氣"
+              >
+                <CloudSun size={12} />
+              </button>
             </div>
           </div>
 
@@ -2822,24 +2821,28 @@ const handleReplyNote = async (noteId, replyText) => {
                     id={`day-section-${day}`}
                     className="mb-8 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-32"
                   >
-                    <div className="flex justify-between items-end mb-4 px-2">
+<div className="flex justify-between items-end mb-2 px-2">
                       <div className="flex flex-col">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-4xl font-bold text-stone-200 font-mono">
+                        <div className="flex items-baseline gap-1.5">
+                          {/* 修改：從 text-4xl 縮小到 text-2xl，顏色改淡一點 */}
+                          <span className="text-2xl font-bold text-stone-300 font-mono leading-none">
                             {String(day).padStart(2, "0")}
                           </span>
-                          <span className="text-sm font-bold text-stone-600">
+                          <span className="text-xs font-bold text-stone-600">
                             Day {day}
                           </span>
                         </div>
-                        <span className="text-[10px] text-stone-400 font-mono pl-1">
+                        <span className="text-[9px] text-stone-400 font-mono pl-0.5 mt-0.5">
                           {dateStr}
                         </span>
                       </div>
-                      <WeatherBadge
-                        date={dateStr}
-                        weatherData={tripData.weather}
-                      />
+                      {/* 修改：用 scale-90 把天氣標籤稍微變小 */}
+                      <div className="scale-90 origin-bottom-right">
+                        <WeatherBadge
+                          date={dateStr}
+                          weatherData={tripData.weather}
+                        />
+                      </div>
                     </div>
                     <div className="pl-2 border-l-2 border-stone-100 ml-4">
                       {groupedItinerary[day]
