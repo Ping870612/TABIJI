@@ -214,11 +214,11 @@ const ConfirmModal = ({
   );
 };
 
-// --- 新增：自動將文字中的網址轉為連結的元件 ---
+// --- 新增：自動將文字中的網址轉為連結，並支援換行顯示的元件 ---
 const LinkText = ({ text }) => {
   if (!text) return null;
 
-  // 使用正則表達式分割文字與網址
+  // 1. 先使用正則表達式分割文字與網址
   const parts = text.split(/(https?:\/\/[^\s]+)/g);
 
   return (
@@ -239,8 +239,18 @@ const LinkText = ({ text }) => {
             </a>
           );
         }
-        // 普通文字
-        return part;
+        
+        // 2. 普通文字：將換行符號 \n 轉換為 <br /> 標籤
+        return (
+          <span key={i}>
+            {part.split('\n').map((line, j, arr) => (
+              <React.Fragment key={j}>
+                {line}
+                {j < arr.length - 1 && <br />}
+              </React.Fragment>
+            ))}
+          </span>
+        );
       })}
     </span>
   );
@@ -3109,7 +3119,7 @@ const handleReplyNote = async (noteId, replyText) => {
     <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
       <textarea
         placeholder="想分享什麼？"
-        className="w-full bg-stone-50 p-4 rounded-2xl text-sm outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-none"
+        className="w-full bg-stone-50 p-4 rounded-2xl text-sm outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-y"
         value={itemData.noteContent || ""}
         onChange={(e) => setItemData({...itemData, noteContent: e.target.value})}
       />
@@ -3169,11 +3179,11 @@ const handleReplyNote = async (noteId, replyText) => {
   </span>
 </div>
             ))}
-            <input 
-              type="text" 
+            <textarea 
+              rows="1"
               placeholder="回覆旅伴..." 
               className="w-full bg-stone-50 text-[10px] p-2 rounded-lg outline-none"
-              onKeyDown={(e) => { if(e.key === 'Enter') { handleReplyNote(note.id, e.target.value); e.target.value = ''; } }}
+              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { handleReplyNote(note.id, e.target.value); e.target.value = ''; } }}
             />
           </div>
         </div>
@@ -3448,7 +3458,7 @@ const handleReplyNote = async (noteId, replyText) => {
                       onChange={(e) =>
                         setItemData({ ...itemData, notes: e.target.value })
                       }
-                      className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors resize-none"
+                      className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors resize-y min-h-[80px]"
                     />
                   </div>
                 </>
