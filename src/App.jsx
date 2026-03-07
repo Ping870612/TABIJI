@@ -1033,19 +1033,20 @@ const ItineraryCard = ({
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
-  return (
+return (
     <div
       onClick={() => onSelect(item)}
-      // 修改處：移除了 border, shadow-sm，保留 padding (p-3) 和圓角，加入 hover 效果
-      className={`rounded-xl p-3 mb-1 relative group transition-all active:scale-[0.99] cursor-pointer hover:bg-stone-50 ${config.cardStyle}`}
+      // 🔴 修改：將 p-3 改為 py-1.5 px-3，並將 mb-1 拿掉 (改為 mb-0)，大幅縮減上下間距
+      className={`rounded-xl py-1.5 px-3 mb-0 relative group transition-all active:scale-[0.99] cursor-pointer hover:bg-stone-50 ${config.cardStyle}`}
     >
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col items-center mr-3 pt-1 min-w-[3rem]">
+      <div className="flex justify-between items-start h-full">
+        {/* 🔴 修改：加上 self-stretch，並將 pt-1 改為 pt-0.5 讓文字對齊 */}
+        <div className="flex flex-col items-center mr-3 pt-0.5 min-w-[3rem] self-stretch">
           <span className="text-sm font-bold text-stone-600 tracking-wider font-mono">
             {item.time}
           </span>
-          {/* 修改處：讓時間軸線稍微淡一點 */}
-          <div className="h-full w-[1px] bg-stone-100 my-1"></div>
+          {/* 🔴 修改：加上 flex-1 讓時間軸的灰線可以完美延伸連接 */}
+          <div className="flex-1 w-[1px] bg-stone-100 my-1"></div>
         </div>
 
         <div className="flex-1 min-w-0 pr-1">
@@ -2926,7 +2927,7 @@ const handleReplyNote = async (noteId, replyText) => {
         )}
 
         {activeTab === "expenses" && (
-          <div className="space-y-4 px-1 pb-24">
+          <div className="space-y-4 px-1 pt-4 pb-24">
             {/* 上方卡片：個人支出計算 & AI 按鈕 */}
             <div className="bg-stone-800 text-stone-50 p-6 rounded-2xl shadow-xl relative overflow-hidden flex justify-between items-center">
               <div className="relative z-10">
@@ -3114,7 +3115,7 @@ const handleReplyNote = async (noteId, replyText) => {
         )}
 
 {activeTab === "notes" && (
-  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
+  <div className="space-y-4 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
     {/* 留言輸入區 */}
     <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
       <textarea
