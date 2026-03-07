@@ -1082,7 +1082,7 @@ return (
           )}
           
 {item.notes && !item.guideInfo && (
-  <div className="text-stone-400 text-xs mt-1 line-clamp-2">
+  <div className="text-stone-400 text-xs mt-1 leading-relaxed">
     <LinkText text={item.notes} />
   </div>
 )}
