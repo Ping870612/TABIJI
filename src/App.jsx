@@ -2693,7 +2693,7 @@ const handleReplyNote = async (noteId, replyText) => {
         </div>
       )}
 
-<header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-4 sticky top-0 z-30 border-b border-stone-100 flex flex-col transition-all">
+<header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-2 sticky top-0 z-30 border-b border-stone-100 flex flex-col transition-all">
         
         {/* 第一排：標題、成員、右側操作按鈕 (全部水平置中對齊) */}
         <div className="flex justify-between items-center">
@@ -2770,7 +2770,7 @@ const handleReplyNote = async (noteId, replyText) => {
         </div>
 
         {/* 第二排：日期選擇區 (使用 mt-4 讓它往下推，拉開距離) */}
-        <div className="flex items-center gap-1 mt-4 pl-1">
+        <div className="flex items-center gap-1 mt-1 pl-1">
           
           {/* 出發日區塊 */}
           <div className="relative flex items-center gap-1 bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
