@@ -3186,7 +3186,7 @@ const handleReplyNote = async (noteId, replyText) => {
       </main>
 
 
-<nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
+<nav className="absolute bottom-[calc(0.5rem+env(safe-area-inset-bottom))] left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
         <button
           onClick={() => {
             setActiveTab("itinerary");
@@ -3244,7 +3244,7 @@ const handleReplyNote = async (noteId, replyText) => {
 {/* 整合版：新增行程與魔法球按鈕群組 */}
       {!isModalOpen && activeTab === "itinerary" && (
         // 統一的外層容器，把位置精準定在導覽列上方
-        <div className="absolute bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-6 z-[60] flex flex-col-reverse items-end gap-4 pointer-events-none">
+        <div className="absolute bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-6 z-[60] flex flex-col-reverse items-end gap-4 pointer-events-none">
           
           {/* 1. 主要的「新增行程」按鈕 (置於最底) */}
           <button
@@ -3254,7 +3254,7 @@ const handleReplyNote = async (noteId, replyText) => {
               setItemData({ day: 1, time: "10:00", category: "sightseeing" });
               setIsModalOpen(true);
             }}
-            className="bg-stone-800 text-white p-4 rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 hover:bg-stone-700 pointer-events-auto"
+            className="bg-stone-800 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 hover:bg-stone-700 pointer-events-auto"
           >
             <Plus size={24} />
           </button>
@@ -3267,7 +3267,7 @@ const handleReplyNote = async (noteId, replyText) => {
                 setShowExportMenu(false);
               }}
               // 魔法球稍微做小一點 (w-12 h-12)，以襯托主按鈕
-              className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
+              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
                 showAIMenu ? "bg-stone-800 rotate-45" : "bg-indigo-600 hover:bg-indigo-700"
               }`}
             >
