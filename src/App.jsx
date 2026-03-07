@@ -3343,9 +3343,11 @@ const handleReplyNote = async (noteId, replyText) => {
         </div>
       )}
 
-      {isModalOpen && (
-        <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div className="bg-[#FDFCF8] w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300 max-h-[90vh] flex flex-col">
+{isModalOpen && (
+        // 修改 1：將 items-end sm:items-center 改成統一的 items-center (永遠垂直置中)
+        <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          {/* 修改 2：將動畫從 slide-in-from-bottom 改為 zoom-in-95，讓置中彈出的視覺更自然 */}
+          <div className="bg-[#FDFCF8] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] flex flex-col">
             <h3 className="text-lg font-bold mb-6 text-stone-800 tracking-wide text-center shrink-0">
               {isEditMode
                 ? "編輯內容"
