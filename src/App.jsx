@@ -2693,98 +2693,51 @@ const handleReplyNote = async (noteId, replyText) => {
         </div>
       )}
 
-      <header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-stone-100 flex flex-col justify-between transition-all">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex-1 mr-4 min-w-0"> {/* 這裡加 min-w-0 防止被子元素撐爆 */}
-            <div className="flex items-center justify-between mb-1">
-              
-{/* 標題與編輯圖示區塊 */}
-              <div className="flex items-center gap-2 group flex-1 min-w-0">
-                <input
-                  // 🔴 修改：將 text-3xl 改成 text-4xl 放大標題
-                  className="text-5xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
-                  value={localTripName}
-                  placeholder="點擊輸入旅程名稱..."
-                  onChange={(e) => setLocalTripName(e.target.value)}
-                  onBlur={handleSaveName}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") e.target.blur();
-                  }}
-                />
-                <Edit size={18} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-              </div>
-              
-              <div className="flex -space-x-2 ml-2 flex-shrink-0">
-                {Object.values(tripData.members || {})
-                  .slice(0, 3)
-                  .map((member) => (
-                    <UserBadge
-                      key={member.nickname}
-                      nickname={member.nickname}
-                      emoji={member.emoji}
-                      size="sm"
-                    />
-                  ))}
-                {Object.keys(tripData.members || {}).length > 3 && (
-                  <div className="w-6 h-6 rounded-full bg-stone-100 border border-white ring-2 ring-white flex items-center justify-center text-[8px] font-bold text-stone-500">
-                    +{Object.keys(tripData.members).length - 3}
-                  </div>
-                )}
-              </div>
-            </div>
-
-{/* 日期選擇區 (終極縮小版 + 隱形按鈕技巧) */}
-            <div className="flex items-center gap-1 mt-1 pl-1">
-              
-              {/* 出發日區塊 */}
-              <div className="relative flex items-center gap-1 bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
-                <Calendar size={10} className="text-stone-400 group-hover:text-stone-600" />
-                {/* 用 span 顯示文字，強制縮小到 text-[9px] */}
-                <span className="font-mono text-[11px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
-                  {tripData.startDate || "出發日"}
-                </span>
-                {/* 透明的 input 覆蓋在上面，負責觸發手機日期鍵盤 */}
-                <input 
-                  type="date" 
-                  value={tripData.startDate || ""}
-                  onChange={(e) => handleDateUpdate('startDate', e.target.value)}
-                  onClick={(e) => { try { e.target.showPicker() } catch(err){} }}
-                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
-                />
-              </div>
-
-              <ArrowRight size={8} className="text-stone-300 mx-0.5" />
-              
-              {/* 回程日區塊 */}
-              <div className="relative flex items-center bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
-                <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
-                  {tripData.endDate || "回程日"}
-                </span>
-                <input 
-                  type="date" 
-                  value={tripData.endDate || ""}
-                  min={tripData.startDate}
-                  onChange={(e) => handleDateUpdate('endDate', e.target.value)}
-                  onClick={(e) => { try { e.target.showPicker() } catch(err){} }}
-                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
-                />
-              </div>
-
-              {/* 更新天氣按鈕 */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fetchWeather(tripId, tripData.destination, tripData.startDate);
+<header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-4 sticky top-0 z-30 border-b border-stone-100 flex flex-col transition-all">
+        
+        {/* 第一排：標題、成員、右側操作按鈕 (全部水平置中對齊) */}
+        <div className="flex justify-between items-center">
+          
+          {/* 左半部：標題 + 成員 */}
+          <div className="flex-1 flex items-center min-w-0 mr-4">
+            
+            {/* 標題與編輯圖示 */}
+            <div className="flex items-center gap-2 group flex-1 min-w-0">
+              <input
+                className="text-4xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
+                value={localTripName}
+                placeholder="點擊輸入旅程名稱..."
+                onChange={(e) => setLocalTripName(e.target.value)}
+                onBlur={handleSaveName}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.target.blur();
                 }}
-                className="ml-1 p-1 bg-stone-50/80 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-md transition-colors"
-                title="點擊更新天氣"
-              >
-                <CloudSun size={11} />
-              </button>
+              />
+              <Edit size={18} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            </div>
+            
+            {/* 成員頭像區塊 */}
+            <div className="flex -space-x-2 ml-2 flex-shrink-0">
+              {Object.values(tripData.members || {})
+                .slice(0, 3)
+                .map((member) => (
+                  <UserBadge
+                    key={member.nickname}
+                    nickname={member.nickname}
+                    emoji={member.emoji}
+                    size="sm"
+                  />
+                ))}
+              {Object.keys(tripData.members || {}).length > 3 && (
+                <div className="w-6 h-6 rounded-full bg-stone-100 border border-white ring-2 ring-white flex items-center justify-center text-[8px] font-bold text-stone-500">
+                  +{Object.keys(tripData.members).length - 3}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex gap-2 shrink-0 pt-2">
+          {/* 右半部：操作按鈕 (移除原本的 pt-2，直接與左側完美對齊) */}
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setIsShareOpen(true)}
               className="p-2 bg-indigo-50 rounded-full text-indigo-500 hover:bg-indigo-100"
@@ -2815,6 +2768,55 @@ const handleReplyNote = async (noteId, replyText) => {
             </button>
           </div>
         </div>
+
+        {/* 第二排：日期選擇區 (使用 mt-4 讓它往下推，拉開距離) */}
+        <div className="flex items-center gap-1 mt-4 pl-1">
+          
+          {/* 出發日區塊 */}
+          <div className="relative flex items-center gap-1 bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
+            <Calendar size={10} className="text-stone-400 group-hover:text-stone-600" />
+            <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
+              {tripData.startDate || "出發日"}
+            </span>
+            <input 
+              type="date" 
+              value={tripData.startDate || ""}
+              onChange={(e) => handleDateUpdate('startDate', e.target.value)}
+              onClick={(e) => { try { e.target.showPicker() } catch(err){} }}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+            />
+          </div>
+
+          <ArrowRight size={8} className="text-stone-300 mx-0.5" />
+          
+          {/* 回程日區塊 */}
+          <div className="relative flex items-center bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
+            <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
+              {tripData.endDate || "回程日"}
+            </span>
+            <input 
+              type="date" 
+              value={tripData.endDate || ""}
+              min={tripData.startDate}
+              onChange={(e) => handleDateUpdate('endDate', e.target.value)}
+              onClick={(e) => { try { e.target.showPicker() } catch(err){} }}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+            />
+          </div>
+
+          {/* 更新天氣按鈕 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              fetchWeather(tripId, tripData.destination, tripData.startDate);
+            }}
+            className="ml-1 p-1 bg-stone-50/80 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-md transition-colors"
+            title="點擊更新天氣"
+          >
+            <CloudSun size={11} />
+          </button>
+        </div>
+        
       </header>
 
       <main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
