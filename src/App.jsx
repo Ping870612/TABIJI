@@ -2733,44 +2733,53 @@ const handleReplyNote = async (noteId, replyText) => {
               </div>
             </div>
 
-{/* 日期選擇區 (極小化版) */}
-            {/* 🔴 修改：整體字體縮減為 text-[10px] */}
-            <div className="flex items-center gap-2 text-[10px] text-stone-400 mt-1 pl-1">
-              <div className="flex items-center gap-1 bg-stone-50/50 hover:bg-stone-100 px-1.5 py-1 rounded-md transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
-                <Calendar size={12} className="text-stone-400 group-hover:text-stone-600" />
-                
+{/* 日期選擇區 (終極縮小版 + 隱形按鈕技巧) */}
+            <div className="flex items-center gap-1 mt-1 pl-1">
+              
+              {/* 出發日區塊 */}
+              <div className="relative flex items-center gap-1 bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
+                <Calendar size={10} className="text-stone-400 group-hover:text-stone-600" />
+                {/* 用 span 顯示文字，強制縮小到 text-[9px] */}
+                <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
+                  {tripData.startDate || "出發日"}
+                </span>
+                {/* 透明的 input 覆蓋在上面，負責觸發手機日期鍵盤 */}
                 <input 
                   type="date" 
                   value={tripData.startDate || ""}
                   onChange={(e) => handleDateUpdate('startDate', e.target.value)}
-                  onClick={(e) => e.target.showPicker()}
-                  // 🔴 修改：將輸入框字體設定為 text-[10px] 並縮小寬度 w-20
-                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-20 text-[10px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden leading-none"
+                  onClick={(e) => { try { e.target.showPicker() } catch(err){} }}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
                 />
-                
-                <ArrowRight size={10} className="text-stone-300" />
-                
+              </div>
+
+              <ArrowRight size={8} className="text-stone-300 mx-0.5" />
+              
+              {/* 回程日區塊 */}
+              <div className="relative flex items-center bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
+                <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
+                  {tripData.endDate || "回程日"}
+                </span>
                 <input 
                   type="date" 
                   value={tripData.endDate || ""}
                   min={tripData.startDate}
                   onChange={(e) => handleDateUpdate('endDate', e.target.value)}
-                  onClick={(e) => e.target.showPicker()}
-                  // 🔴 修改：將輸入框字體設定為 text-[10px] 並縮小寬度 w-20
-                  className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-20 text-[10px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden leading-none"
+                  onClick={(e) => { try { e.target.showPicker() } catch(err){} }}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
                 />
               </div>
 
+              {/* 更新天氣按鈕 */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   fetchWeather(tripId, tripData.destination, tripData.startDate);
                 }}
-                // 🔴 修改：縮小天氣按鈕的內距與圖示大小
-                className="p-1 bg-stone-50/50 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-md transition-colors border border-transparent hover:border-orange-200"
+                className="ml-1 p-1 bg-stone-50/80 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-md transition-colors"
                 title="點擊更新天氣"
               >
-                <CloudSun size={12} />
+                <CloudSun size={11} />
               </button>
             </div>
           </div>
