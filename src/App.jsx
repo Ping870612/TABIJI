@@ -2703,16 +2703,19 @@ const handleReplyNote = async (noteId, replyText) => {
             
             {/* 標題與編輯圖示 */}
             <div className="flex items-center gap-2 group flex-1 min-w-0">
-              <input
-                className="text-4xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
-                value={localTripName}
-                placeholder="點擊輸入旅程名稱..."
-                onChange={(e) => setLocalTripName(e.target.value)}
-                onBlur={handleSaveName}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") e.target.blur();
-                }}
-              />
+<input
+  // 修改重點：
+  // 1. 加上 leading-none (讓行高貼齊文字)
+  // 2. 將 p-1 改成 px-1 pb-0 (保留左右內距，但把下方內距歸零)
+  className="text-4xl leading-none font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 px-1 pb-0 pt-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
+  value={localTripName}
+  placeholder="點擊輸入旅程名稱..."
+  onChange={(e) => setLocalTripName(e.target.value)}
+  onBlur={handleSaveName}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") e.target.blur();
+  }}
+/>
               <Edit size={18} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </div>
             
