@@ -911,7 +911,7 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
-// --- 更新後的導覽列元件 (半透明毛玻璃版 - 縮小優化版) ---
+// --- 更新後的導覽列元件 (Day在上、日期在下) ---
   const DayNavigation = ({ days, tripData, onScrollToDay }) => {
     const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -936,23 +936,28 @@ const WeatherBadge = ({ date, weatherData }) => {
               <button
                 key={day}
                 onClick={() => onScrollToDay(day)}
-                // 修改：縮小寬度為 w-20，padding 為 p-2，圓角為 rounded-xl
-                className="flex-shrink-0 w-20 bg-white/80 border border-stone-100 rounded-xl p-2 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-400 hover:shadow-md"
+                // 稍微縮減寬度並調整為 flex 垂直排列
+                className="flex-shrink-0 w-20 bg-white/80 border border-stone-100 rounded-xl p-2.5 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-400 hover:shadow-md flex flex-col gap-1"
               >
-                <div className="text-[9px] text-stone-400 font-bold mb-0.5 truncate">
-                  {formattedDate} ({dayOfWeek})
-                </div>
+                {/* 1. Day 在最上面 */}
                 <div className="flex items-baseline gap-1">
                   <span className="text-xl font-black text-stone-800 leading-none">{day}</span>
-                  <span className="text-[9px] text-stone-500 font-bold leading-none">DAY</span>
+                  <span className="text-[10px] text-stone-500 font-bold leading-none">DAY</span>
                 </div>
+                
+                {/* 2. 日期在中間 */}
+                <div className="text-[9px] text-stone-400 font-bold leading-none truncate w-full">
+                  {formattedDate} ({dayOfWeek})
+                </div>
+                
+                {/* 3. 天氣資訊在最下 */}
                 {weather ? (
-                  <div className="mt-1 flex items-center gap-0.5 text-[8px] text-orange-500 font-bold">
+                  <div className="mt-0.5 flex items-center gap-0.5 text-[9px] text-orange-500 font-bold leading-none">
                     <Sun size={10} />
                     <span className="truncate">{weather.temp}</span>
                   </div>
                 ) : (
-                  <div className="mt-1 text-[8px] text-stone-200 font-bold italic leading-none">無資訊</div>
+                  <div className="mt-0.5 text-[8px] text-stone-300 font-bold italic leading-none">無資訊</div>
                 )}
               </button>
             );
@@ -2693,11 +2698,11 @@ const handleReplyNote = async (noteId, replyText) => {
           <div className="flex-1 mr-4 min-w-0"> {/* 這裡加 min-w-0 防止被子元素撐爆 */}
             <div className="flex items-center justify-between mb-1">
               
-              {/* 標題與編輯圖示區塊 */}
-              <div className="flex items-center gap-2 group flex-1 min-w-0"> {/* min-w-0 再次確保彈性佈局正常 */}
+{/* 標題與編輯圖示區塊 */}
+              <div className="flex items-center gap-2 group flex-1 min-w-0">
                 <input
-                  // 🔴 修改這裡：將 w-full 改為 flex-1 min-w-0
-                  className="text-3xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
+                  // 🔴 修改：將 text-3xl 改成 text-4xl 放大標題
+                  className="text-4xl font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 p-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
                   value={localTripName}
                   placeholder="點擊輸入旅程名稱..."
                   onChange={(e) => setLocalTripName(e.target.value)}
@@ -2728,9 +2733,10 @@ const handleReplyNote = async (noteId, replyText) => {
               </div>
             </div>
 
-{/* 日期選擇區 (縮小優化版) */}
+{/* 日期選擇區 (極小化版) */}
+            {/* 🔴 修改：整體字體縮減為 text-[10px] */}
             <div className="flex items-center gap-2 text-[10px] text-stone-400 mt-1 pl-1">
-              <div className="flex items-center gap-1.5 bg-stone-50/50 hover:bg-stone-100 px-1.5 py-1 rounded-md transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
+              <div className="flex items-center gap-1 bg-stone-50/50 hover:bg-stone-100 px-1.5 py-1 rounded-md transition-colors group cursor-pointer border border-transparent hover:border-stone-200">
                 <Calendar size={12} className="text-stone-400 group-hover:text-stone-600" />
                 
                 <input 
@@ -2738,7 +2744,7 @@ const handleReplyNote = async (noteId, replyText) => {
                   value={tripData.startDate || ""}
                   onChange={(e) => handleDateUpdate('startDate', e.target.value)}
                   onClick={(e) => e.target.showPicker()}
-                  // 修改：字體改為 text-[10px]，寬度變窄 w-20
+                  // 🔴 修改：將輸入框字體設定為 text-[10px] 並縮小寬度 w-20
                   className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-20 text-[10px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden leading-none"
                 />
                 
@@ -2750,6 +2756,7 @@ const handleReplyNote = async (noteId, replyText) => {
                   min={tripData.startDate}
                   onChange={(e) => handleDateUpdate('endDate', e.target.value)}
                   onClick={(e) => e.target.showPicker()}
+                  // 🔴 修改：將輸入框字體設定為 text-[10px] 並縮小寬度 w-20
                   className="bg-transparent outline-none font-bold text-stone-500 group-hover:text-stone-800 font-mono w-20 text-[10px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden leading-none"
                 />
               </div>
@@ -2759,6 +2766,7 @@ const handleReplyNote = async (noteId, replyText) => {
                   e.stopPropagation();
                   fetchWeather(tripId, tripData.destination, tripData.startDate);
                 }}
+                // 🔴 修改：縮小天氣按鈕的內距與圖示大小
                 className="p-1 bg-stone-50/50 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-md transition-colors border border-transparent hover:border-orange-200"
                 title="點擊更新天氣"
               >
