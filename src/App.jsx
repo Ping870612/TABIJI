@@ -3185,30 +3185,6 @@ const handleReplyNote = async (noteId, replyText) => {
         
       </main>
 
-    {/* 修改：只在行程頁面 (itinerary) 顯示 */}
-{activeTab === "itinerary" && (
-  <button
-    onClick={() => {
-      setIsEditMode(false);
-      setEditingId(null);
-      setItemData(
-        activeTab === "itinerary"
-          ? { day: 1, time: "10:00", category: "sightseeing" }
-          : {
-              payer: getCurrentUserNickname(),
-              date: new Date().toISOString().split("T")[0],
-              isSplit: false,
-              splitWith: [],
-              category: "food",
-            }
-      );
-      setIsModalOpen(true);
-    }}
-    className="absolute bottom-[calc(7rem+env(safe-area-inset-bottom))] right-6 bg-stone-800 text-white p-4 rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 z-40 hover:bg-stone-700"
-  >
-    <Plus size={24} />
-  </button>
-)}
 
 <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
         <button
@@ -3265,87 +3241,105 @@ const handleReplyNote = async (noteId, replyText) => {
         </button>
       </nav>
 
+{/* 整合版：新增行程與魔法球按鈕群組 */}
       {!isModalOpen && activeTab === "itinerary" && (
-        <div className="absolute bottom-48 right-6 z-[60] flex flex-col-reverse items-end gap-3">
+        // 統一的外層容器，把位置精準定在導覽列上方
+        <div className="absolute bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-6 z-[60] flex flex-col-reverse items-end gap-4 pointer-events-none">
           
-          {/* 主按鈕 */}
+          {/* 1. 主要的「新增行程」按鈕 (置於最底) */}
           <button
             onClick={() => {
-              setShowAIMenu(!showAIMenu);
-              setShowExportMenu(false);
+              setIsEditMode(false);
+              setEditingId(null);
+              setItemData({ day: 1, time: "10:00", category: "sightseeing" });
+              setIsModalOpen(true);
             }}
-            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
-              showAIMenu ? "bg-stone-800 rotate-45" : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
+            className="bg-stone-800 text-white p-4 rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 hover:bg-stone-700 pointer-events-auto"
           >
-            {isAnalyzing || (typeof isImportLoading !== 'undefined' && isImportLoading) ? (
-              <Loader2 className="animate-spin text-white" size={24} />
-            ) : (
-              <Sparkles className={`text-white transition-all ${showAIMenu ? "opacity-0" : "opacity-100"}`} size={24} />
-            )}
-            {showAIMenu && <Plus className="text-white absolute rotate-0" size={24} />}
+            <Plus size={24} />
           </button>
 
-          {/* 展開後的選單 */}
-          {showAIMenu && (
-            <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-5 duration-300 items-end">
-              <div className="px-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">AI Tools</div>
-              <button
-                onClick={() => { handleAIAnalyze(); setShowAIMenu(false); }}
-                className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
-              >
-                <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><Sparkles size={16} /></div>
-                <span className="text-sm font-bold text-stone-700">智能導遊分析</span>
-              </button>
-              <button
-                onClick={() => { setShowOptimizeModal(true); setShowAIMenu(false); }}
-                className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
-              >
-                <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center"><Route size={16} /></div>
-                <span className="text-sm font-bold text-stone-700">路線優化建議</span>
-              </button>
+          {/* 2. 魔法球與 AI 選單 (置於新增按鈕的上方) */}
+          <div className="flex flex-col-reverse items-end gap-3 pointer-events-auto">
+            <button
+              onClick={() => {
+                setShowAIMenu(!showAIMenu);
+                setShowExportMenu(false);
+              }}
+              // 魔法球稍微做小一點 (w-12 h-12)，以襯托主按鈕
+              className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
+                showAIMenu ? "bg-stone-800 rotate-45" : "bg-indigo-600 hover:bg-indigo-700"
+              }`}
+            >
+              {isAnalyzing || (typeof isImportLoading !== 'undefined' && isImportLoading) ? (
+                <Loader2 className="animate-spin text-white" size={20} />
+              ) : (
+                <Sparkles className={`text-white transition-all ${showAIMenu ? "opacity-0" : "opacity-100"}`} size={20} />
+              )}
+              {showAIMenu && <Plus className="text-white absolute rotate-0" size={20} />}
+            </button>
 
-              <div className="px-2 text-[10px] font-black text-stone-400 uppercase tracking-widest mt-2">Files</div>
-              <button
-                onClick={() => { setIsImportOpen(true); setShowAIMenu(false); }}
-                className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
-              >
-                <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><Upload size={16} /></div>
-                <span className="text-sm font-bold text-stone-700">匯入行程檔案</span>
-              </button>
-
-              <div className="relative">
+            {/* 展開後的選單 */}
+            {showAIMenu && (
+              <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-5 duration-300 items-end mb-2">
+                <div className="px-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">AI Tools</div>
                 <button
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setMenuPos({ top: rect.top - 10, left: rect.left - 160 });
-                    setShowExportMenu(!showExportMenu);
-                  }}
-                  className={`flex items-center gap-3 w-48 bg-white/90 backdrop-blur-md border px-4 py-3 rounded-2xl shadow-xl transition-all ${
-                    showExportMenu ? "border-stone-800 bg-stone-50" : "border-stone-100 hover:bg-stone-50"
-                  }`}
+                  onClick={() => { handleAIAnalyze(); setShowAIMenu(false); }}
+                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
                 >
-                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><Download size={16} /></div>
-                  <span className="text-sm font-bold text-stone-700">匯出行程內容</span>
-                  <ChevronRight size={14} className={`ml-auto text-stone-300 transition-transform ${showExportMenu ? "rotate-90" : ""}`} />
+                  <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><Sparkles size={16} /></div>
+                  <span className="text-sm font-bold text-stone-700">智能導遊分析</span>
+                </button>
+                <button
+                  onClick={() => { setShowOptimizeModal(true); setShowAIMenu(false); }}
+                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+                >
+                  <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center"><Route size={16} /></div>
+                  <span className="text-sm font-bold text-stone-700">路線優化建議</span>
                 </button>
 
-                {showExportMenu && (
-                  <div 
-                    className="fixed bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-right-2 duration-200"
-                    style={{ top: menuPos.top, left: menuPos.left }}
+                <div className="px-2 text-[10px] font-black text-stone-400 uppercase tracking-widest mt-2">Files</div>
+                <button
+                  onClick={() => { setIsImportOpen(true); setShowAIMenu(false); }}
+                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+                >
+                  <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><Upload size={16} /></div>
+                  <span className="text-sm font-bold text-stone-700">匯入行程檔案</span>
+                </button>
+
+                <div className="relative">
+                  <button
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setMenuPos({ top: rect.top - 10, left: rect.left - 160 });
+                      setShowExportMenu(!showExportMenu);
+                    }}
+                    className={`flex items-center gap-3 w-48 bg-white/90 backdrop-blur-md border px-4 py-3 rounded-2xl shadow-xl transition-all ${
+                      showExportMenu ? "border-stone-800 bg-stone-50" : "border-stone-100 hover:bg-stone-50"
+                    }`}
                   >
-                    <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-green-50 rounded-xl transition-colors whitespace-nowrap">
-                      <FileSpreadsheet size={16} /> Excel 表格
-                    </button>
-                    <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-pink-50 rounded-xl transition-colors whitespace-nowrap">
-                      <ImageIcon size={16} /> AI 美圖分享
-                    </button>
-                  </div>
-                )}
+                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><Download size={16} /></div>
+                    <span className="text-sm font-bold text-stone-700">匯出行程內容</span>
+                    <ChevronRight size={14} className={`ml-auto text-stone-300 transition-transform ${showExportMenu ? "rotate-90" : ""}`} />
+                  </button>
+
+                  {showExportMenu && (
+                    <div 
+                      className="fixed bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-right-2 duration-200"
+                      style={{ top: menuPos.top, left: menuPos.left }}
+                    >
+                      <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-green-50 rounded-xl transition-colors whitespace-nowrap">
+                        <FileSpreadsheet size={16} /> Excel 表格
+                      </button>
+                      <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-pink-50 rounded-xl transition-colors whitespace-nowrap">
+                        <ImageIcon size={16} /> AI 美圖分享
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
