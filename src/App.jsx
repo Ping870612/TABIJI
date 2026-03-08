@@ -3207,14 +3207,7 @@ const handleReplyNote = async (noteId, replyText) => {
           <div className="text-sm text-stone-600 whitespace-pre-wrap">
   <LinkText text={note.content} />
 </div>
-          {note.image && (
-            <img 
-              src={note.image} 
-              onClick={() => setZoomedImage(note.image)}
-              className="mt-3 rounded-xl w-full h-auto border border-stone-100 shadow-sm cursor-zoom-in active:scale-[0.98] transition-transform" 
-              alt="Note Attachment"
-            />
-          )}
+          {note.image && <img src={note.image} className="mt-2 rounded-xl w-full max-h-60 object-contain" />}
           
           {/* 回覆區 */}
           <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
@@ -3702,27 +3695,7 @@ const handleReplyNote = async (noteId, replyText) => {
         </div>
       )}
 
-      {zoomedImage && (
-        <div 
-          className="fixed inset-0 z-[110] bg-stone-900/95 backdrop-blur-md flex items-center justify-center p-2 animate-in fade-in duration-200 cursor-zoom-out"
-          onClick={() => setZoomedImage(null)}
-        >
-          <button 
-            className="absolute top-6 right-6 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-colors z-10"
-            onClick={(e) => {
-              e.stopPropagation();
-              setZoomedImage(null);
-            }}
-          >
-            <X size={24} />
-          </button>
-          <img 
-            src={zoomedImage} 
-            className="max-w-full max-h-[90dvh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" 
-            alt="Zoomed Fullscreen"
-          />
-        </div>
-      )}
+    </div>
   );
 };
 
