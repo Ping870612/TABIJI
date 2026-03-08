@@ -7,6 +7,7 @@ import {
   Plus,
   Trash2,
   LogOut,
+  Pin,
   Navigation,
   CheckCircle,
   Copy,
@@ -2453,6 +2454,15 @@ const handleSaveNote = async () => {
     showToast("留言失敗: " + (e.message || "未知錯誤"), "error"); 
   }
 };
+
+  const togglePinNote = async (note) => {
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  const updatedNotes = (tripData.notes || []).map(n => 
+    n.id === note.id ? { ...n, isPinned: !n.isPinned } : n
+  );
+  await updateDoc(tripRef, { notes: updatedNotes });
+  showToast(note.isPinned ? "已取消置頂" : "已置頂！");
+};
 // 3. 刪除留言
 const deleteNote = async (noteId) => {
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
@@ -3190,18 +3200,42 @@ const handleReplyNote = async (noteId, replyText) => {
       </div>
     </div>
 
-    {/* 留言列表 */}
+{/* 留言列表 */}
     <div className="space-y-4 pb-24">
-{(tripData.notes || []).slice().sort((a, b) => b.time - a.time).map((note) => (
-        // 🔴 修改：拿掉 border-l-4 和 style 屬性，改用 border border-stone-100 讓卡片更乾淨
-        <div key={note.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
+      {(tripData.notes || [])
+        .slice()
+        // 🔴 修改：先判斷有沒有置頂，都有或都沒有的話，再依照時間新到舊排序
+        .sort((a, b) => {
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          return b.time - a.time;
+        })
+        .map((note) => (
+        // 🔴 修改：如果是置頂留言，給它一個淡淡的橘黃色邊框當作視覺提示
+        <div key={note.id} className={`bg-white p-4 rounded-2xl shadow-sm border ${note.isPinned ? "border-amber-300 bg-amber-50/10" : "border-stone-100"}`}>
           <div className="flex items-center gap-2 mb-2">
             <UserBadge nickname={note.author} emoji={note.emoji} size="sm" />
             <span className="font-bold text-[11px] text-stone-700">{note.author}</span>
+            
+            {/* 置頂標籤 */}
+            {note.isPinned && (
+              <span className="text-[9px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-0.5">
+                <Pin size={8} className="fill-amber-500" /> Pinned
+              </span>
+            )}
+
             <span className="text-[9px] text-stone-300 ml-auto">{new Date(note.time).toLocaleString()}</span>
             
-            {/* 編輯與刪除按鈕 (只顯示給自己或可以設為公開) */}
             <div className="flex gap-1 ml-1">
+              {/* 🔴 新增：置頂按鈕 */}
+              <button 
+                onClick={() => togglePinNote(note)} 
+                className={`p-1 hover:scale-110 transition-transform ${note.isPinned ? "text-amber-500" : "text-stone-200 hover:text-stone-400"}`}
+                title="置頂/取消置頂"
+              >
+                <Pin size={12} className={note.isPinned ? "fill-amber-500" : ""} />
+              </button>
+              
               <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({noteContent: note.content, noteImage: note.image}); }} className="p-1 text-stone-200 hover:text-stone-500"><Edit size={12}/></button>
               <button onClick={() => deleteNote(note.id)} className="p-1 text-stone-200 hover:text-red-400"><Trash2 size={12}/></button>
             </div>
