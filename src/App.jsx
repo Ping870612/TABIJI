@@ -1541,6 +1541,8 @@ const App = () => {
   const [showMemberSelect, setShowMemberSelect] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
+  const [editingReplyId, setEditingReplyId] = useState(null);
+  const [editReplyContent, setEditReplyContent] = useState("");
   
   // ★ 確保 isImportLoading 在這裡定義
   const [isImportLoading, setIsImportLoading] = useState(false);
@@ -2470,16 +2472,52 @@ const deleteNote = async (noteId) => {
   showToast("已刪除");
 };
 
-// 4. 回覆留言
-const handleReplyNote = async (noteId, replyText) => {
-  if (!replyText.trim()) return;
+// 4. 送出新回覆 (改為透過 ID 讀取輸入框，支援按鈕送出)
+const handleReplySubmit = async (noteId) => {
+  const input = document.getElementById(`reply-input-${noteId}`);
+  const text = input?.value;
+  if (!text?.trim()) return;
+
   const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
   const updatedNotes = tripData.notes.map(n => n.id === noteId ? { 
-    ...n, replies: [...(n.replies || []), { id: Date.now(), author: getCurrentUserNickname(), content: replyText, time: Date.now() }] 
+    ...n, replies: [...(n.replies || []), { id: Date.now(), author: getCurrentUserNickname(), content: text, time: Date.now() }] 
   } : n);
   await updateDoc(tripRef, { notes: updatedNotes });
   showToast("回覆成功");
+  if (input) input.value = ''; // 成功後清空輸入框
 };
+
+// 5. 儲存編輯後的回覆
+const handleEditReplySave = async (noteId, replyId) => {
+  if (!editReplyContent.trim()) return;
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  const updatedNotes = tripData.notes.map(n => {
+    if (n.id === noteId) {
+      return {
+        ...n,
+        replies: n.replies.map(r => r.id === replyId ? { ...r, content: editReplyContent, isEdited: true } : r)
+      };
+    }
+    return n;
+  });
+  await updateDoc(tripRef, { notes: updatedNotes });
+  setEditingReplyId(null);
+  showToast("回覆已更新");
+};
+
+// 6. 刪除回覆
+const handleDeleteReply = async (noteId, replyId) => {
+  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+  const updatedNotes = tripData.notes.map(n => {
+    if (n.id === noteId) {
+      return { ...n, replies: n.replies.filter(r => r.id !== replyId) };
+    }
+    return n;
+  });
+  await updateDoc(tripRef, { notes: updatedNotes });
+  showToast("回覆已刪除");
+};
+  
   const deleteItem = async (col, item) => {
     const tripRef = doc(
       db,
@@ -3253,15 +3291,90 @@ const handleReplyNote = async (noteId, replyText) => {
             />
           )}
           
-          {/* 回覆區 */}
+{/* 回覆區 */}
           <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
             {(note.replies || []).map((r, i) => (
-              <div key={i} className="text-[11px]">
-  <span className="font-bold text-stone-800">{r.author}:</span>{" "}
-  <span className="text-stone-500">
-    <LinkText text={r.content} />
-  </span>
-</div>
+              <div key={r.id || i} className="text-[11px] group relative">
+                
+                {/* 判斷：如果是編輯模式，顯示修改框 */}
+                {editingReplyId === r.id ? (
+                  <div className="flex flex-col gap-1.5 mt-1 bg-stone-50 p-2 rounded-lg border border-stone-200 animate-in fade-in zoom-in-95 duration-200">
+                    <textarea
+                      value={editReplyContent}
+                      onChange={(e) => setEditReplyContent(e.target.value)}
+                      className="w-full bg-transparent text-[10px] outline-none resize-y min-h-[40px]"
+                      autoFocus
+                    />
+                    <div className="flex justify-end gap-2 border-t border-stone-200 pt-1.5">
+                      <button onClick={() => setEditingReplyId(null)} className="text-[9px] text-stone-400 hover:text-stone-600 px-2 py-1">取消</button>
+                      <button onClick={() => handleEditReplySave(note.id, r.id)} className="text-[9px] bg-stone-800 text-white px-3 py-1 rounded-md shadow-sm">儲存</button>
+                    </div>
+                  </div>
+                ) : (
+                  
+                  /* 判斷：正常顯示模式 */
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <span className="font-bold text-stone-800">{r.author}:</span>{" "}
+                      <span className="text-stone-500">
+                        <LinkText text={r.content} />
+                      </span>
+                      {r.isEdited && <span className="text-[8px] text-stone-300 ml-1 italic">(已編輯)</span>}
+                    </div>
+                    
+                    {/* 🔴 權限判斷：只有自己可以編輯或刪除。在手機版預設顯示，電腦版 hover 才顯示 */}
+                    {r.author === getCurrentUserNickname() && (
+                      <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shrink-0 bg-white/80 backdrop-blur-sm rounded-md px-1">
+                        <button 
+                          onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }} 
+                          className="p-1 text-stone-300 hover:text-stone-600 transition-colors"
+                        >
+                          <Edit size={10} />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setConfirmConfig({
+                              isOpen: true,
+                              title: "刪除回覆",
+                              message: "確定要刪除這則回覆嗎？",
+                              onConfirm: () => { handleDeleteReply(note.id, r.id); setConfirmConfig({isOpen: false}); },
+                              onCancel: () => setConfirmConfig({isOpen: false}),
+                              isDangerous: true,
+                            });
+                          }} 
+                          className="p-1 text-stone-300 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {/* 新增回覆輸入框與「送出按鈕」 */}
+            <div className="flex gap-2 items-end pt-1">
+              <textarea 
+                id={`reply-input-${note.id}`}
+                rows="1"
+                placeholder="回覆旅伴... (Shift+Enter 換行)" 
+                className="flex-1 w-full bg-stone-50 text-[10px] placeholder:text-[8px] px-3 py-2 rounded-xl outline-none resize-y min-h-[34px] border border-transparent focus:border-stone-200 transition-colors"
+                onKeyDown={(e) => { 
+                  if(e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    handleReplySubmit(note.id); 
+                  } 
+                }}
+              />
+              <button
+                onClick={() => handleReplySubmit(note.id)}
+                className="bg-stone-800 hover:bg-stone-700 text-white px-3 py-2 rounded-xl text-[10px] font-bold transition-transform active:scale-95 mb-0 shrink-0 shadow-sm"
+              >
+                送出
+              </button>
+            </div>
+          </div>
             ))}
 <textarea 
               rows="1"
