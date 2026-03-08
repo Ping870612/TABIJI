@@ -3158,9 +3158,10 @@ const handleReplyNote = async (noteId, replyText) => {
   <div className="space-y-4 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
     {/* 留言輸入區 */}
     <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
-      <textarea
+<textarea
         placeholder="想分享什麼？"
-        className="w-full bg-stone-50 p-4 rounded-2xl text-sm outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-y"
+        // 🔴 加入 placeholder:text-[11px] 單獨縮小提示字，並改為 text-xs
+        className="w-full bg-stone-50 p-4 rounded-2xl text-xs placeholder:text-[11px] outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-y"
         value={itemData.noteContent || ""}
         onChange={(e) => setItemData({...itemData, noteContent: e.target.value})}
       />
@@ -3191,8 +3192,9 @@ const handleReplyNote = async (noteId, replyText) => {
 
     {/* 留言列表 */}
     <div className="space-y-4 pb-24">
-      {(tripData.notes || []).slice().sort((a, b) => b.time - a.time).map((note) => (
-        <div key={note.id} className="bg-white p-4 rounded-2xl border-l-4 shadow-sm" style={{ borderLeftColor: note.color || '#8B5CF6' }}>
+{(tripData.notes || []).slice().sort((a, b) => b.time - a.time).map((note) => (
+        // 🔴 修改：拿掉 border-l-4 和 style 屬性，改用 border border-stone-100 讓卡片更乾淨
+        <div key={note.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
           <div className="flex items-center gap-2 mb-2">
             <UserBadge nickname={note.author} emoji={note.emoji} size="sm" />
             <span className="font-bold text-[11px] text-stone-700">{note.author}</span>
@@ -3227,10 +3229,11 @@ const handleReplyNote = async (noteId, replyText) => {
   </span>
 </div>
             ))}
-            <textarea 
+<textarea 
               rows="1"
               placeholder="回覆旅伴..." 
-              className="w-full bg-stone-50 text-[10px] p-2 rounded-lg outline-none"
+              // 🔴 加入 placeholder:text-[8px] 單獨縮小提示字
+              className="w-full bg-stone-50 text-[10px] placeholder:text-[8px] p-2 rounded-lg outline-none resize-y"
               onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { handleReplyNote(note.id, e.target.value); e.target.value = ''; } }}
             />
           </div>
