@@ -3200,193 +3200,179 @@ const handleDeleteReply = async (noteId, replyId) => {
         )}
 
 {activeTab === "notes" && (
-  <div className="space-y-4 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
-    {/* 留言輸入區 */}
-    <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
-<textarea
-        placeholder="想分享什麼？"
-        // 🔴 加入 placeholder:text-[11px] 單獨縮小提示字，並改為 text-xs
-        className="w-full bg-stone-50 p-4 rounded-2xl text-xs placeholder:text-[11px] outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-y"
-        value={itemData.noteContent || ""}
-        onChange={(e) => setItemData({...itemData, noteContent: e.target.value})}
-      />
-      
-      {/* 圖片預覽區 */}
-      {itemData.noteImage && (
-        <div className="relative mt-2 w-20 h-20">
-          <img src={itemData.noteImage} className="w-full h-full object-contain rounded-xl border" />
-          <button onClick={() => setItemData({...itemData, noteImage: null})} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
-        </div>
-      )}
-
-      <div className="flex justify-between items-center mt-3">
-        {/* 左側：只剩下相機按鈕 */}
-        <div>
-          <label className="cursor-pointer p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors inline-flex items-center justify-center">
-            <Camera size={20} />
-            <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
-          </label>
-        </div>
-
-        {/* 右側：送出按鈕 */}
-        <button onClick={handleSaveNote} className="bg-stone-800 text-white px-6 py-2 rounded-xl text-sm font-bold active:scale-95 transition-transform">
-          {isEditMode ? "更新" : "送出"}
-        </button>
-      </div>
-    </div>
-
-{/* 留言列表 */}
-    <div className="space-y-4 pb-24">
-      {(tripData.notes || [])
-        .slice()
-        // 🔴 修改：先判斷有沒有置頂，都有或都沒有的話，再依照時間新到舊排序
-        .sort((a, b) => {
-          if (a.isPinned && !b.isPinned) return -1;
-          if (!a.isPinned && b.isPinned) return 1;
-          return b.time - a.time;
-        })
-        .map((note) => (
-        // 🔴 修改：如果是置頂留言，給它一個淡淡的橘黃色邊框當作視覺提示
-        <div key={note.id} className={`bg-white p-4 rounded-2xl shadow-sm border ${note.isPinned ? "border-amber-300 bg-amber-50/10" : "border-stone-100"}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <UserBadge nickname={note.author} emoji={note.emoji} size="sm" />
-            <span className="font-bold text-[11px] text-stone-700">{note.author}</span>
+          <div className="space-y-4 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
             
-            {/* 置頂標籤 */}
-            {note.isPinned && (
-              <span className="text-[9px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-0.5">
-                <Pin size={8} className="fill-amber-500" /> Pinned
-              </span>
-            )}
+            {/* 留言輸入區 */}
+            <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
+              <textarea
+                placeholder="想分享什麼？"
+                className="w-full bg-stone-50 p-4 rounded-2xl text-xs placeholder:text-[11px] outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-y"
+                value={itemData.noteContent || ""}
+                onChange={(e) => setItemData({ ...itemData, noteContent: e.target.value })}
+              />
 
-            <span className="text-[9px] text-stone-300 ml-auto">{new Date(note.time).toLocaleString()}</span>
-            
-            <div className="flex gap-1 ml-1">
-              {/* 🔴 新增：置頂按鈕 */}
-              <button 
-                onClick={() => togglePinNote(note)} 
-                className={`p-1 hover:scale-110 transition-transform ${note.isPinned ? "text-amber-500" : "text-stone-200 hover:text-stone-400"}`}
-                title="置頂/取消置頂"
-              >
-                <Pin size={12} className={note.isPinned ? "fill-amber-500" : ""} />
-              </button>
-              
-              <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({noteContent: note.content, noteImage: note.image}); }} className="p-1 text-stone-200 hover:text-stone-500"><Edit size={12}/></button>
-              <button onClick={() => deleteNote(note.id)} className="p-1 text-stone-200 hover:text-red-400"><Trash2 size={12}/></button>
+              {/* 圖片預覽區 */}
+              {itemData.noteImage && (
+                <div className="relative mt-2 h-20 inline-block">
+                  <img src={itemData.noteImage} className="h-full w-auto max-w-[200px] object-contain rounded-xl border bg-stone-50" alt="Preview" />
+                  <button onClick={() => setItemData({ ...itemData, noteImage: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm"><X size={12} /></button>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center mt-3">
+                {/* 左側：相機按鈕 */}
+                <div>
+                  <label className="cursor-pointer p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors inline-flex items-center justify-center">
+                    <Camera size={20} />
+                    <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
+                  </label>
+                </div>
+
+                {/* 右側：送出按鈕 */}
+                <button onClick={handleSaveNote} className="bg-stone-800 text-white px-6 py-2 rounded-xl text-sm font-bold active:scale-95 transition-transform">
+                  {isEditMode ? "更新" : "送出"}
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div className="text-sm text-stone-600 whitespace-pre-wrap">
-  <LinkText text={note.content} />
-</div>
-          {note.image && (
-            <img 
-              src={note.image} 
-              onClick={() => setZoomedImage(note.image)}
-              className="mt-3 rounded-xl w-full h-auto border border-stone-100 shadow-sm cursor-zoom-in active:scale-[0.98] transition-transform" 
-              alt="Note Attachment"
-            />
-          )}
-          
-{/* 回覆區 */}
-          <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
-            {(note.replies || []).map((r, i) => (
-              <div key={r.id || i} className="text-[11px] group relative">
-                
-                {/* 判斷：如果是編輯模式，顯示修改框 */}
-                {editingReplyId === r.id ? (
-                  <div className="flex flex-col gap-1.5 mt-1 bg-stone-50 p-2 rounded-lg border border-stone-200 animate-in fade-in zoom-in-95 duration-200">
-                    <textarea
-                      value={editReplyContent}
-                      onChange={(e) => setEditReplyContent(e.target.value)}
-                      className="w-full bg-transparent text-[10px] outline-none resize-y min-h-[40px]"
-                      autoFocus
-                    />
-                    <div className="flex justify-end gap-2 border-t border-stone-200 pt-1.5">
-                      <button onClick={() => setEditingReplyId(null)} className="text-[9px] text-stone-400 hover:text-stone-600 px-2 py-1">取消</button>
-                      <button onClick={() => handleEditReplySave(note.id, r.id)} className="text-[9px] bg-stone-800 text-white px-3 py-1 rounded-md shadow-sm">儲存</button>
-                    </div>
-                  </div>
-                ) : (
-                  
-                  /* 判斷：正常顯示模式 */
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <span className="font-bold text-stone-800">{r.author}:</span>{" "}
-                      <span className="text-stone-500">
-                        <LinkText text={r.content} />
-                      </span>
-                      {r.isEdited && <span className="text-[8px] text-stone-300 ml-1 italic">(已編輯)</span>}
-                    </div>
-                    
-                    {/* 🔴 權限判斷：只有自己可以編輯或刪除。在手機版預設顯示，電腦版 hover 才顯示 */}
-                    {r.author === getCurrentUserNickname() && (
-                      <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shrink-0 bg-white/80 backdrop-blur-sm rounded-md px-1">
-                        <button 
-                          onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }} 
-                          className="p-1 text-stone-300 hover:text-stone-600 transition-colors"
+
+            {/* 留言列表 */}
+            <div className="space-y-4 pb-24">
+              {(tripData.notes || [])
+                .slice()
+                .sort((a, b) => {
+                  if (a.isPinned && !b.isPinned) return -1;
+                  if (!a.isPinned && b.isPinned) return 1;
+                  return b.time - a.time;
+                })
+                .map((note) => (
+                  <div key={note.id} className={`bg-white p-4 rounded-2xl shadow-sm border ${note.isPinned ? "border-amber-300 bg-amber-50/10" : "border-stone-100"}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <UserBadge nickname={note.author} emoji={note.emoji} size="sm" />
+                      <span className="font-bold text-[11px] text-stone-700">{note.author}</span>
+
+                      {/* 置頂標籤 */}
+                      {note.isPinned && (
+                        <span className="text-[9px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-0.5">
+                          <Pin size={8} className="fill-amber-500" /> Pinned
+                        </span>
+                      )}
+
+                      <span className="text-[9px] text-stone-300 ml-auto">{new Date(note.time).toLocaleString()}</span>
+
+                      <div className="flex gap-1 ml-1">
+                        {/* 置頂按鈕 */}
+                        <button
+                          onClick={() => togglePinNote(note)}
+                          className={`p-1 hover:scale-110 transition-transform ${note.isPinned ? "text-amber-500" : "text-stone-200 hover:text-stone-400"}`}
+                          title="置頂/取消置頂"
                         >
-                          <Edit size={10} />
+                          <Pin size={12} className={note.isPinned ? "fill-amber-500" : ""} />
                         </button>
-                        <button 
-                          onClick={() => {
-                            setConfirmConfig({
-                              isOpen: true,
-                              title: "刪除回覆",
-                              message: "確定要刪除這則回覆嗎？",
-                              onConfirm: () => { handleDeleteReply(note.id, r.id); setConfirmConfig({isOpen: false}); },
-                              onCancel: () => setConfirmConfig({isOpen: false}),
-                              isDangerous: true,
-                            });
-                          }} 
-                          className="p-1 text-stone-300 hover:text-red-400 transition-colors"
+
+                        <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({ noteContent: note.content, noteImage: note.image }); }} className="p-1 text-stone-200 hover:text-stone-500"><Edit size={12} /></button>
+                        <button onClick={() => deleteNote(note.id)} className="p-1 text-stone-200 hover:text-red-400"><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-stone-600 whitespace-pre-wrap">
+                      <LinkText text={note.content} />
+                    </div>
+                    {note.image && (
+                      <img
+                        src={note.image}
+                        onClick={() => setZoomedImage(note.image)}
+                        className="mt-3 rounded-xl w-full h-auto border border-stone-100 shadow-sm cursor-zoom-in active:scale-[0.98] transition-transform"
+                        alt="Note Attachment"
+                      />
+                    )}
+
+                    {/* 回覆區 */}
+                    <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
+                      {(note.replies || []).map((r, i) => (
+                        <div key={r.id || i} className="text-[11px] group relative">
+                          {/* 判斷：如果是編輯模式，顯示修改框 */}
+                          {editingReplyId === r.id ? (
+                            <div className="flex flex-col gap-1.5 mt-1 bg-stone-50 p-2 rounded-lg border border-stone-200 animate-in fade-in zoom-in-95 duration-200">
+                              <textarea
+                                value={editReplyContent}
+                                onChange={(e) => setEditReplyContent(e.target.value)}
+                                className="w-full bg-transparent text-[10px] outline-none resize-y min-h-[40px]"
+                                autoFocus
+                              />
+                              <div className="flex justify-end gap-2 border-t border-stone-200 pt-1.5">
+                                <button onClick={() => setEditingReplyId(null)} className="text-[9px] text-stone-400 hover:text-stone-600 px-2 py-1">取消</button>
+                                <button onClick={() => handleEditReplySave(note.id, r.id)} className="text-[9px] bg-stone-800 text-white px-3 py-1 rounded-md shadow-sm">儲存</button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* 判斷：正常顯示模式 */
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <span className="font-bold text-stone-800">{r.author}:</span>{" "}
+                                <span className="text-stone-500">
+                                  <LinkText text={r.content} />
+                                </span>
+                                {r.isEdited && <span className="text-[8px] text-stone-300 ml-1 italic">(已編輯)</span>}
+                              </div>
+
+                              {/* 權限判斷：只有自己可以編輯或刪除 */}
+                              {r.author === getCurrentUserNickname() && (
+                                <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shrink-0 bg-white/80 backdrop-blur-sm rounded-md px-1">
+                                  <button
+                                    onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }}
+                                    className="p-1 text-stone-300 hover:text-stone-600 transition-colors"
+                                  >
+                                    <Edit size={10} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setConfirmConfig({
+                                        isOpen: true,
+                                        title: "刪除回覆",
+                                        message: "確定要刪除這則回覆嗎？",
+                                        onConfirm: () => { handleDeleteReply(note.id, r.id); setConfirmConfig({ isOpen: false }); },
+                                        onCancel: () => setConfirmConfig({ isOpen: false }),
+                                        isDangerous: true,
+                                      });
+                                    }}
+                                    className="p-1 text-stone-300 hover:text-red-400 transition-colors"
+                                  >
+                                    <Trash2 size={10} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* 新增回覆輸入框與「送出按鈕」 */}
+                      <div className="flex gap-2 items-end pt-1">
+                        <textarea
+                          id={`reply-input-${note.id}`}
+                          rows="1"
+                          placeholder="回覆旅伴... (Shift+Enter 換行)"
+                          className="flex-1 w-full bg-stone-50 text-[10px] placeholder:text-[8px] px-3 py-2 rounded-xl outline-none resize-y min-h-[34px] border border-transparent focus:border-stone-200 transition-colors"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleReplySubmit(note.id);
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => handleReplySubmit(note.id)}
+                          className="bg-stone-800 hover:bg-stone-700 text-white px-3 py-2 rounded-xl text-[10px] font-bold transition-transform active:scale-95 mb-0 shrink-0 shadow-sm"
                         >
-                          <Trash2 size={10} />
+                          送出
                         </button>
                       </div>
-                    )}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-            
-            {/* 新增回覆輸入框與「送出按鈕」 */}
-            <div className="flex gap-2 items-end pt-1">
-              <textarea 
-                id={`reply-input-${note.id}`}
-                rows="1"
-                placeholder="回覆旅伴... (Shift+Enter 換行)" 
-                className="flex-1 w-full bg-stone-50 text-[10px] placeholder:text-[8px] px-3 py-2 rounded-xl outline-none resize-y min-h-[34px] border border-transparent focus:border-stone-200 transition-colors"
-                onKeyDown={(e) => { 
-                  if(e.key === 'Enter' && !e.shiftKey) { 
-                    e.preventDefault(); 
-                    handleReplySubmit(note.id); 
-                  } 
-                }}
-              />
-              <button
-                onClick={() => handleReplySubmit(note.id)}
-                className="bg-stone-800 hover:bg-stone-700 text-white px-3 py-2 rounded-xl text-[10px] font-bold transition-transform active:scale-95 mb-0 shrink-0 shadow-sm"
-              >
-                送出
-              </button>
+                ))}
             </div>
           </div>
-            ))}
-<textarea 
-              rows="1"
-              placeholder="回覆旅伴..." 
-              // 🔴 加入 placeholder:text-[8px] 單獨縮小提示字
-              className="w-full bg-stone-50 text-[10px] placeholder:text-[8px] p-2 rounded-lg outline-none resize-y"
-              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { handleReplyNote(note.id, e.target.value); e.target.value = ''; } }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
+        )}
         
       </main>
 
