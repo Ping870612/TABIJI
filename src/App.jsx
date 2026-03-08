@@ -1180,7 +1180,6 @@ const WelcomeScreen = ({
   const [duration, setDuration] = useState(0);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isImportLoading, setIsImportLoading] = useState(false);
-const [zoomedImage, setZoomedImage] = useState(null);
 
   useEffect(() => {
     try {
@@ -1540,6 +1539,7 @@ const App = () => {
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showMemberSelect, setShowMemberSelect] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState(null);
   
   // ★ 確保 isImportLoading 在這裡定義
   const [isImportLoading, setIsImportLoading] = useState(false);
