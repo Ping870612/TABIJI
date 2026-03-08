@@ -1181,7 +1181,6 @@ const WelcomeScreen = ({
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isImportLoading, setIsImportLoading] = useState(false);
 const [zoomedImage, setZoomedImage] = useState(null);
-const [aiAnalysisResult, setAiAnalysisResult] = useState({
 
   useEffect(() => {
     try {
