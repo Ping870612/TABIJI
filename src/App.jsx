@@ -2371,7 +2371,7 @@ const handleSaveItem = async () => {
 const handleNoteImageUpload = (e) => {
   const file = e.target.files[0];
   if (file) {
-    if (file.size > 1024 * 1024) { showToast("圖片需小於 1MB", "error"); return; }
+    if (file.size > 2 * 1024 * 1024) { showToast("圖片需小於 2MB", "error"); return; }
     const reader = new FileReader();
     reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
     reader.readAsDataURL(file);
@@ -3167,7 +3167,7 @@ const handleReplyNote = async (noteId, replyText) => {
       {/* 圖片預覽區 */}
       {itemData.noteImage && (
         <div className="relative mt-2 w-20 h-20">
-          <img src={itemData.noteImage} className="w-full h-full object-cover rounded-xl border" />
+          <img src={itemData.noteImage} className="w-full h-full object-contain rounded-xl border" />
           <button onClick={() => setItemData({...itemData, noteImage: null})} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
         </div>
       )}
@@ -3207,7 +3207,7 @@ const handleReplyNote = async (noteId, replyText) => {
           <div className="text-sm text-stone-600 whitespace-pre-wrap">
   <LinkText text={note.content} />
 </div>
-          {note.image && <img src={note.image} className="mt-2 rounded-xl w-full max-h-60 object-cover" />}
+          {note.image && <img src={note.image} className="mt-2 rounded-xl w-full max-h-60 object-contain" />}
           
           {/* 回覆區 */}
           <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
