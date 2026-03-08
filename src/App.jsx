@@ -1539,14 +1539,11 @@ const App = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showMemberSelect, setShowMemberSelect] = useState(false);
+  const [isImportLoading, setIsImportLoading] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
   const [editingReplyId, setEditingReplyId] = useState(null);
   const [editReplyContent, setEditReplyContent] = useState("");
-  
-  // ★ 確保 isImportLoading 在這裡定義
-  const [isImportLoading, setIsImportLoading] = useState(false);
-  
   const [aiAnalysisResult, setAiAnalysisResult] = useState({
     isOpen: false,
     title: "",
