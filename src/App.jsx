@@ -3723,8 +3723,6 @@ const handleReplyNote = async (noteId, replyText) => {
           />
         </div>
       )}
-
-    </div>
   );
 };
 
