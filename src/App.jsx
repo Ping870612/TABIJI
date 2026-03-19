@@ -954,6 +954,7 @@ const scrollToDay = (day) => {
   }
 };
 
+// --- ★ 完美套用 Stitch 設計的行程卡片 (備註全顯示版) ---
 const ItineraryCard = ({
   item,
   onSelect,
@@ -979,7 +980,7 @@ const ItineraryCard = ({
       onClick={() => onSelect(item)}
       className="flex flex-row items-center gap-4 p-3 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 hover:bg-white/90 transition-all duration-300 mb-4 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.04)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.08)]"
     >
-      {/* 1. 左側視覺區塊 (尺寸改小 w-14 h-14，換成霧紫漸層底色，並強制使用純白 Icon) */}
+      {/* 1. 左側視覺區塊 */}
       <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#b4a0c8] to-[#68577b] border border-white flex items-center justify-center shadow-md">
          <div className="text-white opacity-95 scale-110">
             {config.icon}
@@ -999,19 +1000,19 @@ const ItineraryCard = ({
           </span>
         </div>
         
-        {/* 地點名稱 (套用 Stitch 的 Noto Serif 字體) */}
+        {/* 地點名稱 */}
         <h4 className="font-serif text-lg font-bold text-[#504062] truncate leading-tight">
           {item.location}
         </h4>
         
-        {/* 備註與導遊資訊 */}
-        {(item.guideInfo || item.notes) && (
-          <p className="text-[11px] text-stone-500 mt-1 line-clamp-2 leading-relaxed">
-            {item.guideInfo || item.notes}
-          </p>
+        {/* 備註 (拔除導遊介紹，並移除 line-clamp 讓內容完整顯示，支援換行) */}
+        {item.notes && (
+          <div className="text-[11px] text-stone-500 mt-1.5 leading-relaxed break-words">
+            <LinkText text={item.notes} />
+          </div>
         )}
 
-        {/* 把建立者的頭像加回卡片上 */}
+        {/* 建立者的頭像 */}
         {author.nickname && (
           <div className="flex items-center gap-1 mt-2 opacity-70 text-[10px]">
             <UserBadge nickname={author.nickname} emoji={author.emoji} color={author.color} size="sm" />
