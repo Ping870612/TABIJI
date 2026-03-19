@@ -3156,52 +3156,58 @@ const App = () => {
         
       </main>
 
-    {/* --- Bottom Navigation (滑動果凍動畫版) --- */}
-      <nav className="absolute bottom-0 left-0 right-0 z-40 px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4 bg-white/70 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-15px_40px_rgba(104,87,123,0.08)] border-t border-white/60 transition-all">
-        <div className="relative flex w-full max-w-[320px] mx-auto bg-stone-50/60 p-1.5 rounded-3xl border border-white shadow-inner">
-          
-          {/* 1. 背後滑動的紫色果凍色塊 */}
-          <div
-            className="absolute top-1.5 bottom-1.5 w-[calc(33.333%-0.2rem)] bg-gradient-to-b from-white to-[#eedbff] rounded-2xl shadow-sm border border-white transition-transform duration-500"
-            style={{
-              transform: `translateX(${
-                activeTab === "itinerary" ? "0%" :
-                activeTab === "expenses" ? "100%" : "200%"
-              })`,
-              // 使用彈簧曲線，讓滑動時有 Q彈感
-              transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" 
-            }}
-          ></div>
-
-          {/* 2. 前方的透明點擊按鈕 */}
-          {[
-            { id: "itinerary", icon: <Calendar size={20} />, label: "行程" },
-            { id: "expenses", icon: <CreditCard size={20} />, label: "記帳" },
-            { id: "notes", icon: <BookOpen size={20} />, label: "記事本" }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setIsEditMode(false);
-                setEditingId(null);
-                setItemData({});
+   {/* --- Bottom Navigation (懸浮膠囊 + 滑動果凍動畫版) --- */}
+      <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[340px]">
+        {/* 懸浮毛玻璃外殼 */}
+        <div className="bg-white/70 backdrop-blur-xl p-1.5 rounded-[2rem] border border-white/60 shadow-[0_15px_40px_rgba(104,87,123,0.12)]">
+          <div className="relative flex w-full">
+            
+            {/* 1. 背後滑動的紫色果凍色塊 */}
+            <div
+              className="absolute top-0 bottom-0 w-1/3 p-0.5 transition-transform duration-500"
+              style={{
+                transform: `translateX(${
+                  activeTab === "itinerary" ? "0%" :
+                  activeTab === "expenses" ? "100%" : "200%"
+                })`,
+                // 使用彈簧曲線，讓滑動時有 Q彈回饋感
+                transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" 
               }}
-              className={`relative z-10 flex flex-col items-center justify-center flex-1 py-2.5 transition-colors duration-300 ease-out active:scale-95 group ${
-                activeTab === tab.id
-                  ? "text-[#504062]"
-                  : "text-[#b4a0c8] hover:text-[#68577b]"
-              }`}
             >
-              {/* 圖示點擊時會有稍微向上浮動的動畫 */}
-              <div className={`transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${activeTab === tab.id ? "scale-110 -translate-y-0.5" : "group-hover:scale-110 group-hover:-translate-y-0.5"}`}>
-                {tab.icon}
-              </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-opacity duration-300 ${activeTab === tab.id ? "opacity-100" : "opacity-70"}`}>
-                {tab.label}
-              </span>
-            </button>
-          ))}
+               {/* 實際的紫色漸層方塊 */}
+               <div className="w-full h-full bg-gradient-to-b from-white to-[#eedbff] rounded-2xl shadow-sm border border-white"></div>
+            </div>
+
+            {/* 2. 前方的透明點擊按鈕 */}
+            {[
+              { id: "itinerary", icon: <Calendar size={20} />, label: "行程" },
+              { id: "expenses", icon: <CreditCard size={20} />, label: "記帳" },
+              { id: "notes", icon: <BookOpen size={20} />, label: "記事本" }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsEditMode(false);
+                  setEditingId(null);
+                  setItemData({});
+                }}
+                className={`relative z-10 flex flex-col items-center justify-center flex-1 py-2 transition-colors duration-300 ease-out active:scale-95 group ${
+                  activeTab === tab.id
+                    ? "text-[#504062]"
+                    : "text-[#b4a0c8] hover:text-[#68577b]"
+                }`}
+              >
+                {/* 圖示點擊時會有稍微向上浮動的動畫 */}
+                <div className={`transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${activeTab === tab.id ? "scale-110 -translate-y-0.5" : "group-hover:scale-110 group-hover:-translate-y-0.5"}`}>
+                  {tab.icon}
+                </div>
+                <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-opacity duration-300 ${activeTab === tab.id ? "opacity-100" : "opacity-70"}`}>
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
 
