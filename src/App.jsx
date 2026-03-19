@@ -954,7 +954,7 @@ const scrollToDay = (day) => {
   }
 };
 
-// --- ★ 完美套用 Stitch 設計的行程卡片 (備註全顯示版) ---
+// --- ★ 垂直堆疊+大圖片+移除 Icon 版行程卡片 (Stitch 設計款) ---
 const ItineraryCard = ({
   item,
   onSelect,
@@ -964,12 +964,12 @@ const ItineraryCard = ({
   members,
 }) => {
   const typeConfig = {
-    sightseeing: { icon: <Camera size={20} />, iconColor: "text-[#68577b]", label: "景點" },
-    food: { icon: <Utensils size={20} />, iconColor: "text-orange-500", label: "餐廳" },
-    transport: { icon: <Train size={20} />, iconColor: "text-emerald-500", label: "交通" },
-    flight: { icon: <Plane size={20} />, iconColor: "text-sky-500", label: "航班" },
-    accommodation: { icon: <Home size={20} />, iconColor: "text-rose-500", label: "住宿" },
-    activity: { icon: <MapPin size={20} />, iconColor: "text-stone-500", label: "活動" },
+    sightseeing: { iconColor: "text-[#68577b]", label: "景點" },
+    food: { iconColor: "text-orange-500", label: "餐廳" },
+    transport: { iconColor: "text-emerald-500", label: "交通" },
+    flight: { iconColor: "text-sky-500", label: "航班" },
+    accommodation: { iconColor: "text-rose-500", label: "住宿" },
+    activity: { iconColor: "text-stone-500", label: "活動" },
   };
 
   const config = typeConfig[item.category] || typeConfig.activity;
@@ -978,54 +978,59 @@ const ItineraryCard = ({
   return (
     <div
       onClick={() => onSelect(item)}
-      className="flex flex-row items-center gap-4 p-3 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 hover:bg-white/90 transition-all duration-300 mb-4 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.04)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.08)]"
+      // 1. 卡片外殼改為垂直佈局 (flex-col) 且移除 padding，讓圖片滿版
+      className="flex flex-col gap-0 p-0 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 hover:bg-white/90 transition-all duration-300 mb-6 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.06)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.1)] overflow-hidden"
     >
-      {/* 1. 左側視覺區塊 */}
-      <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#b4a0c8] to-[#68577b] border border-white flex items-center justify-center shadow-md">
-         <div className="text-white opacity-95 scale-110">
-            {config.icon}
-         </div>
-      </div>
+      {/* 2. 頂部大圖片區塊 (如果有上傳照片) */}
+      {item.image && (
+        <div className="relative w-full h-44 sm:h-52 overflow-hidden rounded-t-3xl border-b border-white">
+          <img 
+            src={item.image} 
+            alt={item.location} 
+            className="w-full h-full object-cover opacity-95 group-hover:opacity-100 transition-opacity" 
+          />
+        </div>
+      )}
 
-      {/* 2. 右側資訊區塊 */}
-      <div className="flex-1 min-w-0 py-1 pr-2">
-        {/* 時間與分類標籤 */}
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[11px] font-bold text-stone-500 font-mono bg-white/80 px-2 py-0.5 rounded-md shadow-sm border border-stone-100/50">
+      {/* 3. 下方資訊區塊 (獨立 padding) */}
+      <div className="p-5 pt-4 relative">
+        {/* 操作按鈕 (移動到資訊區塊的右上角) */}
+        <div className="absolute top-3 right-3 flex gap-1 z-10 opacity-100 bg-white/80 backdrop-blur-md rounded-xl p-1 shadow-sm border border-stone-100/50">
+          <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
+        </div>
+
+        {/* 時間與分類標籤 (移除了 Icon，只顯示文字) */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[12px] font-bold text-stone-500 font-mono bg-white/80 px-2 py-0.5 rounded-md shadow-sm border border-stone-100/50">
             {item.time}
           </span>
           <span className="w-1 h-1 rounded-full bg-stone-300"></span>
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${config.iconColor}`}>
+          <span className={`text-[11px] font-bold uppercase tracking-widest ${config.iconColor}`}>
             {config.label}
           </span>
         </div>
         
-        {/* 地點名稱 */}
-        <h4 className="font-serif text-lg font-bold text-[#504062] truncate leading-tight">
+        {/* 地點名稱 (字體調大一點，text-xl) */}
+        <h4 className="font-serif text-xl font-bold text-[#504062] truncate leading-tight mb-2">
           {item.location}
         </h4>
         
-        {/* 備註 (拔除導遊介紹，並移除 line-clamp 讓內容完整顯示，支援換行) */}
+        {/* 備註 (完整顯示，支援換行) */}
         {item.notes && (
-          <div className="text-[11px] text-stone-500 mt-1.5 leading-relaxed break-words">
+          <div className="text-[12px] text-stone-500 mt-2 leading-relaxed break-words">
             <LinkText text={item.notes} />
           </div>
         )}
 
         {/* 建立者的頭像 */}
         {author.nickname && (
-          <div className="flex items-center gap-1 mt-2 opacity-70 text-[10px]">
+          <div className="flex items-center gap-1.5 mt-3 opacity-80 text-[11px]">
             <UserBadge nickname={author.nickname} emoji={author.emoji} color={author.color} size="sm" />
             <span className="text-stone-400 font-medium">by {author.nickname}</span>
           </div>
         )}
-      </div>
-
-      {/* 3. 懸浮操作按鈕 */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-md rounded-xl p-1 z-10 shadow-sm border border-stone-100/50">
-        <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
-        <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
       </div>
     </div>
   );
@@ -2167,6 +2172,7 @@ const App = () => {
           notes: itemData.notes || "",
           guideInfo: itemData.guideInfo || "", 
           tags: itemData.tags || [],
+          image: itemData.image || null,
         };
       } else {
         safeData = {
@@ -3416,6 +3422,47 @@ const App = () => {
                       className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-[#504062]"
                     />
                   </div>
+{/* 🔴 新增：自訂照片上傳區塊 */}
+                  <div>
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
+                      自訂照片 (選填)
+                    </label>
+                    <div className="flex items-center gap-4">
+                      {itemData.image ? (
+                        <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-white shadow-sm">
+                          <img src={itemData.image} alt="preview" className="w-full h-full object-cover" />
+                          <button 
+                            onClick={() => setItemData({...itemData, image: null})}
+                            className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-500 text-white p-1 rounded-full backdrop-blur-md transition-colors"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer w-16 h-16 rounded-2xl border-2 border-dashed border-[#eadef1] flex items-center justify-center bg-white/50 text-[#b4a0c8] hover:bg-white hover:text-[#68577b] hover:border-[#b4a0c8] transition-all shadow-sm">
+                          <Camera size={20} />
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                if (file.size > 2 * 1024 * 1024) { showToast("圖片需小於 2MB", "error"); return; }
+                                const reader = new FileReader();
+                                reader.onloadend = () => setItemData({ ...itemData, image: reader.result });
+                                reader.readAsDataURL(file);
+                              }
+                            }} 
+                          />
+                        </label>
+                      )}
+                      <span className="text-[10px] text-stone-400 leading-tight">
+                        點擊左側圖示上傳照片<br/>(建議小於 2MB)
+                      </span>
+                    </div>
+                  </div>
+                  
                 </>
               ) : (
                 <>
