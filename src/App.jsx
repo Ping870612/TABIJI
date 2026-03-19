@@ -1031,10 +1031,9 @@ const ItineraryCard = ({
   return (
     <div
       onClick={() => onSelect(item)}
-      // 這是 Stitch 的卡片外觀：圓角 3xl、毛玻璃、橫向排列 (flex-row)
       className="flex flex-row items-center gap-4 p-3 rounded-3xl bg-white/50 dark:bg-stone-900/50 backdrop-blur-md border border-white/60 hover:bg-white/80 transition-all duration-300 mb-4 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.04)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.08)]"
     >
-      {/* 1. 左側視覺區塊 (Stitch 原本放圖片的地方，我們用優雅的漸層與大 Icon 替代) */}
+      {/* 1. 左側視覺區塊 (漸層底色與大圖示) */}
       <div className="w-20 h-20 md:w-28 md:h-24 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#f5f4ef] to-[#eadef1] border border-white flex items-center justify-center">
          <div className={`${config.iconColor} opacity-80 scale-125`}>
             {config.icon}
@@ -1065,6 +1064,14 @@ const ItineraryCard = ({
             {item.guideInfo || item.notes}
           </p>
         )}
+
+        {/* 把建立者的頭像加回卡片上 */}
+        {author.nickname && (
+          <div className="flex items-center gap-1 mt-2 opacity-70 text-[10px]">
+            <UserBadge nickname={author.nickname} emoji={author.emoji} color={author.color} size="sm" />
+            <span className="text-stone-400 font-medium">by {author.nickname}</span>
+          </div>
+        )}
       </div>
 
       {/* 3. 懸浮操作按鈕 (保持原樣，但在 hover 時才顯示) */}
@@ -1072,56 +1079,6 @@ const ItineraryCard = ({
         <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
         <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
         <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
-      </div>
-    </div>
-  );
-};
-
-          {author.nickname && (
-            <div className="flex items-center gap-1 mt-1 justify-end opacity-40 text-[10px]">
-              <span className="text-stone-500">by</span>
-              <UserBadge
-                nickname={author.nickname}
-                emoji={author.emoji}
-                color={author.color}
-                size="sm"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="absolute top-2 right-2 flex gap-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-0.5 z-10 shadow-sm border border-stone-100">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onMap(item.location);
-          }}
-          className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-          title="導航"
-        >
-          <Navigation size={14} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(item);
-          }}
-          className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
-          title="編輯"
-        >
-          <Edit size={14} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(item);
-          }}
-          className="p-1.5 text-stone-400 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
-          title="刪除"
-        >
-          <Trash2 size={14} />
-        </button>
       </div>
     </div>
   );
