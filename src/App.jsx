@@ -1059,10 +1059,9 @@ const ItineraryCard = ({
   const author = members?.[item.createdBy] || {};
 
 return (
-    <div
+<div
       onClick={() => onSelect(item)}
-      // 🔴 修改：將 p-3 改為 py-1.5 px-3，並將 mb-1 拿掉 (改為 mb-0)，大幅縮減上下間距
-      className={`rounded-xl py-1.5 px-3 mb-0 relative group transition-all active:scale-[0.99] cursor-pointer hover:bg-stone-50 ${config.cardStyle}`}
+      className={`rounded-3xl p-4 mb-3 relative group transition-all duration-300 active:scale-[0.98] cursor-pointer bg-white/40 dark:bg-stone-900/40 backdrop-blur-sm border border-white/50 dark:border-stone-800 hover:bg-white/70 dark:hover:bg-stone-800/70 shadow-[0_4px_20px_rgba(104,87,123,0.04)] ${config.cardStyle}`}
     >
       <div className="flex justify-between items-start h-full">
         {/* 🔴 修改：加上 self-stretch，並將 pt-1 改為 pt-0.5 讓文字對齊 */}
@@ -2591,7 +2590,7 @@ const handleDeleteReply = async (noteId, replyId) => {
     );
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#FDFCF8] font-sans max-w-md mx-auto shadow-2xl relative text-stone-800">
+    <div className="flex flex-col h-[100dvh] bg-[#faf9f4] dark:bg-stone-900 font-sans max-w-md mx-auto shadow-2xl relative text-stone-800 dark:text-stone-100 transition-colors duration-500">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <ConfirmModal {...confirmConfig} />
       <ShareModal
@@ -2789,7 +2788,7 @@ const handleDeleteReply = async (noteId, replyId) => {
         </div>
       )}
 
-<header className="bg-[#FDFCF8]/90 backdrop-blur-md px-6 py-2 sticky top-0 z-30 border-b border-stone-100 flex flex-col transition-all">
+<header className="bg-white/60 dark:bg-stone-900/60 backdrop-blur-md px-6 py-4 sticky top-0 z-30 border-b border-white/20 shadow-[0_10px_30px_rgba(104,87,123,0.05)] dark:shadow-none flex flex-col transition-all">
         
         {/* 第一排：標題、成員、右側操作按鈕 (全部水平置中對齊) */}
         <div className="flex justify-between items-center">
@@ -3377,60 +3376,35 @@ const handleDeleteReply = async (noteId, replyId) => {
       </main>
 
 
-<nav className="absolute bottom-[calc(0.5rem+env(safe-area-inset-bottom))] left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-2 flex justify-around items-center z-40">
-        <button
-          onClick={() => {
-            setActiveTab("itinerary");
-            setIsEditMode(false); // 切換時重置編輯模式
-            setEditingId(null);   // 清空編輯 ID
-            setItemData({});      // 清空暫存資料
-          }}
-          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-            activeTab === "itinerary"
-              ? "text-stone-800 bg-stone-100"
-              : "text-stone-400 hover:text-stone-600"
-          }`}
-        >
-          <Calendar size={20} />
-          <span className="text-[10px] font-medium tracking-wide">行程</span>
-        </button>
-        <div className="w-[1px] h-6 bg-stone-200"></div>
-        <button
-          onClick={() => {
-            setActiveTab("expenses");
-            setIsEditMode(false); // 切換時重置編輯模式
-            setEditingId(null);
-            setItemData({});
-          }}
-          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-            activeTab === "expenses"
-              ? "text-stone-800 bg-stone-100"
-              : "text-stone-400 hover:text-stone-600"
-          }`}
-        >
-          <CreditCard size={20} />
-          <span className="text-[10px] font-medium tracking-wide">記帳</span>
-        </button>
-        
-        <div className="w-[1px] h-6 bg-stone-200"></div>
-        
-        <button
-          onClick={() => {
-            setActiveTab("notes");
-            setIsEditMode(false); // 切換時重置編輯模式
-            setEditingId(null);
-            setItemData({});
-          }}
-          className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-            activeTab === "notes"
-              ? "text-stone-800 bg-stone-100"
-              : "text-stone-400 hover:text-stone-600"
-          }`}
-        >
-          <BookOpen size={20} />
-          <span className="text-[10px] font-medium tracking-wide">記事本</span>
-        </button>
-      </nav>
+<nav className="absolute bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md rounded-t-[2rem] shadow-[0_-10px_30px_rgba(104,87,123,0.08)] border-t border-white/30 transition-all">
+  {[
+    { id: "itinerary", icon: <Calendar size={24} />, label: "行程" },
+    { id: "expenses", icon: <CreditCard size={24} />, label: "記帳" },
+    { id: "notes", icon: <BookOpen size={24} />, label: "記事本" }
+  ].map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => {
+        setActiveTab(tab.id);
+        setIsEditMode(false);
+        setEditingId(null);
+        setItemData({});
+      }}
+      className={`flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-95 group ${
+        activeTab === tab.id
+          ? "text-[#68577b] dark:text-purple-300 bg-[#eadef1]/60 dark:bg-purple-900/40 rounded-2xl px-6 py-2"
+          : "text-stone-400 hover:text-[#68577b] py-2"
+      }`}
+    >
+      <div className={`${activeTab !== tab.id && "group-hover:scale-110"} transition-transform`}>
+        {tab.icon}
+      </div>
+      <span className="text-[10px] font-bold uppercase tracking-widest mt-1">
+        {tab.label}
+      </span>
+    </button>
+  ))}
+</nav>
 
 {/* 整合版：新增行程與魔法球按鈕群組 */}
       {!isModalOpen && activeTab === "itinerary" && (
@@ -3438,14 +3412,14 @@ const handleDeleteReply = async (noteId, replyId) => {
         <div className="absolute bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-6 z-[60] flex flex-col-reverse items-end gap-4 pointer-events-none">
           
           {/* 1. 主要的「新增行程」按鈕 (置於最底) */}
-          <button
+<button
             onClick={() => {
               setIsEditMode(false);
               setEditingId(null);
               setItemData({ day: 1, time: "10:00", category: "sightseeing" });
               setIsModalOpen(true);
             }}
-            className="bg-stone-800 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg shadow-stone-300 transition-transform active:scale-90 hover:bg-stone-700 pointer-events-auto"
+            className="bg-[#68577b] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-[0_15px_30px_rgba(104,87,123,0.35)] transition-all duration-300 active:scale-90 hover:bg-[#504062] hover:shadow-[0_20px_40px_rgba(104,87,123,0.45)] pointer-events-auto"
           >
             <Plus size={24} />
           </button>
