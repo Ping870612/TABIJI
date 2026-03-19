@@ -1017,99 +1017,65 @@ const ItineraryCard = ({
   members,
 }) => {
   const typeConfig = {
-    sightseeing: {
-      icon: <Camera size={15} />,
-      cardStyle: "", // 移除背景與邊框顏色
-      iconColor: "text-indigo-500",
-      label: "景點",
-    },
-    food: {
-      icon: <Utensils size={15} />,
-      cardStyle: "",
-      iconColor: "text-orange-500",
-      label: "餐廳",
-    },
-    transport: {
-      icon: <Train size={15} />,
-      cardStyle: "",
-      iconColor: "text-emerald-500",
-      label: "交通",
-    },
-    flight: {
-      icon: <Plane size={15} />,
-      cardStyle: "",
-      iconColor: "text-sky-500",
-      label: "航班",
-    },
-    accommodation: {
-      icon: <Home size={15} />,
-      cardStyle: "",
-      iconColor: "text-rose-500",
-      label: "住宿",
-    },
-    activity: {
-      icon: <MapPin size={15} />,
-      cardStyle: "",
-      iconColor: "text-stone-500",
-      label: "活動",
-    },
+    sightseeing: { icon: <Camera size={20} />, iconColor: "text-[#68577b]", label: "景點" },
+    food: { icon: <Utensils size={20} />, iconColor: "text-orange-600", label: "餐廳" },
+    transport: { icon: <Train size={20} />, iconColor: "text-emerald-600", label: "交通" },
+    flight: { icon: <Plane size={20} />, iconColor: "text-sky-600", label: "航班" },
+    accommodation: { icon: <Home size={20} />, iconColor: "text-rose-600", label: "住宿" },
+    activity: { icon: <MapPin size={20} />, iconColor: "text-stone-500", label: "活動" },
   };
 
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
-return (
-<div
+  return (
+    <div
       onClick={() => onSelect(item)}
-      className={`rounded-3xl p-4 mb-3 relative group transition-all duration-300 active:scale-[0.98] cursor-pointer bg-white/40 dark:bg-stone-900/40 backdrop-blur-sm border border-white/50 dark:border-stone-800 hover:bg-white/70 dark:hover:bg-stone-800/70 shadow-[0_4px_20px_rgba(104,87,123,0.04)] ${config.cardStyle}`}
+      // 這是 Stitch 的卡片外觀：圓角 3xl、毛玻璃、橫向排列 (flex-row)
+      className="flex flex-row items-center gap-4 p-3 rounded-3xl bg-white/50 dark:bg-stone-900/50 backdrop-blur-md border border-white/60 hover:bg-white/80 transition-all duration-300 mb-4 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.04)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.08)]"
     >
-      <div className="flex justify-between items-start h-full">
-        {/* 🔴 修改：加上 self-stretch，並將 pt-1 改為 pt-0.5 讓文字對齊 */}
-        <div className="flex flex-col items-center mr-3 pt-0.5 min-w-[3rem] self-stretch">
-          <span className="text-sm font-bold text-stone-600 tracking-wider font-mono">
+      {/* 1. 左側視覺區塊 (Stitch 原本放圖片的地方，我們用優雅的漸層與大 Icon 替代) */}
+      <div className="w-20 h-20 md:w-28 md:h-24 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#f5f4ef] to-[#eadef1] border border-white flex items-center justify-center">
+         <div className={`${config.iconColor} opacity-80 scale-125`}>
+            {config.icon}
+         </div>
+      </div>
+
+      {/* 2. 右側資訊區塊 */}
+      <div className="flex-1 min-w-0 py-1">
+        {/* 時間與分類標籤 */}
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[11px] font-bold text-stone-500 font-mono bg-stone-100/80 px-1.5 py-0.5 rounded-md">
             {item.time}
           </span>
-          {/* 🔴 修改：加上 flex-1 讓時間軸的灰線可以完美延伸連接 */}
-          <div className="flex-1 w-[1px] bg-stone-100 my-1"></div>
+          <span className="w-1 h-1 rounded-full bg-stone-300"></span>
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${config.iconColor}`}>
+            {config.label}
+          </span>
         </div>
+        
+        {/* 地點名稱 (套用 Stitch 的 Noto Serif 字體) */}
+        <h4 className="font-serif text-lg font-bold text-stone-800 dark:text-stone-100 truncate leading-tight">
+          {item.location}
+        </h4>
+        
+        {/* 備註與導遊資訊 */}
+        {(item.guideInfo || item.notes) && (
+          <p className="text-xs text-stone-500 mt-1.5 line-clamp-1">
+            {item.guideInfo || item.notes}
+          </p>
+        )}
+      </div>
 
-        <div className="flex-1 min-w-0 pr-1">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="flex items-center gap-2 min-w-0">
-              {/* Icon 顏色保留 */}
-              <span className={`${config.iconColor} shrink-0 opacity-100`}>
-                {config.icon}
-              </span>
-              <h3 className="font-bold text-stone-800 text-base sm:text-lg truncate tracking-tight">
-                {item.location}
-              </h3>
-            </div>
-            <div className="w-16 shrink-0"></div>
-          </div>
-
-          {(item.tags || []).length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-1.5 mt-0.5">
-              {item.tags.map((tag, i) => (
-                <Tag key={i} type={tag.type} text={tag.text} />
-              ))}
-            </div>
-          )}
-          
-          {item.guideInfo && (
-            <div className="text-xs text-stone-600 bg-stone-50 p-2 rounded-lg leading-relaxed mb-1 flex gap-2">
-              <BookOpen
-                size={14}
-                className="text-stone-400 flex-shrink-0 mt-0.5"
-              />
-              {item.guideInfo}
-            </div>
-          )}
-          
-{item.notes && !item.guideInfo && (
-  <div className="text-stone-400 text-xs mt-1 leading-relaxed">
-    <LinkText text={item.notes} />
-  </div>
-)}
+      {/* 3. 懸浮操作按鈕 (保持原樣，但在 hover 時才顯示) */}
+      <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-md rounded-xl p-1 z-10 shadow-sm border border-stone-100/50">
+        <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
+        <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
+      </div>
+    </div>
+  );
+};
 
           {author.nickname && (
             <div className="flex items-center gap-1 mt-1 justify-end opacity-40 text-[10px]">
