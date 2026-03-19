@@ -893,68 +893,64 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
-// --- 更新後的導覽列元件 (Day在上、日期在下) ---
-  const DayNavigation = ({ days, tripData, onScrollToDay }) => {
-    const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+// --- 更新後的導覽列元件 ---
+const DayNavigation = ({ days, tripData, onScrollToDay }) => {
+  const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
-    return (
-      <div className="sticky top-[68px] z-20 bg-white/60 backdrop-blur-md pb-2 pt-2 px-4 -mx-4 mb-2 shadow-[0_10px_20px_rgba(104,87,123,0.03)] border-b border-white/40 transition-all">
-        <div className="flex gap-2 overflow-x-auto py-1 custom-scrollbar justify-start md:justify-center px-1">
-          {days.map((day) => {
-            const dateObj = new Date(tripData.startDate);
-            dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
-            
-            const formattedDate = dateObj.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
-            const dayOfWeek = weekdays[dateObj.getDay()];
-            
-            const y = dateObj.getFullYear();
-            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const d = String(dateObj.getDate()).padStart(2, '0');
-            const dateKey = `${y}-${m}-${d}`;
-            
-            const weather = tripData.weather?.[dateKey];
+  return (
+    // 修正：改回 top-0，因為它是在 main 裡面滾動的
+    <div className="sticky top-0 z-40 bg-[#faf9f4]/90 backdrop-blur-md pb-3 pt-3 px-4 -mx-4 mb-4 shadow-[0_10px_20px_rgba(104,87,123,0.05)] border-b border-white/60 transition-all">
+      <div className="flex gap-3 overflow-x-auto py-1 custom-scrollbar justify-start px-2">
+        {days.map((day) => {
+          const dateObj = new Date(tripData.startDate);
+          dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
+          
+          const formattedDate = dateObj.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+          const dayOfWeek = weekdays[dateObj.getDay()];
+          
+          const y = dateObj.getFullYear();
+          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const d = String(dateObj.getDate()).padStart(2, '0');
+          const dateKey = `${y}-${m}-${d}`;
+          
+          const weather = tripData.weather?.[dateKey];
 
-            return (
-              <button
-                key={day}
-                onClick={() => onScrollToDay(day)}
-                className="flex-shrink-0 w-20 bg-white/80 border border-white rounded-2xl p-2.5 shadow-sm active:scale-95 transition-all text-left group hover:border-[#b4a0c8] hover:shadow-md flex flex-col gap-1"
-              >
-                {/* 1. Day 在最上面 */}
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-serif font-black text-[#504062] leading-none">{day}</span>
-                  <span className="text-[10px] text-[#b4a0c8] font-bold leading-none">DAY</span>
+          return (
+            <button
+              key={day}
+              onClick={() => onScrollToDay(day)}
+              className="flex-shrink-0 w-20 bg-white/70 backdrop-blur-sm border border-white rounded-2xl p-2.5 shadow-sm active:scale-95 transition-all text-center group hover:bg-white hover:shadow-md flex flex-col items-center gap-1"
+            >
+              <div className="flex items-baseline gap-1 justify-center">
+                <span className="text-xl font-serif font-black text-[#504062] leading-none">{day}</span>
+                <span className="text-[10px] text-[#b4a0c8] font-bold leading-none uppercase">Day</span>
+              </div>
+              
+              <div className="text-[9px] text-[#68577b] font-bold leading-none truncate w-full mt-1">
+                {formattedDate} ({dayOfWeek})
+              </div>
+              
+              {weather ? (
+                <div className="mt-1 flex items-center justify-center gap-0.5 text-[9px] text-orange-500 font-bold leading-none">
+                  <Sun size={10} />
+                  <span className="truncate">{weather.temp}</span>
                 </div>
-                
-                {/* 2. 日期在中間 */}
-                <div className="text-[9px] text-stone-400 font-bold leading-none truncate w-full mt-0.5">
-                  {formattedDate} ({dayOfWeek})
-                </div>
-                
-                {/* 3. 天氣資訊在最下 */}
-                {weather ? (
-                  <div className="mt-1 flex items-center gap-0.5 text-[9px] text-orange-500 font-bold leading-none">
-                    <Sun size={10} />
-                    <span className="truncate">{weather.temp}</span>
-                  </div>
-                ) : (
-                  <div className="mt-1 text-[8px] text-stone-300 font-bold italic leading-none">無資訊</div>
-                )}
-              </button>
-            );
-          })}
-        </div>
+              ) : (
+                <div className="mt-1 text-[8px] text-stone-400 font-bold italic leading-none">無資訊</div>
+              )}
+            </button>
+          );
+        })}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 const scrollToDay = (day) => {
-  // Account for the new sticky header + day navigation height
-  const offset = 140; 
   const element = document.getElementById(`day-section-${day}`);
   if (element) {
-    const top = element.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: "smooth" });
+    // 修正：改回 scrollIntoView，讓瀏覽器自動處理內部容器的滾動
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 };
 
@@ -2724,17 +2720,18 @@ const App = () => {
             />
 
             <div className="px-4">
-              {Object.keys(groupedItinerary)
-                .sort((a, b) => a - b)
-                .map((day) => {
-                  const dateStr = getDateForDay(day);
-                  return (
-                    <div
-                      key={day}
-                      id={`day-section-${day}`}
-                      className="mb-10 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500"
-                    >
-                      <div className="flex justify-between items-end mb-4 px-2">
+             {Object.keys(groupedItinerary)
+              .sort((a, b) => a - b)
+              .map((day) => {
+                const dateStr = getDateForDay(day);
+                return (
+                  <div
+                    key={day}
+                    id={`day-section-${day}`}
+                    // 修正重點：加上 scroll-mt-32，這樣跳轉時才不會被毛玻璃標題蓋住
+                    className="mb-10 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-32"
+                  >
+                    <div className="flex justify-between items-end mb-4 px-2">
                         <div className="flex flex-col">
                           <div className="flex items-baseline gap-2">
                             <span className="text-3xl font-serif font-black text-[#504062] leading-none">
