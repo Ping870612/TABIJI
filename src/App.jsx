@@ -50,6 +50,9 @@ import {
   ArrowRightLeft,
 } from "lucide-react";
 
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+
 // --- Firebase Imports ---
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
@@ -983,7 +986,7 @@ const ItineraryCard = ({
     >
       {/* 2. 頂部大圖片區塊 (如果有上傳照片) */}
       {item.image && (
-        <div className="relative w-full h-44 sm:h-52 overflow-hidden rounded-t-3xl border-b border-white">
+        <div className="relative w-full h-32 sm:h-52 overflow-hidden rounded-t-3xl border-b border-white">
           <img 
             src={item.image} 
             alt={item.location} 
@@ -1405,6 +1408,11 @@ const App = () => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [originalImage, setOriginalImage] = useState(null);
+  const [crop, setCrop] = useState();
+  const [completedCrop, setCompletedCrop] = useState();
+  const imgRef = useRef(null);
   const [itemData, setItemData] = useState({});
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
   const [selectedItem, setSelectedItem] = useState(null);
@@ -3163,13 +3171,13 @@ const App = () => {
         
       </main>
 
-   {/* --- Bottom Navigation (懸浮膠囊 + 滑動果凍動畫版) --- */}
+   {/* --- Bottom Navigation (完美膠囊比例 + 果凍滑動動畫版) --- */}
       <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[340px]">
-        {/* 懸浮毛玻璃外殼 */}
-        <div className="bg-white/70 backdrop-blur-xl p-1.5 rounded-[2rem] border border-white/60 shadow-[0_15px_40px_rgba(104,87,123,0.12)]">
+        {/* 1. 外層懸浮毛玻璃：四個角弧度完全相同 (rounded-full) */}
+        <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full border border-white/80 shadow-[0_15px_40px_rgba(104,87,123,0.12)]">
           <div className="relative flex w-full">
             
-            {/* 1. 背後滑動的紫色果凍色塊 */}
+            {/* 2. 背後滑動的紫色果凍色塊 (弧度也是完美的 rounded-full) */}
             <div
               className="absolute top-0 bottom-0 w-1/3 p-0.5 transition-transform duration-500"
               style={{
@@ -3177,15 +3185,15 @@ const App = () => {
                   activeTab === "itinerary" ? "0%" :
                   activeTab === "expenses" ? "100%" : "200%"
                 })`,
-                // 使用彈簧曲線，讓滑動時有 Q彈回饋感
+                // 彈簧曲線，讓滑動時有 Q 彈回饋感
                 transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" 
               }}
             >
                {/* 實際的紫色漸層方塊 */}
-               <div className="w-full h-full bg-gradient-to-b from-white to-[#eedbff] rounded-2xl shadow-sm border border-white"></div>
+               <div className="w-full h-full bg-gradient-to-b from-[#faf9f4] to-[#eedbff] rounded-full shadow-sm border border-white"></div>
             </div>
 
-            {/* 2. 前方的透明點擊按鈕 */}
+            {/* 3. 前方的透明點擊按鈕 */}
             {[
               { id: "itinerary", icon: <Calendar size={20} />, label: "行程" },
               { id: "expenses", icon: <CreditCard size={20} />, label: "記帳" },
@@ -3205,7 +3213,7 @@ const App = () => {
                     : "text-[#b4a0c8] hover:text-[#68577b]"
                 }`}
               >
-                {/* 圖示點擊時會有稍微向上浮動的動畫 */}
+                {/* 圖示點擊時微向上浮動 */}
                 <div className={`transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${activeTab === tab.id ? "scale-110 -translate-y-0.5" : "group-hover:scale-110 group-hover:-translate-y-0.5"}`}>
                   {tab.icon}
                 </div>
@@ -3422,14 +3430,14 @@ const App = () => {
                       className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-[#504062]"
                     />
                   </div>
-{/* 🔴 新增：自訂照片上傳區塊 */}
+{/* --- 照片上傳區塊 --- */}
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       自訂照片 (選填)
                     </label>
                     <div className="flex items-center gap-4">
                       {itemData.image ? (
-                        <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-white shadow-sm">
+                        <div className="relative w-28 h-20 rounded-2xl overflow-hidden border border-white shadow-sm">
                           <img src={itemData.image} alt="preview" className="w-full h-full object-cover" />
                           <button 
                             onClick={() => setItemData({...itemData, image: null})}
@@ -3439,7 +3447,7 @@ const App = () => {
                           </button>
                         </div>
                       ) : (
-                        <label className="cursor-pointer w-16 h-16 rounded-2xl border-2 border-dashed border-[#eadef1] flex items-center justify-center bg-white/50 text-[#b4a0c8] hover:bg-white hover:text-[#68577b] hover:border-[#b4a0c8] transition-all shadow-sm">
+                        <label className="cursor-pointer w-28 h-20 rounded-2xl border-2 border-dashed border-[#eadef1] flex items-center justify-center bg-white/50 text-[#b4a0c8] hover:bg-white hover:text-[#68577b] hover:border-[#b4a0c8] transition-all shadow-sm">
                           <Camera size={20} />
                           <input 
                             type="file" 
@@ -3448,9 +3456,14 @@ const App = () => {
                             onChange={(e) => {
                               const file = e.target.files[0];
                               if (file) {
-                                if (file.size > 2 * 1024 * 1024) { showToast("圖片需小於 2MB", "error"); return; }
+                                if (file.size > 5 * 1024 * 1024) { showToast("圖片需小於 5MB", "error"); return; }
                                 const reader = new FileReader();
-                                reader.onloadend = () => setItemData({ ...itemData, image: reader.result });
+                                reader.onloadend = () => {
+                                  setOriginalImage(reader.result);
+                                  setShowCropModal(true);
+                                  // 設定比例為 16:6 (比較扁長，配合卡片的 h-32)
+                                  setCrop({ unit: '%', width: 90, aspect: 16 / 6 });
+                                };
                                 reader.readAsDataURL(file);
                               }
                             }} 
@@ -3458,10 +3471,86 @@ const App = () => {
                         </label>
                       )}
                       <span className="text-[10px] text-stone-400 leading-tight">
-                        點擊左側圖示上傳照片<br/>(建議小於 2MB)
+                        點擊左側圖示上傳照片<br/>我們會開啟裁剪視窗
                       </span>
                     </div>
                   </div>
+
+      {/* --- 裁剪視窗 (Modal) 放這裡，緊接在 isModalOpen 的內容裡面或外面都可以，建議放在最外層 return 前 --- */}
+      {showCropModal && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl bg-[#faf9f4] rounded-[2.5rem] p-6 shadow-2xl border border-white">
+            <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#eadef1]">
+              <h3 className="font-serif text-xl font-bold text-[#504062]">裁剪照片</h3>
+              <p className="text-xs text-stone-400">請拖曳選擇最適合放上卡片的範圍</p>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto rounded-2xl border-2 border-dashed border-[#eadef1] bg-white p-2 flex justify-center">
+              <ReactCrop
+                crop={crop}
+                onChange={c => setCrop(c)}
+                onComplete={c => setCompletedCrop(c)}
+                aspect={16 / 6} // 強制比例，讓它跟卡片高度完美吻合
+                className="max-w-full"
+              >
+                <img
+                  ref={imgRef}
+                  src={originalImage}
+                  alt="原始圖"
+                  onLoad={(e) => {
+                    const { width, height } = e.currentTarget;
+                    setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, 16 / 6, width, height), width, height));
+                  }}
+                />
+              </ReactCrop>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#eadef1]">
+              <button 
+                onClick={() => { setShowCropModal(false); setOriginalImage(null); }}
+                className="px-6 py-3 rounded-xl text-sm font-bold text-stone-500 bg-white border border-stone-200 hover:bg-stone-50 transition-colors"
+              >
+                取消
+              </button>
+              <button 
+                onClick={async () => {
+                  if (completedCrop && imgRef.current) {
+                    const image = imgRef.current;
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    const scaleX = image.naturalWidth / image.width;
+                    const scaleY = image.naturalHeight / image.height;
+                    
+                    canvas.width = completedCrop.width;
+                    canvas.height = completedCrop.height;
+                    
+                    ctx.drawImage(
+                      image,
+                      completedCrop.x * scaleX,
+                      completedCrop.y * scaleY,
+                      completedCrop.width * scaleX,
+                      completedCrop.height * scaleY,
+                      0,
+                      0,
+                      completedCrop.width,
+                      completedCrop.height
+                    );
+                    
+                    const base64Image = canvas.toDataURL('image/jpeg', 0.8); // 壓縮一點避免超過 Firebase 限制
+                    setItemData({ ...itemData, image: base64Image });
+                    setShowCropModal(false);
+                    setOriginalImage(null);
+                  }
+                }}
+                className="px-8 py-3 rounded-xl text-sm font-bold text-white bg-[#68577b] hover:bg-[#504062] shadow-lg transition-all"
+              >
+                確認裁剪
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
                   
                 </>
               ) : (
