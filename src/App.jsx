@@ -954,7 +954,6 @@ const scrollToDay = (day) => {
   }
 };
 
-// --- ★ 完美套用 Stitch 設計的行程卡片 ---
 const ItineraryCard = ({
   item,
   onSelect,
@@ -980,9 +979,9 @@ const ItineraryCard = ({
       onClick={() => onSelect(item)}
       className="flex flex-row items-center gap-4 p-3 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 hover:bg-white/90 transition-all duration-300 mb-4 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.04)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.08)]"
     >
-      {/* 1. 左側視覺區塊 (漸層底色與大圖示) */}
-      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#faf9f4] to-[#eadef1] border border-white flex items-center justify-center shadow-inner">
-         <div className={`${config.iconColor} opacity-80 scale-125`}>
+      {/* 1. 左側視覺區塊 (尺寸改小 w-14 h-14，換成霧紫漸層底色，並強制使用純白 Icon) */}
+      <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#b4a0c8] to-[#68577b] border border-white flex items-center justify-center shadow-md">
+         <div className="text-white opacity-95 scale-110">
             {config.icon}
          </div>
       </div>
@@ -3157,35 +3156,53 @@ const App = () => {
         
       </main>
 
-      {/* --- Bottom Navigation (Stitch 質感毛玻璃) --- */}
-      <nav className="absolute bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 bg-white/70 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-15px_40px_rgba(104,87,123,0.08)] border-t border-white/60 transition-all">
-        {[
-          { id: "itinerary", icon: <Calendar size={22} />, label: "行程" },
-          { id: "expenses", icon: <CreditCard size={22} />, label: "記帳" },
-          { id: "notes", icon: <BookOpen size={22} />, label: "記事本" }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => {
-              setActiveTab(tab.id);
-              setIsEditMode(false);
-              setEditingId(null);
-              setItemData({});
+    {/* --- Bottom Navigation (滑動果凍動畫版) --- */}
+      <nav className="absolute bottom-0 left-0 right-0 z-40 px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4 bg-white/70 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-15px_40px_rgba(104,87,123,0.08)] border-t border-white/60 transition-all">
+        <div className="relative flex w-full max-w-[320px] mx-auto bg-stone-50/60 p-1.5 rounded-3xl border border-white shadow-inner">
+          
+          {/* 1. 背後滑動的紫色果凍色塊 */}
+          <div
+            className="absolute top-1.5 bottom-1.5 w-[calc(33.333%-0.2rem)] bg-gradient-to-b from-white to-[#eedbff] rounded-2xl shadow-sm border border-white transition-transform duration-500"
+            style={{
+              transform: `translateX(${
+                activeTab === "itinerary" ? "0%" :
+                activeTab === "expenses" ? "100%" : "200%"
+              })`,
+              // 使用彈簧曲線，讓滑動時有 Q彈感
+              transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" 
             }}
-            className={`flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-95 group w-20 ${
-              activeTab === tab.id
-                ? "text-[#504062] bg-[#eedbff]/80 rounded-2xl py-2.5 shadow-sm border border-[#eadef1]/50"
-                : "text-[#b4a0c8] hover:text-[#68577b] py-2.5 hover:bg-white/50 rounded-2xl"
-            }`}
-          >
-            <div className={`${activeTab !== tab.id && "group-hover:scale-110"} transition-transform`}>
-              {tab.icon}
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest mt-1">
-              {tab.label}
-            </span>
-          </button>
-        ))}
+          ></div>
+
+          {/* 2. 前方的透明點擊按鈕 */}
+          {[
+            { id: "itinerary", icon: <Calendar size={20} />, label: "行程" },
+            { id: "expenses", icon: <CreditCard size={20} />, label: "記帳" },
+            { id: "notes", icon: <BookOpen size={20} />, label: "記事本" }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setIsEditMode(false);
+                setEditingId(null);
+                setItemData({});
+              }}
+              className={`relative z-10 flex flex-col items-center justify-center flex-1 py-2.5 transition-colors duration-300 ease-out active:scale-95 group ${
+                activeTab === tab.id
+                  ? "text-[#504062]"
+                  : "text-[#b4a0c8] hover:text-[#68577b]"
+              }`}
+            >
+              {/* 圖示點擊時會有稍微向上浮動的動畫 */}
+              <div className={`transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${activeTab === tab.id ? "scale-110 -translate-y-0.5" : "group-hover:scale-110 group-hover:-translate-y-0.5"}`}>
+                {tab.icon}
+              </div>
+              <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-opacity duration-300 ${activeTab === tab.id ? "opacity-100" : "opacity-70"}`}>
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </div>
       </nav>
 
       {/* --- FAB (Plus / AI Buttons) --- */}
