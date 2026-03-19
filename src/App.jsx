@@ -165,7 +165,7 @@ const Toast = ({ message, type, onClose }) => {
   return (
     <div
       className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-xl flex items-center gap-3 text-white text-sm font-medium z-[100] animate-in fade-in slide-in-from-top-5 duration-300 ${
-        type === "error" ? "bg-red-500" : "bg-stone-800"
+        type === "error" ? "bg-red-500" : "bg-[#68577b]"
       }`}
     >
       {type === "error" ? <Info size={16} /> : <CheckCircle size={16} />}
@@ -187,15 +187,15 @@ const ConfirmModal = ({
   if (!isOpen) return null;
   return (
     <div className="absolute inset-0 z-[60] bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-      <div className="bg-[#FDFCF8] w-full max-w-xs rounded-2xl p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border border-stone-100">
-        <h3 className="text-lg font-bold mb-2 text-stone-800 tracking-wide">
+      <div className="bg-[#faf9f4] w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border border-white/50">
+        <h3 className="text-lg font-serif font-bold mb-2 text-[#504062] tracking-wide">
           {title}
         </h3>
         <p className="text-stone-500 text-sm mb-6 leading-relaxed">{message}</p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 rounded-xl bg-stone-100 text-stone-600 font-medium hover:bg-stone-200 transition-colors text-sm"
+            className="flex-1 py-3 rounded-xl bg-white/60 border border-white text-stone-600 font-medium hover:bg-stone-100 transition-colors text-sm shadow-sm"
           >
             {cancelText}
           </button>
@@ -204,7 +204,7 @@ const ConfirmModal = ({
             className={`flex-1 py-3 rounded-xl text-white font-medium shadow-md transition-colors text-sm ${
               isDangerous
                 ? "bg-red-500 hover:bg-red-600"
-                : "bg-stone-800 hover:bg-stone-700"
+                : "bg-[#68577b] hover:bg-[#504062]"
             }`}
           >
             {confirmText}
@@ -215,17 +215,13 @@ const ConfirmModal = ({
   );
 };
 
-// --- 新增：自動將文字中的網址轉為連結，並支援換行顯示的元件 ---
 const LinkText = ({ text }) => {
   if (!text) return null;
-
-  // 1. 先使用正則表達式分割文字與網址
   const parts = text.split(/(https?:\/\/[^\s]+)/g);
 
   return (
     <span>
       {parts.map((part, i) => {
-        // 如果這個片段符合網址格式
         if (part.match(/https?:\/\/[^\s]+/)) {
           return (
             <a
@@ -233,15 +229,13 @@ const LinkText = ({ text }) => {
               href={part}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-indigo-600 hover:text-indigo-800 hover:underline break-all"
-              onClick={(e) => e.stopPropagation()} // 避免觸發卡片點擊
+              className="text-[#68577b] font-bold hover:text-[#504062] hover:underline break-all"
+              onClick={(e) => e.stopPropagation()}
             >
               {part}
             </a>
           );
         }
-        
-        // 2. 普通文字：將換行符號 \n 轉換為 <br /> 標籤
         return (
           <span key={i}>
             {part.split('\n').map((line, j, arr) => (
@@ -258,7 +252,7 @@ const LinkText = ({ text }) => {
 };
 
 const SetupGuide = ({ error }) => (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 p-8 text-center font-sans">
+  <div className="flex flex-col items-center justify-center min-h-screen bg-[#faf9f4] p-8 text-center font-sans">
     <div className="bg-white p-8 rounded-3xl shadow-xl max-w-lg border border-stone-100 text-left">
       <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
         <AlertTriangle size={32} />
@@ -267,8 +261,7 @@ const SetupGuide = ({ error }) => (
         需要設定 Firebase
       </h2>
       <p className="text-stone-500 mb-6 leading-relaxed text-center text-sm">
-        預設的測試金鑰在外部環境無法使用。請依照以下步驟設定您自己的 Firebase
-        專案。
+        預設的測試金鑰在外部環境無法使用。請依照以下步驟設定您自己的 Firebase 專案。
       </p>
 
       <div className="bg-red-50 text-red-600 p-4 rounded-xl text-[10px] font-mono mb-6 overflow-x-auto border border-red-100">
@@ -277,21 +270,14 @@ const SetupGuide = ({ error }) => (
 
       <ol className="text-sm text-stone-600 space-y-3 list-decimal pl-5 mb-8">
         <li>前往 Firebase Console 並建立新專案。</li>
-        <li>
-          建立 Web App 並複製 <code>firebaseConfig</code>。
-        </li>
-        <li>
-          回到程式碼，取代 <code>firebaseConfig</code> 變數。
-        </li>
-        <li>
-          開啟 <strong>Authentication</strong> (匿名登入) 與{" "}
-          <strong>Firestore</strong> (Test mode)。
-        </li>
+        <li>建立 Web App 並複製 <code>firebaseConfig</code>。</li>
+        <li>回到程式碼，取代 <code>firebaseConfig</code> 變數。</li>
+        <li>開啟 <strong>Authentication</strong> (匿名登入) 與 <strong>Firestore</strong> (Test mode)。</li>
       </ol>
 
       <button
         onClick={() => window.location.reload()}
-        className="w-full bg-stone-800 text-white px-6 py-4 rounded-xl font-bold hover:bg-stone-700 transition-colors"
+        className="w-full bg-[#68577b] text-white px-6 py-4 rounded-xl font-bold hover:bg-[#504062] transition-colors shadow-lg"
       >
         已完成設定，重新整理頁面
       </button>
@@ -307,8 +293,8 @@ const UserBadge = ({ nickname, emoji, color, size = "sm" }) => {
   return (
     <div
       className={`${sizeClass} rounded-full ${
-        emoji ? "bg-stone-100" : bgColor
-      } text-stone-800 flex items-center justify-center font-bold shadow-sm flex-shrink-0 select-none border border-stone-200 border-white ring-2 ring-white`}
+        emoji ? "bg-white" : bgColor
+      } text-stone-800 flex items-center justify-center font-bold shadow-sm flex-shrink-0 select-none border border-stone-100 ring-2 ring-white`}
       title={nickname}
     >
       {content}
@@ -341,16 +327,16 @@ const AIAnalysisModal = ({
 
   return (
     <div className="absolute inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] flex flex-col">
-        <div className="flex items-center gap-2 mb-4 text-stone-800 border-b border-stone-100 pb-4">
-          <Sparkles className="text-indigo-500" size={24} />
-          <h3 className="text-xl font-bold">{title}</h3>
+      <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] flex flex-col border border-white">
+        <div className="flex items-center gap-2 mb-4 text-[#504062] border-b border-white/50 pb-4">
+          <Sparkles className="text-[#68577b]" size={24} />
+          <h3 className="text-xl font-serif font-bold">{title}</h3>
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-[150px] text-stone-700 leading-relaxed scrollbar-hide">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full py-8 text-stone-400 gap-3">
-              <Loader2 className="animate-spin text-indigo-500" size={32} />
+            <div className="flex flex-col items-center justify-center h-full py-8 text-[#68577b] gap-3">
+              <Loader2 className="animate-spin text-[#68577b]" size={32} />
               <p className="text-sm font-medium animate-pulse">
                 AI 正在運算中...
               </p>
@@ -371,7 +357,7 @@ const AIAnalysisModal = ({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-100"
+                    className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-white shadow-sm"
                   >
                     <div className="flex items-center gap-2">
                       <UserBadge
@@ -383,8 +369,8 @@ const AIAnalysisModal = ({
                         {debt.from}
                       </span>
                     </div>
-                    <div className="flex flex-col items-center text-stone-400 px-2">
-                      <span className="text-[10px] font-bold text-emerald-600 mb-1">
+                    <div className="flex flex-col items-center text-[#68577b] px-2">
+                      <span className="text-[10px] font-bold text-[#68577b] mb-1">
                         ${debt.amount}
                       </span>
                       <ArrowRight size={16} />
@@ -412,7 +398,7 @@ const AIAnalysisModal = ({
 
         <button
           onClick={onClose}
-          className="w-full mt-4 py-3 rounded-xl bg-stone-800 text-white font-medium hover:bg-stone-700 shadow-lg transition-all"
+          className="w-full mt-4 py-3 rounded-xl bg-[#68577b] text-white font-medium hover:bg-[#504062] shadow-lg transition-all"
         >
           關閉
         </button>
@@ -425,36 +411,12 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   if (!isOpen || !item) return null;
 
   const typeConfig = {
-    sightseeing: {
-      icon: <Camera size={24} />,
-      bgIcon: "bg-indigo-100 text-indigo-600",
-      label: "景點",
-    },
-    food: {
-      icon: <Utensils size={24} />,
-      bgIcon: "bg-orange-100 text-orange-600",
-      label: "餐廳",
-    },
-    transport: {
-      icon: <Train size={24} />,
-      bgIcon: "bg-emerald-100 text-emerald-600",
-      label: "交通",
-    },
-    flight: {
-      icon: <Plane size={24} />,
-      bgIcon: "bg-sky-100 text-sky-600",
-      label: "航班",
-    },
-    accommodation: {
-      icon: <Home size={24} />,
-      bgIcon: "bg-rose-100 text-rose-600",
-      label: "住宿",
-    },
-    activity: {
-      icon: <MapPin size={24} />,
-      bgIcon: "bg-stone-100 text-stone-600",
-      label: "活動",
-    },
+    sightseeing: { icon: <Camera size={24} />, bgIcon: "bg-[#eedbff] text-[#68577b]", label: "景點" },
+    food: { icon: <Utensils size={24} />, bgIcon: "bg-orange-100 text-orange-600", label: "餐廳" },
+    transport: { icon: <Train size={24} />, bgIcon: "bg-emerald-100 text-emerald-600", label: "交通" },
+    flight: { icon: <Plane size={24} />, bgIcon: "bg-sky-100 text-sky-600", label: "航班" },
+    accommodation: { icon: <Home size={24} />, bgIcon: "bg-rose-100 text-rose-600", label: "住宿" },
+    activity: { icon: <MapPin size={24} />, bgIcon: "bg-stone-100 text-stone-600", label: "活動" },
   };
   
   const config = typeConfig[item.category] || typeConfig.activity;
@@ -462,34 +424,32 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
 
   return (
     <div className="absolute inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] overflow-y-auto scrollbar-hide">
+      <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] overflow-y-auto scrollbar-hide border border-white">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-stone-50 rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 z-10"
+          className="absolute top-4 right-4 p-2 bg-white rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 z-10 shadow-sm"
         >
           <X size={20} />
         </button>
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4 border-b border-stone-100 pb-4">
+          <div className="flex items-center gap-4 border-b border-white/50 pb-4">
             <div className={`p-4 rounded-2xl ${config.bgIcon} shadow-sm`}>
               {config.icon}
             </div>
             <div>
-              <div className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">
+              <div className="text-xs font-bold text-[#68577b] uppercase tracking-wider mb-1">
                 {config.label} • {item.time}
               </div>
-              <h2 className="text-xl font-bold text-stone-800 leading-tight">
+              <h2 className="text-xl font-serif font-bold text-[#504062] leading-tight">
                 {item.location}
               </h2>
             </div>
           </div>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-              item.location
-            )}`}
+            href={`https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(item.location)}`}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-medium py-3 rounded-xl hover:bg-blue-100 transition-colors"
+            className="flex items-center justify-center gap-2 bg-white text-[#68577b] border border-white shadow-sm font-medium py-3 rounded-xl hover:bg-stone-50 transition-colors"
           >
             <MapPin size={18} /> 在 Google Maps 開啟
           </a>
@@ -498,7 +458,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
               {item.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-stone-50 border border-stone-200 text-stone-600 font-medium"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-white border border-stone-100 text-[#504062] font-medium shadow-sm"
                 >
                   {tag.text}
                 </span>
@@ -506,29 +466,28 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
             </div>
           )}
           {item.guideInfo && (
-            <div className="bg-gradient-to-br from-indigo-50 to-white p-4 rounded-xl border border-indigo-100">
-              <div className="flex items-center gap-2 mb-2 text-indigo-700 font-bold text-sm">
+            <div className="bg-gradient-to-br from-[#eedbff]/30 to-white/60 p-4 rounded-2xl border border-white shadow-sm">
+              <div className="flex items-center gap-2 mb-2 text-[#68577b] font-bold text-sm">
                 <Sparkles size={16} /> 導遊介紹
               </div>
-              <p className="text-sm text-stone-600 leading-relaxed">
+              <p className="text-sm text-[#504062] leading-relaxed">
                 {item.guideInfo}
               </p>
             </div>
           )}
-{item.notes && (
-  <div>
-    <h4 className="text-sm font-bold text-stone-700 mb-2">備註</h4>
-    <div className="text-sm text-stone-600 bg-stone-50 p-4 rounded-xl border border-stone-100 leading-relaxed whitespace-pre-wrap">
-      {/* 使用剛剛建立的 LinkText 元件 */}
-      <LinkText text={item.notes} />
-    </div>
-  </div>
-)}
+          {item.notes && (
+            <div>
+              <h4 className="text-sm font-bold text-[#504062] mb-2">備註</h4>
+              <div className="text-sm text-stone-600 bg-white/60 p-4 rounded-2xl border border-white shadow-sm leading-relaxed whitespace-pre-wrap">
+                <LinkText text={item.notes} />
+              </div>
+            </div>
+          )}
           {author.nickname && (
-            <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-stone-100 text-xs text-stone-400">
+            <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-white/50 text-xs text-stone-400">
               <span>Added by</span>
               <div className="flex items-center gap-1">
-                <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-xs">
+                <div className="w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center text-xs">
                   {author.emoji || "👤"}
                 </div>
                 <span className="font-bold text-stone-600">
@@ -543,23 +502,21 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   );
 };
 
-// --- 修改：歡迎回來視窗 (加入右上角 X 按鈕) ---
 const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew, onClose }) => {
   if (!isOpen) return null;
 
   return (
     <div className="absolute inset-0 z-[90] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
-        {/* 新增：右上角關閉按鈕 */}
+      <div className="bg-[#faf9f4] w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative border border-white">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-stone-50 rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors z-10"
+          className="absolute top-4 right-4 p-2 bg-white rounded-full text-stone-400 hover:text-stone-600 transition-colors z-10 shadow-sm"
         >
           <X size={16} />
         </button>
 
         <div className="text-center mb-6 mt-2">
-          <h3 className="text-xl font-bold text-stone-800 mb-2">
+          <h3 className="text-xl font-serif font-bold text-[#504062] mb-2">
             歡迎回來！
           </h3>
           <p className="text-sm text-stone-500">
@@ -567,18 +524,18 @@ const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew, onClose }) 
           </p>
         </div>
         
-        <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+        <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
           {Object.entries(members).map(([uid, member]) => (
             <button
               key={uid}
               onClick={() => onSelect(uid, member)}
-              className="w-full flex items-center gap-4 p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition-all active:scale-95 group"
+              className="w-full flex items-center gap-4 p-4 bg-white hover:bg-[#eadef1]/30 border border-white rounded-2xl shadow-sm transition-all active:scale-95 group"
             >
-              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl shadow-sm border border-stone-100">
+              <div className="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center text-xl">
                 {member.emoji}
               </div>
               <div className="text-left">
-                <div className="font-bold text-stone-800 group-hover:text-indigo-600 transition-colors">
+                <div className="font-bold text-stone-800 group-hover:text-[#68577b] transition-colors">
                   我是 {member.nickname}
                 </div>
                 <div className="text-[10px] text-stone-400">
@@ -590,14 +547,14 @@ const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew, onClose }) 
         </div>
 
         <div className="relative flex py-2 items-center mb-4">
-          <div className="flex-grow border-t border-stone-100"></div>
+          <div className="flex-grow border-t border-white/50"></div>
           <span className="flex-shrink mx-4 text-stone-300 text-xs">或是</span>
-          <div className="flex-grow border-t border-stone-100"></div>
+          <div className="flex-grow border-t border-white/50"></div>
         </div>
 
         <button
           onClick={onCreateNew}
-          className="w-full bg-stone-800 text-white font-bold py-3 rounded-xl hover:bg-stone-700 transition-all shadow-lg"
+          className="w-full bg-[#68577b] text-white font-bold py-3 rounded-xl hover:bg-[#504062] transition-all shadow-lg"
         >
           我是新成員 (建立新檔案)
         </button>
@@ -606,17 +563,13 @@ const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew, onClose }) 
   );
 };
 
-// --- 修改：建立旅者檔案視窗 (加入返回鈕與重複頭貼阻擋) ---
 const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, onBack }) => {
   const animals = [
     "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", 
     "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔",
   ];
   
-  // 計算出已經被選走的動物頭貼
   const takenEmojis = Object.values(members).map(m => m.emoji);
-  
-  // 初始化時，自動避開已經被選走的動物，找到第一個可用的
   const [nickname, setNickname] = useState(initialName);
   const [selectedEmoji, setSelectedEmoji] = useState("🐶");
 
@@ -626,24 +579,23 @@ const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, o
       const firstAvailable = animals.find(a => !takenEmojis.includes(a)) || "🐶";
       setSelectedEmoji(firstAvailable);
     }
-  }, [isOpen, members]); // 依賴 isOpen 來重置狀態
+  }, [isOpen, members]);
 
   if (!isOpen) return null;
 
   return (
     <div className="absolute inset-0 z-[80] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+      <div className="bg-[#faf9f4] w-full max-w-xs rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border border-white">
         
-        {/* 頂部標題與返回按鈕 */}
         <div className="relative flex items-center justify-center mb-6">
           <button 
             onClick={onBack}
-            className="absolute left-0 p-2 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-600 transition-colors -ml-2"
+            className="absolute left-0 p-2 bg-white rounded-full text-stone-400 hover:text-stone-600 shadow-sm transition-colors -ml-2"
           >
             <ChevronRight className="rotate-180" size={20} />
           </button>
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-stone-800 mb-1">
+          <div className="text-center mt-4">
+            <h3 className="text-xl font-serif font-bold text-[#504062] mb-1">
               建立旅者檔案
             </h3>
             <p className="text-xs text-stone-500">選擇一個動物代表你吧！</p>
@@ -652,12 +604,12 @@ const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, o
 
         <div className="space-y-6">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center text-4xl shadow-lg transition-transform hover:scale-105">
+            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-4xl shadow-md transition-transform hover:scale-105 border border-white">
               {selectedEmoji}
             </div>
           </div>
           <div>
-            <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1 mb-1 block">
+            <label className="text-xs font-bold text-[#68577b] uppercase tracking-wider ml-1 mb-1 block">
               暱稱
             </label>
             <input
@@ -665,12 +617,12 @@ const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, o
               placeholder="例如：小明"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-800 text-center font-medium"
+              className="w-full bg-white border border-white shadow-sm rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#eadef1] text-center font-medium"
               autoFocus
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1 mb-2 block text-center">
+            <label className="text-xs font-bold text-[#68577b] uppercase tracking-wider ml-1 mb-2 block text-center">
               選擇動物
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -684,10 +636,10 @@ const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, o
                     title={isTaken ? "已經被選走囉" : ""}
                     className={`text-2xl p-2 rounded-xl transition-all ${
                       isTaken
-                        ? "opacity-20 cursor-not-allowed grayscale bg-stone-50" // 已被選走的樣式
+                        ? "opacity-20 cursor-not-allowed grayscale bg-transparent" 
                         : selectedEmoji === a
-                        ? "bg-stone-200 scale-110 shadow-sm"
-                        : "hover:bg-stone-100"
+                        ? "bg-white scale-110 shadow-md border border-white"
+                        : "hover:bg-white/50"
                     }`}
                   >
                     {a}
@@ -699,7 +651,7 @@ const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, o
           <button
             onClick={() => nickname && onSubmit({ nickname, emoji: selectedEmoji })}
             disabled={!nickname || takenEmojis.includes(selectedEmoji)}
-            className="w-full bg-stone-800 text-white font-bold py-3 rounded-xl hover:bg-stone-700 transition-all disabled:opacity-50"
+            className="w-full bg-[#68577b] text-white font-bold py-3 rounded-xl hover:bg-[#504062] transition-all disabled:opacity-50 shadow-lg"
           >
             開始旅程
           </button>
@@ -719,15 +671,15 @@ const FileImportModal = ({ isOpen, onClose, onImport, isLoading }) => {
 
   return (
     <div className="absolute inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative">
+      <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border border-white">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-600"
+          className="absolute top-4 right-4 p-2 bg-white rounded-full text-stone-400 hover:text-stone-600 shadow-sm"
         >
           <XCircle size={20} />
         </button>
-        <h3 className="text-xl font-bold text-stone-800 mb-2 flex items-center gap-2">
-          <FileText className="text-indigo-500" /> 匯入行程檔案
+        <h3 className="text-xl font-serif font-bold text-[#504062] mb-2 flex items-center gap-2">
+          <FileText className="text-[#68577b]" /> 匯入行程檔案
         </h3>
         <p className="text-sm text-stone-500 mb-6 leading-relaxed">
           支援 <b>PDF</b> 或 <b>圖片</b> (如 Excel 截圖)。
@@ -736,7 +688,7 @@ const FileImportModal = ({ isOpen, onClose, onImport, isLoading }) => {
         </p>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 space-y-3">
-            <Loader2 className="animate-spin text-indigo-500" size={40} />
+            <Loader2 className="animate-spin text-[#68577b]" size={40} />
             <p className="text-sm font-medium text-stone-600 animate-pulse">
               正在分析檔案內容...
             </p>
@@ -744,14 +696,14 @@ const FileImportModal = ({ isOpen, onClose, onImport, isLoading }) => {
         ) : (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-indigo-200 bg-indigo-50 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-100 transition-colors group"
+            className="border-2 border-dashed border-[#eadef1] bg-white/50 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-colors group shadow-sm"
           >
             <Upload
               size={32}
-              className="text-indigo-400 group-hover:text-indigo-600 mb-2"
+              className="text-[#b4a0c8] group-hover:text-[#68577b] mb-2 transition-colors"
             />
-            <span className="text-indigo-600 font-medium">點擊上傳檔案</span>
-            <span className="text-xs text-indigo-400 mt-1">
+            <span className="text-[#68577b] font-medium">點擊上傳檔案</span>
+            <span className="text-xs text-stone-400 mt-1">
               .pdf, .jpg, .png
             </span>
             <input
@@ -772,47 +724,42 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
   if (!isOpen) return null;
   return (
     <div className="absolute inset-0 z-[60] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative">
+      <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative border border-white">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-stone-50 rounded-full text-stone-400 hover:bg-stone-100"
+          className="absolute top-4 right-4 p-2 bg-white rounded-full text-stone-400 hover:text-stone-600 shadow-sm"
         >
           <XCircle size={20} />
         </button>
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="bg-indigo-50 p-4 rounded-full text-indigo-600 mb-2">
+          <div className="bg-[#eedbff] p-4 rounded-full text-[#68577b] mb-2 shadow-sm">
             <Users size={32} />
           </div>
-          <h3 className="text-xl font-bold text-stone-800">邀請朋友加入</h3>
+          <h3 className="text-xl font-serif font-bold text-[#504062]">邀請朋友加入</h3>
           <p className="text-sm text-stone-500 leading-relaxed">
             將此代碼分享給您的旅伴。
             <br />
             他們只需在首頁輸入代碼即可共同編輯 <b>{tripName}</b>。
           </p>
           
-          {/* ↓↓↓ 重點修改區 ↓↓↓ */}
           <div
             onClick={() => {
-              // 1. 取得完整網址
               const link = `${window.location.origin}${window.location.pathname}?tripId=${tripId}`;
-              // 2. 組合邀請訊息
               const message = `👋 點擊下方連結一起參與 ${tripName} 的行程！✈️\n${link}`;
-              // 3. 複製
               copyToClipboard(message);
             }}
-            className="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-6 cursor-pointer hover:bg-stone-100 hover:border-indigo-300 transition-all group"
+            className="w-full bg-white border-2 border-dashed border-[#eadef1] rounded-2xl p-6 cursor-pointer hover:bg-[#faf9f4] hover:border-[#b4a0c8] transition-all group shadow-sm"
           >
             <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
               點擊複製邀請函
             </div>
-            <div className="text-3xl font-mono font-bold text-stone-800 tracking-wider group-hover:text-indigo-600">
+            <div className="text-3xl font-mono font-bold text-[#504062] tracking-wider group-hover:text-[#68577b]">
               {tripId}
             </div>
             <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
               <Copy size={12} /> 複製文字與連結
             </div>
           </div>
-          {/* ↑↑↑ 修改結束 ↑↑↑ */}
           
         </div>
       </div>
@@ -873,9 +820,9 @@ const LocationInput = ({ value, onChange, placeholder }) => {
           placeholder={placeholder}
           value={value}
           onChange={(e) => handleSearch(e.target.value)}
-          className="w-full bg-white border border-stone-200 rounded-xl p-3 pl-10 outline-none focus:border-stone-400 transition-colors"
+          className="w-full bg-white border border-white shadow-sm rounded-xl p-3 pl-10 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-800"
         />
-        <Search className="absolute left-3 top-3.5 text-stone-400" size={16} />
+        <Search className="absolute left-3 top-3.5 text-[#b4a0c8]" size={16} />
         {value && (
           <button
             onClick={() => onChange("")}
@@ -891,7 +838,7 @@ const LocationInput = ({ value, onChange, placeholder }) => {
             <li
               key={place.place_id}
               onClick={() => handleSelect(place)}
-              className="p-3 hover:bg-stone-50 cursor-pointer text-sm text-stone-600 border-b border-stone-50 last:border-0 truncate"
+              className="p-3 hover:bg-[#faf9f4] cursor-pointer text-sm text-stone-600 border-b border-stone-50 last:border-0 truncate"
             >
               <span className="font-bold text-stone-800">
                 {place.display_name.split(",")[0]}
@@ -912,7 +859,7 @@ const Tag = ({ type, text }) => {
     mustEat: "bg-orange-50 text-orange-700 border-orange-200",
     mustBuy: "bg-emerald-50 text-emerald-700 border-emerald-200",
     reservation: "bg-red-50 text-red-700 border-red-200",
-    story: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    story: "bg-[#eedbff] text-[#504062] border-[#eadef1]",
     default: "bg-stone-100 text-stone-600 border-stone-200",
   };
   return (
@@ -937,7 +884,7 @@ const WeatherBadge = ({ date, weatherData }) => {
   else if (info.condition.includes("Wind") || info.condition.includes("風"))
     Icon = Wind;
   return (
-    <div className="flex items-center gap-2 text-xs text-stone-500 bg-white/50 px-3 py-1.5 rounded-full border border-stone-100 backdrop-blur-sm animate-in fade-in">
+    <div className="flex items-center gap-2 text-xs text-[#68577b] bg-white/60 px-3 py-1.5 rounded-full border border-white shadow-sm backdrop-blur-sm animate-in fade-in">
       <Icon size={14} className="text-orange-400" />
       <span>
         {info.temp} {info.condition}
@@ -951,8 +898,8 @@ const WeatherBadge = ({ date, weatherData }) => {
     const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
     return (
-      <div className="sticky top-0 z-50 bg-[#FDFCF8]/60 backdrop-blur-md pb-2 pt-1 px-4 -mx-4 mb-2 border-b border-stone-100/50 shadow-sm">
-        <div className="flex gap-2 overflow-x-auto py-1 custom-scrollbar justify-start md:justify-center">
+      <div className="sticky top-[68px] z-20 bg-white/60 backdrop-blur-md pb-2 pt-2 px-4 -mx-4 mb-2 shadow-[0_10px_20px_rgba(104,87,123,0.03)] border-b border-white/40 transition-all">
+        <div className="flex gap-2 overflow-x-auto py-1 custom-scrollbar justify-start md:justify-center px-1">
           {days.map((day) => {
             const dateObj = new Date(tripData.startDate);
             dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
@@ -971,28 +918,27 @@ const WeatherBadge = ({ date, weatherData }) => {
               <button
                 key={day}
                 onClick={() => onScrollToDay(day)}
-                // 稍微縮減寬度並調整為 flex 垂直排列
-                className="flex-shrink-0 w-20 bg-white/80 border border-stone-100 rounded-xl p-2.5 shadow-sm active:scale-95 transition-all text-left group hover:border-stone-400 hover:shadow-md flex flex-col gap-1"
+                className="flex-shrink-0 w-20 bg-white/80 border border-white rounded-2xl p-2.5 shadow-sm active:scale-95 transition-all text-left group hover:border-[#b4a0c8] hover:shadow-md flex flex-col gap-1"
               >
                 {/* 1. Day 在最上面 */}
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-stone-800 leading-none">{day}</span>
-                  <span className="text-[10px] text-stone-500 font-bold leading-none">DAY</span>
+                  <span className="text-xl font-serif font-black text-[#504062] leading-none">{day}</span>
+                  <span className="text-[10px] text-[#b4a0c8] font-bold leading-none">DAY</span>
                 </div>
                 
                 {/* 2. 日期在中間 */}
-                <div className="text-[9px] text-stone-400 font-bold leading-none truncate w-full">
+                <div className="text-[9px] text-stone-400 font-bold leading-none truncate w-full mt-0.5">
                   {formattedDate} ({dayOfWeek})
                 </div>
                 
                 {/* 3. 天氣資訊在最下 */}
                 {weather ? (
-                  <div className="mt-0.5 flex items-center gap-0.5 text-[9px] text-orange-500 font-bold leading-none">
+                  <div className="mt-1 flex items-center gap-0.5 text-[9px] text-orange-500 font-bold leading-none">
                     <Sun size={10} />
                     <span className="truncate">{weather.temp}</span>
                   </div>
                 ) : (
-                  <div className="mt-0.5 text-[8px] text-stone-300 font-bold italic leading-none">無資訊</div>
+                  <div className="mt-1 text-[8px] text-stone-300 font-bold italic leading-none">無資訊</div>
                 )}
               </button>
             );
@@ -1001,13 +947,18 @@ const WeatherBadge = ({ date, weatherData }) => {
       </div>
     );
   };
+
 const scrollToDay = (day) => {
+  // Account for the new sticky header + day navigation height
+  const offset = 140; 
   const element = document.getElementById(`day-section-${day}`);
   if (element) {
-    element.scrollIntoView({ behavior: "smooth", block: "start" });
+    const top = element.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: "smooth" });
   }
 };
 
+// --- ★ 完美套用 Stitch 設計的行程卡片 ---
 const ItineraryCard = ({
   item,
   onSelect,
@@ -1018,10 +969,10 @@ const ItineraryCard = ({
 }) => {
   const typeConfig = {
     sightseeing: { icon: <Camera size={20} />, iconColor: "text-[#68577b]", label: "景點" },
-    food: { icon: <Utensils size={20} />, iconColor: "text-orange-600", label: "餐廳" },
-    transport: { icon: <Train size={20} />, iconColor: "text-emerald-600", label: "交通" },
-    flight: { icon: <Plane size={20} />, iconColor: "text-sky-600", label: "航班" },
-    accommodation: { icon: <Home size={20} />, iconColor: "text-rose-600", label: "住宿" },
+    food: { icon: <Utensils size={20} />, iconColor: "text-orange-500", label: "餐廳" },
+    transport: { icon: <Train size={20} />, iconColor: "text-emerald-500", label: "交通" },
+    flight: { icon: <Plane size={20} />, iconColor: "text-sky-500", label: "航班" },
+    accommodation: { icon: <Home size={20} />, iconColor: "text-rose-500", label: "住宿" },
     activity: { icon: <MapPin size={20} />, iconColor: "text-stone-500", label: "活動" },
   };
 
@@ -1031,20 +982,20 @@ const ItineraryCard = ({
   return (
     <div
       onClick={() => onSelect(item)}
-      className="flex flex-row items-center gap-4 p-3 rounded-3xl bg-white/50 dark:bg-stone-900/50 backdrop-blur-md border border-white/60 hover:bg-white/80 transition-all duration-300 mb-4 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.04)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.08)]"
+      className="flex flex-row items-center gap-4 p-3 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 hover:bg-white/90 transition-all duration-300 mb-4 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.04)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.08)]"
     >
       {/* 1. 左側視覺區塊 (漸層底色與大圖示) */}
-      <div className="w-20 h-20 md:w-28 md:h-24 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#f5f4ef] to-[#eadef1] border border-white flex items-center justify-center">
+      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden shrink-0 relative bg-gradient-to-br from-[#faf9f4] to-[#eadef1] border border-white flex items-center justify-center shadow-inner">
          <div className={`${config.iconColor} opacity-80 scale-125`}>
             {config.icon}
          </div>
       </div>
 
       {/* 2. 右側資訊區塊 */}
-      <div className="flex-1 min-w-0 py-1">
+      <div className="flex-1 min-w-0 py-1 pr-2">
         {/* 時間與分類標籤 */}
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[11px] font-bold text-stone-500 font-mono bg-stone-100/80 px-1.5 py-0.5 rounded-md">
+          <span className="text-[11px] font-bold text-stone-500 font-mono bg-white/80 px-2 py-0.5 rounded-md shadow-sm border border-stone-100/50">
             {item.time}
           </span>
           <span className="w-1 h-1 rounded-full bg-stone-300"></span>
@@ -1054,13 +1005,13 @@ const ItineraryCard = ({
         </div>
         
         {/* 地點名稱 (套用 Stitch 的 Noto Serif 字體) */}
-        <h4 className="font-serif text-lg font-bold text-stone-800 dark:text-stone-100 truncate leading-tight">
+        <h4 className="font-serif text-lg font-bold text-[#504062] truncate leading-tight">
           {item.location}
         </h4>
         
         {/* 備註與導遊資訊 */}
         {(item.guideInfo || item.notes) && (
-          <p className="text-xs text-stone-500 mt-1.5 line-clamp-1">
+          <p className="text-[11px] text-stone-500 mt-1 line-clamp-2 leading-relaxed">
             {item.guideInfo || item.notes}
           </p>
         )}
@@ -1074,7 +1025,7 @@ const ItineraryCard = ({
         )}
       </div>
 
-      {/* 3. 懸浮操作按鈕 (保持原樣，但在 hover 時才顯示) */}
+      {/* 3. 懸浮操作按鈕 */}
       <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-md rounded-xl p-1 z-10 shadow-sm border border-stone-100/50">
         <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
         <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
@@ -1203,32 +1154,32 @@ const WelcomeScreen = ({
 
   if (mode === "create") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFCF8] p-6 font-sans">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#faf9f4] p-6 font-sans">
         <FileImportModal
           isOpen={isImportOpen}
           onClose={() => setIsImportOpen(false)}
           onImport={handleFileAnalyze}
           isLoading={isImportLoading}
         />
-        <div className="w-full max-w-md bg-white p-8 rounded-[2rem] shadow-2xl space-y-6 animate-in zoom-in-95 duration-300">
-          <div className="flex items-center gap-2 text-stone-800 mb-2">
+        <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-[0_20px_60px_rgba(104,87,123,0.1)] border border-white space-y-6 animate-in zoom-in-95 duration-300">
+          <div className="flex items-center gap-2 text-[#504062] mb-2">
             <button
               onClick={() => setMode("home")}
-              className="p-2 hover:bg-stone-100 rounded-full"
+              className="p-2 bg-stone-50 hover:bg-[#eadef1]/50 rounded-full transition-colors"
             >
               <ChevronRight className="rotate-180" size={20} />
             </button>
-            <h2 className="text-xl font-bold">建立新旅程</h2>
+            <h2 className="text-2xl font-serif font-bold">建立新旅程</h2>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1 mb-1 block">
+              <label className="text-xs font-bold text-[#b4a0c8] uppercase tracking-wider ml-1 mb-1 block">
                 目的地
               </label>
               <input
                 type="text"
                 placeholder="例如：京都, 日本"
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl p-4 outline-none focus:border-stone-800 transition-colors"
+                className="w-full bg-stone-50 border border-transparent rounded-2xl p-4 outline-none focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-[#504062] font-medium"
                 value={newTripData.destination}
                 onChange={(e) =>
                   setNewTripData({
@@ -1241,25 +1192,25 @@ const WelcomeScreen = ({
 
             <div className="space-y-3">
               <div className="flex justify-between items-end px-1">
-                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">
+                <label className="text-xs font-bold text-[#b4a0c8] uppercase tracking-wider">
                   旅遊日期
                 </label>
                 {duration > 0 && (
-                  <span className="text-[10px] font-bold bg-stone-800 text-white px-3 py-1 rounded-full animate-in zoom-in spin-in-3">
+                  <span className="text-[10px] font-bold bg-[#68577b] text-white px-3 py-1 rounded-full animate-in zoom-in spin-in-3 shadow-sm">
                     ✈️ {duration} 天 {duration - 1} 夜
                   </span>
                 )}
               </div>
 
-              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-1 focus-within:ring-2 focus-within:ring-stone-800 focus-within:border-stone-800 transition-all shadow-sm">
+              <div className="bg-stone-50 border border-transparent rounded-3xl p-1 focus-within:ring-2 focus-within:ring-[#eedbff] focus-within:border-[#eadef1] focus-within:bg-white transition-all">
                 <div className="flex items-center divide-x divide-stone-200">
-                  <div className="flex-1 px-3 py-3 relative group">
-                    <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
+                  <div className="flex-1 px-4 py-3 relative group">
+                    <label className="absolute top-2 left-4 text-[9px] font-bold text-[#b4a0c8] uppercase">
                       DEPART
                     </label>
                     <input
                       type="date"
-                      className="w-full bg-transparent pt-4 pb-1 font-bold text-stone-800 outline-none text-sm font-mono cursor-pointer h-full"
+                      className="w-full bg-transparent pt-4 pb-1 font-bold text-[#504062] outline-none text-sm font-mono cursor-pointer h-full"
                       value={newTripData.startDate}
                       onChange={handleStartDateChange}
                     />
@@ -1269,14 +1220,14 @@ const WelcomeScreen = ({
                     <ArrowRight size={16} />
                   </div>
 
-                  <div className="flex-1 px-3 py-3 relative group">
-                    <label className="absolute top-2 left-3 text-[9px] font-bold text-stone-400 uppercase">
+                  <div className="flex-1 px-4 py-3 relative group">
+                    <label className="absolute top-2 left-4 text-[9px] font-bold text-[#b4a0c8] uppercase">
                       RETURN
                     </label>
                     <input
                       type="date"
                       id="endDateInput"
-                      className="w-full bg-transparent pt-4 pb-1 font-bold text-stone-800 outline-none text-sm font-mono cursor-pointer disabled:opacity-30"
+                      className="w-full bg-transparent pt-4 pb-1 font-bold text-[#504062] outline-none text-sm font-mono cursor-pointer disabled:opacity-30"
                       value={newTripData.endDate}
                       min={newTripData.startDate}
                       disabled={!newTripData.startDate}
@@ -1292,24 +1243,16 @@ const WelcomeScreen = ({
               </div>
 
               {newTripData.startDate && (
-                <div className="animate-in slide-in-from-top-2 fade-in duration-300">
-                  <div className="flex items-center gap-2 mb-2 px-1">
-                    <div className="h-[1px] bg-stone-200 flex-1"></div>
-                    <span className="text-[10px] text-stone-400 font-bold">
-                      或是直接選擇天數
-                    </span>
-                    <div className="h-[1px] bg-stone-200 flex-1"></div>
-                  </div>
-
+                <div className="animate-in slide-in-from-top-2 fade-in duration-300 pt-2">
                   <div className="grid grid-cols-4 gap-2">
-                    {[2, 3, 4, 5, 6, 7, 8, 10].map((d) => (
+                    {[3, 4, 5, 7].map((d) => (
                       <button
                         key={d}
                         onClick={() => setQuickDuration(d)}
-                        className={`py-3 rounded-xl text-xs font-bold transition-all active:scale-95 border ${
+                        className={`py-3 rounded-2xl text-xs font-bold transition-all active:scale-95 border ${
                           duration === d
-                            ? "bg-stone-800 text-white border-stone-800 shadow-md transform scale-105"
-                            : "bg-white border-stone-200 text-stone-500 hover:border-stone-400 hover:bg-stone-50"
+                            ? "bg-[#68577b] text-white border-[#68577b] shadow-md transform scale-105"
+                            : "bg-white border-stone-200 text-stone-500 hover:border-[#b4a0c8] hover:bg-[#faf9f4]"
                         }`}
                       >
                         {d}天
@@ -1321,30 +1264,30 @@ const WelcomeScreen = ({
             </div>
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-3 pt-4">
             <button
               onClick={handleCreateSubmit}
               disabled={isCreating}
-              className="w-full bg-stone-800 text-white font-bold py-4 rounded-xl hover:bg-stone-700 transition-all shadow-lg flex justify-center items-center gap-2"
+              className="w-full bg-[#68577b] text-white font-bold py-4 rounded-2xl hover:bg-[#504062] transition-all shadow-[0_8px_20px_rgba(104,87,123,0.3)] flex justify-center items-center gap-2 active:scale-95"
             >
               {isCreating ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <>
-                  建立旅程 <Plane size={18} />
+                  建立專屬旅程 <Plane size={18} />
                 </>
               )}
             </button>
-            <div className="relative flex py-2 items-center">
+            <div className="relative flex py-3 items-center">
               <div className="flex-grow border-t border-stone-100"></div>
-              <span className="flex-shrink mx-4 text-stone-300 text-xs">
+              <span className="flex-shrink mx-4 text-stone-300 text-xs font-bold uppercase tracking-widest">
                 OR
               </span>
               <div className="flex-grow border-t border-stone-100"></div>
             </div>
             <button
               onClick={() => setIsImportOpen(true)}
-              className="w-full bg-indigo-50 text-indigo-600 font-bold py-4 rounded-xl hover:bg-indigo-100 transition-all flex justify-center items-center gap-2 border border-indigo-100"
+              className="w-full bg-[#eedbff]/50 text-[#68577b] font-bold py-4 rounded-2xl hover:bg-[#eedbff] transition-all flex justify-center items-center gap-2 border border-[#eadef1] active:scale-95"
             >
               <Upload size={18} /> 從檔案匯入 (PDF/圖片)
             </button>
@@ -1355,20 +1298,25 @@ const WelcomeScreen = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFCF8] p-6 font-sans">
-      <div className="w-full max-w-md text-center space-y-8 animate-in fade-in zoom-in duration-500">
-        <div className="inline-flex items-center justify-center p-6 bg-stone-900 rounded-[2rem] shadow-2xl shadow-stone-200">
-          <Sparkles className="w-10 h-10 text-white" />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#faf9f4] p-6 font-sans">
+      <div className="w-full max-w-md text-center space-y-10 animate-in fade-in zoom-in duration-700">
+        
+        {/* Stitch Style Hero Logo */}
+        <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-br from-[#eadef1] to-[#d3bee8] rounded-[2.5rem] shadow-[0_20px_40px_rgba(104,87,123,0.2)] border border-white">
+          <Sparkles className="w-12 h-12 text-[#504062]" />
         </div>
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-stone-800 tracking-widest">
-            旅路 TABIJI
+        
+        <div className="space-y-3">
+          <h1 className="text-4xl md:text-5xl font-serif font-black text-[#504062] tracking-tight">
+            旅路 <span className="italic text-[#68577b]">TABIJI</span>
           </h1>
+          <p className="text-stone-500 text-sm tracking-widest uppercase">Your Journey, Refined.</p>
         </div>
-        <div className="space-y-4 pt-4">
+
+        <div className="space-y-4 pt-6">
           <button
             onClick={() => setMode("create")}
-            className="w-full bg-stone-800 text-white font-medium py-4 rounded-2xl hover:bg-stone-700 transition-all active:scale-95 shadow-lg shadow-stone-200 flex items-center justify-center gap-2"
+            className="w-full bg-[#68577b] text-white font-medium py-4 rounded-2xl hover:bg-[#504062] transition-all active:scale-95 shadow-[0_10px_30px_rgba(104,87,123,0.3)] flex items-center justify-center gap-2"
           >
             <Plus size={20} /> 開始新旅程
           </button>
@@ -1378,7 +1326,7 @@ const WelcomeScreen = ({
               placeholder="輸入邀請碼 (Trip ID)"
               value={joinId}
               onChange={(e) => setJoinId(e.target.value)}
-              className="w-full bg-white border border-stone-200 rounded-2xl py-4 px-6 text-center text-stone-800 tracking-widest focus:ring-2 focus:ring-stone-200 outline-none transition-all placeholder:text-stone-300 placeholder:tracking-normal"
+              className="w-full bg-white border border-white shadow-sm rounded-2xl py-4 px-6 text-center text-[#504062] font-mono tracking-widest focus:ring-2 focus:ring-[#eadef1] outline-none transition-all placeholder:text-stone-300 placeholder:tracking-normal placeholder:font-sans"
             />
           </div>
           <button
@@ -1390,44 +1338,47 @@ const WelcomeScreen = ({
               onJoin(joinId);
             }}
             disabled={isJoining}
-            className="w-full text-stone-400 hover:text-stone-600 font-medium py-2 transition-colors text-sm"
+            className="w-full text-[#b4a0c8] hover:text-[#68577b] font-bold tracking-wider py-2 transition-colors text-sm uppercase"
           >
-            {isJoining ? "加入中..." : "加入現有旅程 →"}
+            {isJoining ? "加入中..." : "Join Existing →"}
           </button>
         </div>
+
         {history.length > 0 && (
-          <div className="pt-8 w-full text-left">
-            <div className="flex items-center gap-2 text-stone-400 mb-3 ml-2">
-              <History size={14} />
+          <div className="pt-10 w-full text-left">
+            <div className="flex items-center gap-2 text-[#b4a0c8] mb-4 ml-2">
+              <History size={16} />
               <span className="text-xs font-bold tracking-widest uppercase">
-                我的旅程
+                最近的旅程
               </span>
             </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
               {history.map((h) => (
                 <div
                   key={h.id}
                   onClick={() => onJoin(h.id)}
-                  className="bg-white border border-stone-100 p-4 rounded-xl flex justify-between items-center hover:border-stone-300 cursor-pointer transition-colors group"
+                  className="bg-white border border-white shadow-sm p-4 rounded-2xl flex justify-between items-center hover:border-[#eadef1] hover:shadow-md cursor-pointer transition-all active:scale-95 group"
                 >
                   <div>
-                    <div className="font-bold text-stone-700 group-hover:text-stone-900">
+                    <div className="font-serif font-bold text-lg text-[#504062] group-hover:text-[#68577b] transition-colors leading-tight mb-1">
                       {h.name || "未命名旅程"}
                     </div>
-                    <div className="text-[10px] text-stone-400 flex gap-2">
+                    <div className="text-[10px] text-stone-400 flex gap-2 font-medium tracking-wide">
                       <span>{h.destination || "未知地點"}</span>
                       <span>•</span>
-                      <span>
+                      <span className="font-mono">
                         {h.date
                           ? new Date(h.date).toLocaleDateString()
                           : "未設定日期"}
                       </span>
                     </div>
                   </div>
-                  <ChevronRight
-                    size={16}
-                    className="text-stone-300 group-hover:text-stone-500"
-                  />
+                  <div className="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center group-hover:bg-[#eedbff] transition-colors">
+                     <ChevronRight
+                       size={16}
+                       className="text-stone-300 group-hover:text-[#68577b]"
+                     />
+                  </div>
                 </div>
               ))}
             </div>
@@ -1439,17 +1390,14 @@ const WelcomeScreen = ({
 };
 
 const App = () => {
-  // --- 1. 狀態定義 (請全部集中在這裡，不要穿插函式) ---
+  // --- 1. 狀態定義 ---
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
   const [localTripName, setLocalTripName] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
-  
-  // ★ 補回缺失的 showAIMenu
   const [showAIMenu, setShowAIMenu] = useState(false);
-
   const [activeTab, setActiveTab] = useState("itinerary");
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -1478,7 +1426,7 @@ const App = () => {
   const [transportMode, setTransportMode] = useState("driving");
   const [showOptimizeModal, setShowOptimizeModal] = useState(false);
 
-  // --- 2. 輔助函式 (定義在 State 之後，確保能讀取到上面的變數) ---
+  // --- 2. 輔助函式 ---
   const showToast = (message, type = "success") => setToast({ message, type });
 
   // --- 3. Effects ---
@@ -1502,27 +1450,17 @@ const App = () => {
   };
 
   useEffect(() => {
-    // 程式一啟動，就檢查網址後面有沒有帶著 tripId
     const params = new URLSearchParams(window.location.search);
     const urlTripId = params.get('tripId');
-    
     if (urlTripId) {
-      // 如果有，就設定進去，網頁就會直接跳轉到該行程
       setTripId(urlTripId.toUpperCase());
-      
-      // (選用) 讀取完後把網址變回乾淨的樣子，比較美觀
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  // ... 這裡接原本的 copyToClipboard, handleExportExcel 等函式 ...
   const handleDateUpdate = async (field, value) => {
     if (!tripId) return;
-    
-    // 1. 先更新本地畫面 (讓使用者覺得反應很快)
     setTripData((prev) => ({ ...prev, [field]: value }));
-
-    // 2. 背景默默儲存到 Firebase
     try {
       await updateDoc(
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
@@ -1883,7 +1821,6 @@ const App = () => {
     }
   };
 
-// --- 1. 新增：天氣代碼轉換表 (將數字轉為中文) ---
   const getWeatherDesc = (code) => {
     const codes = {
       0: "晴朗 ☀️", 1: "晴朗 ☀️", 2: "多雲 ⛅", 3: "陰天 ☁️",
@@ -1897,7 +1834,6 @@ const App = () => {
     return codes[code] || "多雲";
   };
 
-  // --- 2. 修改：改用 Open-Meteo 真實氣象 API ---
   const fetchWeather = async (id, destination, startDate) => {
     if (!destination || !startDate) {
       showToast("無法更新：缺少地點或日期", "error");
@@ -1907,7 +1843,6 @@ const App = () => {
     showToast("正在連線氣象衛星抓取資料...", "success");
 
     try {
-      // 第一步：將「地名」轉為「經緯度」 (使用 OpenStreetMap)
       const geoRes = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`
       );
@@ -1919,8 +1854,6 @@ const App = () => {
 
       const { lat, lon } = geoData[0];
 
-      // 第二步：利用經緯度，向 Open-Meteo 查詢天氣
-      // 計算結束日期 (往後抓 7 天)
       const start = new Date(startDate);
       const end = new Date(start);
       end.setDate(start.getDate() + 6);
@@ -1935,7 +1868,6 @@ const App = () => {
         throw new Error("無法取得氣象資料");
       }
 
-      // 第三步：整理資料格式
       const weatherMap = {};
       const { time, weathercode, temperature_2m_max, temperature_2m_min } = weatherData.daily;
 
@@ -1951,7 +1883,6 @@ const App = () => {
         };
       });
 
-      // 第四步：存回 Firebase
       await updateDoc(
         doc(db, "artifacts", appId, "public", "data", "travel_trips", id),
         { weather: weatherMap }
@@ -2098,8 +2029,8 @@ const App = () => {
     if (!showOptimizeModal) return null;
     return (
       <div className="absolute inset-0 z-[80] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-        <div className="bg-white w-full max-w-xs rounded-[2rem] p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-          <h3 className="text-xl font-bold text-stone-800 mb-4 text-center">
+        <div className="bg-[#faf9f4] w-full max-w-xs rounded-[2rem] p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border border-white">
+          <h3 className="text-xl font-serif font-bold text-[#504062] mb-4 text-center">
             路線優化設定
           </h3>
           <p className="text-sm text-stone-500 mb-6 text-center leading-relaxed">
@@ -2109,10 +2040,10 @@ const App = () => {
           <div className="flex gap-3 mb-6">
             <button
               onClick={() => setTransportMode("driving")}
-              className={`flex-1 py-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+              className={`flex-1 py-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all shadow-sm ${
                 transportMode === "driving"
-                  ? "border-indigo-500 bg-indigo-50 text-indigo-600"
-                  : "border-stone-100 bg-white text-stone-400 hover:border-stone-200"
+                  ? "border-[#68577b] bg-white text-[#68577b]"
+                  : "border-white bg-white/50 text-stone-400 hover:border-[#eadef1]"
               }`}
             >
               <Car size={24} />
@@ -2120,10 +2051,10 @@ const App = () => {
             </button>
             <button
               onClick={() => setTransportMode("transit")}
-              className={`flex-1 py-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+              className={`flex-1 py-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all shadow-sm ${
                 transportMode === "transit"
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-600"
-                  : "border-stone-100 bg-white text-stone-400 hover:border-stone-200"
+                  ? "border-[#68577b] bg-white text-[#68577b]"
+                  : "border-white bg-white/50 text-stone-400 hover:border-[#eadef1]"
               }`}
             >
               <Train size={24} />
@@ -2134,7 +2065,7 @@ const App = () => {
           <div className="flex gap-3">
             <button
               onClick={() => setShowOptimizeModal(false)}
-              className="flex-1 py-3 rounded-xl bg-stone-100 text-stone-600 font-medium hover:bg-stone-200 transition-colors"
+              className="flex-1 py-3 rounded-xl bg-white border border-white text-stone-500 font-medium hover:bg-stone-50 transition-colors shadow-sm"
             >
               取消
             </button>
@@ -2143,7 +2074,7 @@ const App = () => {
                 setShowOptimizeModal(false);
                 executeOptimize();
               }}
-              className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium hover:bg-stone-700 transition-colors shadow-lg"
+              className="flex-1 py-3 rounded-xl bg-[#68577b] text-white font-medium hover:bg-[#504062] transition-colors shadow-lg"
             >
               開始優化
             </button>
@@ -2153,33 +2084,28 @@ const App = () => {
     );
   };
 
-const handleCalculateDebts = async () => {
-    // 1. 基礎檢查：是否有資料
+  const handleCalculateDebts = async () => {
     if (!tripData?.expenses?.length) {
       showToast("沒有支出紀錄", "error");
       return;
     }
 
-    // 2. 進階檢查：是否包含有效的數字金額
-    // 我們檢查是否至少有一筆資料的 amount 轉成數字後大於 0
     const validExpenses = tripData.expenses.filter((item) => {
       const amount = parseFloat(item.amount);
       return !isNaN(amount) && amount > 0;
     });
 
-    // 如果沒有任何有效的金額資料，直接報錯，不呼叫 AI
     if (validExpenses.length === 0) {
       setAiAnalysisResult({
         isOpen: true,
         title: "計算失敗",
         content: "原因：偵測不到有效的金額數字。\n請檢查您的支出紀錄，確保「金額」欄位皆為大於 0 的數字。",
-        isDebtAnalysis: false, // 設定為 false 以顯示純文字訊息
+        isDebtAnalysis: false, 
         isLoading: false,
       });
       return;
     }
 
-    // 3. 通過檢查，開始呼叫 AI
     setAiAnalysisResult({
       isOpen: true,
       title: "AI 分帳計算",
@@ -2189,7 +2115,6 @@ const handleCalculateDebts = async () => {
     });
 
     try {
-      // 只傳送有效的支出資料給 AI，減少 token 消耗並提高準確度
       const res = await callGeminiAPI([
         {
           text: `計算旅遊記帳 JSON: ${JSON.stringify(
@@ -2215,9 +2140,7 @@ const handleCalculateDebts = async () => {
     }
   };
 
-//
-// 修改 handleSaveItem 函式，確保所有欄位都有預設值
-const handleSaveItem = async () => {
+  const handleSaveItem = async () => {
     const tripRef = doc(
       db,
       "artifacts",
@@ -2229,11 +2152,9 @@ const handleSaveItem = async () => {
     );
 
     try {
-      // 1. 區分目前是 "行程(itinerary)" 還是 "記帳(expenses)"
       const list =
         activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
 
-      // 2. 建立 "乾淨" 的資料物件 (Sanitized Data)
       let safeData = {};
       const commonFields = {
         id: isEditMode ? editingId : Date.now().toString(),
@@ -2241,43 +2162,36 @@ const handleSaveItem = async () => {
       };
 
       if (activeTab === "itinerary") {
-        // --- 行程資料 ---
         safeData = {
           ...commonFields,
-          // 使用 || "" 確保如果欄位是 undefined，會自動變成空字串
           day: itemData.day || 1,
           time: itemData.time || "10:00",
           location: itemData.location || "", 
           category: itemData.category || "sightseeing",
           notes: itemData.notes || "",
-          guideInfo: itemData.guideInfo || "", // AI 導遊欄位也要預設空字串
+          guideInfo: itemData.guideInfo || "", 
           tags: itemData.tags || [],
         };
       } else {
-        // --- 記帳資料 ---
         safeData = {
           ...commonFields,
           item: itemData.item || "",
-          // 金額轉為數字，避免存入空字串或 undefined
           amount: Number(itemData.amount) || 0,
           category: itemData.category || "other",
           date: itemData.date || new Date().toISOString().split("T")[0],
           payer: itemData.payer || getCurrentUserNickname(),
-          isSplit: !!itemData.isSplit, // 強制轉為布林值 (true/false)
+          isSplit: !!itemData.isSplit, 
           splitWith: itemData.splitWith || [],
         };
       }
 
-      // 3. 執行儲存
       if (isEditMode) {
-        // 編輯模式：更新陣列中對應 ID 的項目
         await updateDoc(tripRef, {
           [activeTab]: list.map((i) =>
             i.id === editingId ? { ...i, ...safeData } : i
           ),
         });
       } else {
-        // 新增模式：使用 arrayUnion 加入新項目 (現在 safeData 很乾淨，不會報錯了)
         await updateDoc(tripRef, { [activeTab]: arrayUnion(safeData) });
       }
 
@@ -2289,153 +2203,130 @@ const handleSaveItem = async () => {
     }
   };
 
-// --- 記事本核心邏輯 ---
-// 1. 上傳圖片轉碼
-const handleNoteImageUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    if (file.size > 2 * 1024 * 1024) { showToast("圖片需小於 2MB", "error"); return; }
-    const reader = new FileReader();
-    reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
-    reader.readAsDataURL(file);
-  }
-};
+  const handleNoteImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { showToast("圖片需小於 2MB", "error"); return; }
+      const reader = new FileReader();
+      reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
+      reader.readAsDataURL(file);
+    }
+  };
 
-// [請完整替換 src/App.jsx 中的 handleSaveNote 函式]
-
-const handleSaveNote = async () => {
-  // 1. 檢查內容：必須有文字或圖片 (防止送出空白)
-  // 使用 ?. 避免 noteContent 為 undefined 時報錯
-  if (!itemData.noteContent?.trim() && !itemData.noteImage) {
-    showToast("請輸入文字或上傳圖片", "error");
-    return;
-  }
-  
-  // 2. 檢查登入狀態與旅程ID
-  if (!user || !tripId) {
-    showToast("錯誤：無法確認使用者或旅程 ID", "error");
-    return;
-  }
-
-  // 3. 取得資料庫參照
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  
-  try {
-    if (isEditMode && editingId) {
-      // --- 編輯模式 ---
-      const currentNotes = tripData.notes || [];
-      const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
-        ...n, 
-        // 編輯時也要確保欄位有值
-        content: itemData.noteContent || "", 
-        image: itemData.noteImage || null, 
-        isEdited: true 
-      } : n);
-      
-      await updateDoc(tripRef, { notes: updatedNotes });
-      showToast("更新成功！");
-
-    } else {
-      // --- 新增模式 ---
-      
-      // 安全地取得頭像 Emoji
-      let userEmoji = "👤";
-      if (tripData.members && tripData.members[user.uid] && tripData.members[user.uid].emoji) {
-        userEmoji = tripData.members[user.uid].emoji;
-      }
-
-      const newNote = {
-        id: "note_" + Date.now(),
-        // ★★★ 關鍵修正：加上 || "" 和 || null 確保不是 undefined ★★★
-        content: itemData.noteContent || "", 
-        image: itemData.noteImage || null,   
-        
-        color: '#8B5CF6', // 預設紫色
-        author: getCurrentUserNickname(),
-        emoji: userEmoji,
-        time: Date.now(),
-        replies: []
-      };
-
-      // Debug 用：印出檢查，確認沒有 undefined
-      console.log("準備送出的留言:", newNote);
-
-      // 使用 arrayUnion 寫入資料庫
-      await updateDoc(tripRef, { notes: arrayUnion(newNote) });
-      showToast("留言發送成功！");
+  const handleSaveNote = async () => {
+    if (!itemData.noteContent?.trim() && !itemData.noteImage) {
+      showToast("請輸入文字或上傳圖片", "error");
+      return;
     }
     
-    // 4. 清空輸入框與重置狀態
-    setItemData({ ...itemData, noteContent: "", noteImage: null });
-    setIsEditMode(false);
-    setEditingId(null);
+    if (!user || !tripId) {
+      showToast("錯誤：無法確認使用者或旅程 ID", "error");
+      return;
+    }
+
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     
-  } catch (e) { 
-    console.error("記事本儲存失敗:", e);
-    showToast("留言失敗: " + (e.message || "未知錯誤"), "error"); 
-  }
-};
+    try {
+      if (isEditMode && editingId) {
+        const currentNotes = tripData.notes || [];
+        const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
+          ...n, 
+          content: itemData.noteContent || "", 
+          image: itemData.noteImage || null, 
+          isEdited: true 
+        } : n);
+        
+        await updateDoc(tripRef, { notes: updatedNotes });
+        showToast("更新成功！");
+
+      } else {
+        let userEmoji = "👤";
+        if (tripData.members && tripData.members[user.uid] && tripData.members[user.uid].emoji) {
+          userEmoji = tripData.members[user.uid].emoji;
+        }
+
+        const newNote = {
+          id: "note_" + Date.now(),
+          content: itemData.noteContent || "", 
+          image: itemData.noteImage || null,   
+          color: '#68577b', 
+          author: getCurrentUserNickname(),
+          emoji: userEmoji,
+          time: Date.now(),
+          replies: []
+        };
+
+        await updateDoc(tripRef, { notes: arrayUnion(newNote) });
+        showToast("留言發送成功！");
+      }
+      
+      setItemData({ ...itemData, noteContent: "", noteImage: null });
+      setIsEditMode(false);
+      setEditingId(null);
+      
+    } catch (e) { 
+      console.error("記事本儲存失敗:", e);
+      showToast("留言失敗: " + (e.message || "未知錯誤"), "error"); 
+    }
+  };
 
   const togglePinNote = async (note) => {
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  const updatedNotes = (tripData.notes || []).map(n => 
-    n.id === note.id ? { ...n, isPinned: !n.isPinned } : n
-  );
-  await updateDoc(tripRef, { notes: updatedNotes });
-  showToast(note.isPinned ? "已取消置頂" : "已置頂！");
-};
-// 3. 刪除留言
-const deleteNote = async (noteId) => {
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  await updateDoc(tripRef, { notes: tripData.notes.filter(n => n.id !== noteId) });
-  showToast("已刪除");
-};
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    const updatedNotes = (tripData.notes || []).map(n => 
+      n.id === note.id ? { ...n, isPinned: !n.isPinned } : n
+    );
+    await updateDoc(tripRef, { notes: updatedNotes });
+    showToast(note.isPinned ? "已取消置頂" : "已置頂！");
+  };
 
-// 4. 送出新回覆 (改為透過 ID 讀取輸入框，支援按鈕送出)
-const handleReplySubmit = async (noteId) => {
-  const input = document.getElementById(`reply-input-${noteId}`);
-  const text = input?.value;
-  if (!text?.trim()) return;
+  const deleteNote = async (noteId) => {
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    await updateDoc(tripRef, { notes: tripData.notes.filter(n => n.id !== noteId) });
+    showToast("已刪除");
+  };
 
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  const updatedNotes = tripData.notes.map(n => n.id === noteId ? { 
-    ...n, replies: [...(n.replies || []), { id: Date.now(), author: getCurrentUserNickname(), content: text, time: Date.now() }] 
-  } : n);
-  await updateDoc(tripRef, { notes: updatedNotes });
-  showToast("回覆成功");
-  if (input) input.value = ''; // 成功後清空輸入框
-};
+  const handleReplySubmit = async (noteId) => {
+    const input = document.getElementById(`reply-input-${noteId}`);
+    const text = input?.value;
+    if (!text?.trim()) return;
 
-// 5. 儲存編輯後的回覆
-const handleEditReplySave = async (noteId, replyId) => {
-  if (!editReplyContent.trim()) return;
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  const updatedNotes = tripData.notes.map(n => {
-    if (n.id === noteId) {
-      return {
-        ...n,
-        replies: n.replies.map(r => r.id === replyId ? { ...r, content: editReplyContent, isEdited: true } : r)
-      };
-    }
-    return n;
-  });
-  await updateDoc(tripRef, { notes: updatedNotes });
-  setEditingReplyId(null);
-  showToast("回覆已更新");
-};
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    const updatedNotes = tripData.notes.map(n => n.id === noteId ? { 
+      ...n, replies: [...(n.replies || []), { id: Date.now(), author: getCurrentUserNickname(), content: text, time: Date.now() }] 
+    } : n);
+    await updateDoc(tripRef, { notes: updatedNotes });
+    showToast("回覆成功");
+    if (input) input.value = ''; 
+  };
 
-// 6. 刪除回覆
-const handleDeleteReply = async (noteId, replyId) => {
-  const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-  const updatedNotes = tripData.notes.map(n => {
-    if (n.id === noteId) {
-      return { ...n, replies: n.replies.filter(r => r.id !== replyId) };
-    }
-    return n;
-  });
-  await updateDoc(tripRef, { notes: updatedNotes });
-  showToast("回覆已刪除");
-};
+  const handleEditReplySave = async (noteId, replyId) => {
+    if (!editReplyContent.trim()) return;
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    const updatedNotes = tripData.notes.map(n => {
+      if (n.id === noteId) {
+        return {
+          ...n,
+          replies: n.replies.map(r => r.id === replyId ? { ...r, content: editReplyContent, isEdited: true } : r)
+        };
+      }
+      return n;
+    });
+    await updateDoc(tripRef, { notes: updatedNotes });
+    setEditingReplyId(null);
+    showToast("回覆已更新");
+  };
+
+  const handleDeleteReply = async (noteId, replyId) => {
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    const updatedNotes = tripData.notes.map(n => {
+      if (n.id === noteId) {
+        return { ...n, replies: n.replies.filter(r => r.id !== replyId) };
+      }
+      return n;
+    });
+    await updateDoc(tripRef, { notes: updatedNotes });
+    showToast("回覆已刪除");
+  };
   
   const deleteItem = async (col, item) => {
     const tripRef = doc(
@@ -2481,6 +2372,7 @@ const handleDeleteReply = async (noteId, replyId) => {
     acc[day].push(item);
     return acc;
   }, {});
+  
   const getDateForDay = (day) => {
     if (!tripData?.startDate) return "";
     const d = new Date(tripData.startDate);
@@ -2496,8 +2388,8 @@ const handleDeleteReply = async (noteId, replyId) => {
   if (firebaseError) return <SetupGuide error={firebaseError} />;
   if (!user)
     return (
-      <div className="flex items-center justify-center h-screen bg-[#FDFCF8]">
-        <Loader2 className="animate-spin text-stone-400" />
+      <div className="flex items-center justify-center h-screen bg-[#faf9f4]">
+        <Loader2 className="animate-spin text-[#68577b]" size={40} />
       </div>
     );
   if (!tripId || !tripData)
@@ -2513,7 +2405,7 @@ const handleDeleteReply = async (noteId, replyId) => {
     );
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#faf9f4] dark:bg-stone-900 font-sans max-w-md mx-auto shadow-2xl relative text-stone-800 dark:text-stone-100 transition-colors duration-500">
+    <div className="flex flex-col h-[100dvh] bg-[#faf9f4] font-sans max-w-md mx-auto shadow-2xl relative text-stone-800 transition-colors duration-500">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <ConfirmModal {...confirmConfig} />
       <ShareModal
@@ -2525,7 +2417,7 @@ const handleDeleteReply = async (noteId, replyId) => {
       />
 
       <OptimizeModal />
-<MemberSelectModal 
+      <MemberSelectModal 
         isOpen={showMemberSelect}
         members={tripData?.members || {}} 
         onSelect={handleJoinAsMember}
@@ -2533,7 +2425,6 @@ const handleDeleteReply = async (noteId, replyId) => {
           setShowMemberSelect(false);
           setShowProfileSetup(true);
         }}
-        // 加入 onClose 讓 X 按鈕生效 (清空 tripId 退回首頁)
         onClose={() => setTripId(null)}
       />
 
@@ -2541,16 +2432,12 @@ const handleDeleteReply = async (noteId, replyId) => {
         isOpen={showProfileSetup}
         onSubmit={handleProfileSubmit}
         initialName=""
-        // 傳入 members 來比對重複頭貼
         members={tripData?.members || {}}
-        // 判斷按返回時該去哪裡
         onBack={() => {
           if (Object.keys(tripData?.members || {}).length > 0) {
-            // 情況 A：如果是被邀請進來的，退回歡迎回來視窗
             setShowProfileSetup(false);
             setShowMemberSelect(true);
           } else {
-            // 情況 B：如果是新建行程的，退回建立新旅程頁面 (清空 tripId 退回首頁)
             setShowProfileSetup(false);
             setTripId(null);
           }
@@ -2581,15 +2468,15 @@ const handleDeleteReply = async (noteId, replyId) => {
       />
 
       {(isAnalyzing || isImportLoading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
-        <div className="absolute inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-[100] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
           <div className="relative mb-6">
-            <div className="w-20 h-20 border-4 border-indigo-100 rounded-full animate-spin"></div>
-            <div className="w-20 h-20 border-4 border-indigo-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
+            <div className="w-20 h-20 border-4 border-[#eadef1] rounded-full animate-spin"></div>
+            <div className="w-20 h-20 border-4 border-[#68577b] rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <Sparkles className="text-indigo-500 animate-pulse" size={32} />
+              <Sparkles className="text-[#68577b] animate-pulse" size={32} />
             </div>
           </div>
-          <h3 className="text-xl font-bold text-stone-800 tracking-widest animate-pulse mb-2">
+          <h3 className="text-xl font-serif font-bold text-[#504062] tracking-widest animate-pulse mb-2">
             AI 正在思考中...
           </h3>
         </div>
@@ -2604,14 +2491,14 @@ const handleDeleteReply = async (noteId, replyId) => {
             minHeight: "800px",
             zIndex: -50,
             visibility: "visible",
-            backgroundColor: posterTheme.themeColor || "#fffbf0",
+            backgroundColor: posterTheme.themeColor || "#faf9f4",
             color: "#333",
             overflow: "visible",
           }}
         >
           <div
             className="flex-1 border-4 border-double rounded-3xl p-8 flex flex-col relative bg-white/50"
-            style={{ borderColor: posterTheme.borderColor || "#333" }}
+            style={{ borderColor: posterTheme.borderColor || "#504062" }}
           >
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -2619,7 +2506,7 @@ const handleDeleteReply = async (noteId, replyId) => {
                   Boarding Pass
                 </div>
                 <h1
-                  className="text-4xl font-serif font-black leading-tight text-stone-800"
+                  className="text-4xl font-serif font-black leading-tight text-[#504062]"
                   style={{ color: posterTheme.borderColor }}
                 >
                   {posterTheme.title}
@@ -2659,7 +2546,7 @@ const handleDeleteReply = async (noteId, replyId) => {
                   <div key={day} className="flex gap-4">
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1"
-                      style={{ backgroundColor: posterTheme.borderColor || "#333" }}
+                      style={{ backgroundColor: posterTheme.borderColor || "#68577b" }}
                     >
                       {day}
                     </div>
@@ -2711,33 +2598,24 @@ const handleDeleteReply = async (noteId, replyId) => {
         </div>
       )}
 
-<header className="bg-white/60 dark:bg-stone-900/60 backdrop-blur-md px-6 py-4 sticky top-0 z-30 border-b border-white/20 shadow-[0_10px_30px_rgba(104,87,123,0.05)] dark:shadow-none flex flex-col transition-all">
-        
-        {/* 第一排：標題、成員、右側操作按鈕 (全部水平置中對齊) */}
+      {/* --- 全局 Header --- */}
+      <header className="bg-white/60 backdrop-blur-md px-6 py-3 sticky top-0 z-30 border-b border-white/50 shadow-[0_10px_30px_rgba(104,87,123,0.05)] flex flex-col transition-all">
         <div className="flex justify-between items-center">
-          
-          {/* 左半部：標題 + 成員 */}
           <div className="flex-1 flex items-center min-w-0 mr-4">
-            
-            {/* 標題與編輯圖示 */}
             <div className="flex items-center gap-2 group flex-1 min-w-0">
-<input
-  // 修改重點：
-  // 1. 加上 leading-none (讓行高貼齊文字)
-  // 2. 將 p-1 改成 px-1 pb-0 (保留左右內距，但把下方內距歸零)
-  className="text-4xl leading-none font-black bg-transparent border-b-2 border-transparent hover:border-stone-200 focus:border-stone-800 px-1 pb-0 pt-1 flex-1 min-w-0 placeholder-stone-300 focus:outline-none text-stone-800 tracking-wide transition-all truncate"
-  value={localTripName}
-  placeholder="點擊輸入旅程名稱..."
-  onChange={(e) => setLocalTripName(e.target.value)}
-  onBlur={handleSaveName}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") e.target.blur();
-  }}
-/>
-              <Edit size={18} className="text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              <input
+                className="text-3xl leading-none font-serif font-black bg-transparent border-b-2 border-transparent hover:border-[#eadef1] focus:border-[#68577b] px-1 pb-0 pt-1 flex-1 min-w-0 placeholder-[#b4a0c8] focus:outline-none text-[#504062] tracking-wide transition-all truncate"
+                value={localTripName}
+                placeholder="點擊輸入旅程名稱..."
+                onChange={(e) => setLocalTripName(e.target.value)}
+                onBlur={handleSaveName}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.target.blur();
+                }}
+              />
+              <Edit size={16} className="text-[#b4a0c8] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </div>
             
-            {/* 成員頭像區塊 */}
             <div className="flex -space-x-2 ml-2 flex-shrink-0">
               {Object.values(tripData.members || {})
                 .slice(0, 3)
@@ -2750,18 +2628,17 @@ const handleDeleteReply = async (noteId, replyId) => {
                   />
                 ))}
               {Object.keys(tripData.members || {}).length > 3 && (
-                <div className="w-6 h-6 rounded-full bg-stone-100 border border-white ring-2 ring-white flex items-center justify-center text-[8px] font-bold text-stone-500">
+                <div className="w-6 h-6 rounded-full bg-white border border-stone-100 ring-2 ring-white flex items-center justify-center text-[8px] font-bold text-stone-500 shadow-sm">
                   +{Object.keys(tripData.members).length - 3}
                 </div>
               )}
             </div>
           </div>
 
-          {/* 右半部：操作按鈕 (移除原本的 pt-2，直接與左側完美對齊) */}
           <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setIsShareOpen(true)}
-              className="p-2 bg-indigo-50 rounded-full text-indigo-500 hover:bg-indigo-100"
+              className="p-2 bg-[#eedbff]/50 rounded-full text-[#68577b] hover:bg-[#eedbff] transition-colors"
             >
               <Share2 size={18} />
             </button>
@@ -2777,26 +2654,23 @@ const handleDeleteReply = async (noteId, replyId) => {
                   confirmText: "確認刪除",
                 })
               }
-              className="p-2 bg-red-50 rounded-full text-red-500 hover:bg-red-100"
+              className="p-2 bg-red-50 rounded-full text-red-500 hover:bg-red-100 transition-colors"
             >
               <Trash2 size={18} />
             </button>
             <button
               onClick={() => setTripId(null)}
-              className="p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200"
+              className="p-2 bg-white rounded-full text-stone-500 hover:bg-stone-100 transition-colors shadow-sm border border-stone-100"
             >
               <LogOut size={18} />
             </button>
           </div>
         </div>
 
-        {/* 第二排：日期選擇區 (使用 mt-4 讓它往下推，拉開距離) */}
-        <div className="flex items-center gap-1 mt-1 pl-1">
-          
-          {/* 出發日區塊 */}
-          <div className="relative flex items-center gap-1 bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
-            <Calendar size={10} className="text-stone-400 group-hover:text-stone-600" />
-            <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
+        <div className="flex items-center gap-1 mt-2 pl-1">
+          <div className="relative flex items-center gap-1 bg-white/60 border border-white shadow-sm hover:bg-white px-2 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
+            <Calendar size={10} className="text-[#b4a0c8] group-hover:text-[#68577b]" />
+            <span className="font-mono text-[9px] font-bold text-[#68577b] group-hover:text-[#504062] leading-none mt-0.5">
               {tripData.startDate || "出發日"}
             </span>
             <input 
@@ -2808,11 +2682,10 @@ const handleDeleteReply = async (noteId, replyId) => {
             />
           </div>
 
-          <ArrowRight size={8} className="text-stone-300 mx-0.5" />
+          <ArrowRight size={8} className="text-[#b4a0c8] mx-0.5" />
           
-          {/* 回程日區塊 */}
-          <div className="relative flex items-center bg-stone-50/80 hover:bg-stone-100 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
-            <span className="font-mono text-[9px] font-bold text-stone-500 group-hover:text-stone-800 leading-none mt-0.5">
+          <div className="relative flex items-center gap-1 bg-white/60 border border-white shadow-sm hover:bg-white px-2 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
+            <span className="font-mono text-[9px] font-bold text-[#68577b] group-hover:text-[#504062] leading-none mt-0.5">
               {tripData.endDate || "回程日"}
             </span>
             <input 
@@ -2825,23 +2698,23 @@ const handleDeleteReply = async (noteId, replyId) => {
             />
           </div>
 
-          {/* 更新天氣按鈕 */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               fetchWeather(tripId, tripData.destination, tripData.startDate);
             }}
-            className="ml-1 p-1 bg-stone-50/80 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-md transition-colors"
+            className="ml-1 p-1 bg-white/60 border border-white shadow-sm hover:bg-orange-50 text-[#b4a0c8] hover:text-orange-500 rounded-md transition-colors"
             title="點擊更新天氣"
           >
             <CloudSun size={11} />
           </button>
         </div>
-        
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-32 px-4 pt-0 relative scroll-smooth">
-        {/* 檢查這裡：如果 tripData 沒抓到，可能也會空白 */}
+      {/* --- Main 內容區 --- */}
+      <main className="flex-1 overflow-y-auto pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
+        
+        {/* 行程分頁 */}
         {activeTab === "itinerary" && tripData && (
           <>
             <DayNavigation 
@@ -2850,112 +2723,111 @@ const handleDeleteReply = async (noteId, replyId) => {
               onScrollToDay={scrollToDay}
             />
 
-            {/* 下方行程列表 ... */}
-            {Object.keys(groupedItinerary)
-              .sort((a, b) => a - b)
-              .map((day) => {
-                const dateStr = getDateForDay(day);
-                return (
-                  <div
-                    key={day}
-                    id={`day-section-${day}`}
-                    className="mb-8 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-32"
-                  >
-<div className="flex justify-between items-end mb-2 px-2">
-                      <div className="flex flex-col">
-                        <div className="flex items-baseline gap-1.5">
-                          {/* 修改：從 text-4xl 縮小到 text-2xl，顏色改淡一點 */}
-                          <span className="text-2xl font-bold text-stone-300 font-mono leading-none">
-                            {String(day).padStart(2, "0")}
-                          </span>
-                          <span className="text-xs font-bold text-stone-600">
-                            Day {day}
+            <div className="px-4">
+              {Object.keys(groupedItinerary)
+                .sort((a, b) => a - b)
+                .map((day) => {
+                  const dateStr = getDateForDay(day);
+                  return (
+                    <div
+                      key={day}
+                      id={`day-section-${day}`}
+                      className="mb-10 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500"
+                    >
+                      <div className="flex justify-between items-end mb-4 px-2">
+                        <div className="flex flex-col">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-serif font-black text-[#504062] leading-none">
+                              {String(day).padStart(2, "0")}
+                            </span>
+                            <span className="text-xs font-bold text-[#b4a0c8] uppercase tracking-widest">
+                              Day {day}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-[#68577b] font-mono font-medium pl-0.5 mt-1">
+                            {dateStr}
                           </span>
                         </div>
-                        <span className="text-[9px] text-stone-400 font-mono pl-0.5 mt-0.5">
-                          {dateStr}
-                        </span>
-                      </div>
-                      {/* 修改：用 scale-90 把天氣標籤稍微變小 */}
-                      <div className="scale-90 origin-bottom-right">
-                        <WeatherBadge
-                          date={dateStr}
-                          weatherData={tripData.weather}
-                        />
-                      </div>
-                    </div>
-                    <div className="pl-2 border-l-2 border-stone-100 ml-4">
-                      {groupedItinerary[day]
-                        .sort((a, b) => a.time.localeCompare(b.time))
-                        .map((item) => (
-                          <ItineraryCard
-                            key={item.id}
-                            item={item}
-                            members={tripData.members}
-                            onSelect={setSelectedItem}
-                            onEdit={(i) => {
-                              setEditingId(i.id);
-                              setItemData(i);
-                              setIsEditMode(true);
-                              setIsModalOpen(true);
-                            }}
-                            onDelete={(i) =>
-                              setConfirmConfig({
-                                isOpen: true,
-                                title: "刪除項目",
-                                message: "確定要刪除嗎？",
-                                onConfirm: () => deleteItem("itinerary", i),
-                                onCancel: () =>
-                                  setConfirmConfig({ isOpen: false }),
-                                isDangerous: true,
-                              })
-                            }
-                            onMap={(loc) =>
-                              window.open(
-                                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                  loc
-                                )}`,
-                                "_blank"
-                              )
-                            }
+                        <div className="origin-bottom-right">
+                          <WeatherBadge
+                            date={dateStr}
+                            weatherData={tripData.weather}
                           />
-                        ))}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {groupedItinerary[day]
+                          .sort((a, b) => a.time.localeCompare(b.time))
+                          .map((item) => (
+                            <ItineraryCard
+                              key={item.id}
+                              item={item}
+                              members={tripData.members}
+                              onSelect={setSelectedItem}
+                              onEdit={(i) => {
+                                setEditingId(i.id);
+                                setItemData(i);
+                                setIsEditMode(true);
+                                setIsModalOpen(true);
+                              }}
+                              onDelete={(i) =>
+                                setConfirmConfig({
+                                  isOpen: true,
+                                  title: "刪除項目",
+                                  message: "確定要刪除嗎？",
+                                  onConfirm: () => deleteItem("itinerary", i),
+                                  onCancel: () =>
+                                    setConfirmConfig({ isOpen: false }),
+                                  isDangerous: true,
+                                })
+                              }
+                              onMap={(loc) =>
+                                window.open(
+                                  `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(loc)}`,
+                                  "_blank"
+                                )
+                              }
+                            />
+                          ))}
+                      </div>
                     </div>
+                  );
+                })}
+              {(!tripData.itinerary || tripData.itinerary.length === 0) && (
+                <div className="text-center py-20 opacity-40 flex flex-col items-center">
+                  <div className="w-20 h-20 bg-stone-200 rounded-full flex items-center justify-center mb-4">
+                    <Map className="w-10 h-10 text-stone-400" />
                   </div>
-                );
-              })}
-            {(!tripData.itinerary || tripData.itinerary.length === 0) && (
-              <div className="text-center py-20 opacity-30">
-                <Map className="w-16 h-16 mx-auto mb-4" />
-                <p className="tracking-widest">旅程空白中...</p>
-              </div>
-            )}
+                  <p className="tracking-widest font-serif text-[#68577b]">旅程空白中...</p>
+                </div>
+              )}
+            </div>
           </>
         )}
 
+        {/* 記帳分頁 */}
         {activeTab === "expenses" && (
-          <div className="space-y-4 px-1 pt-4 pb-24">
-            {/* 上方卡片：個人支出計算 & AI 按鈕 */}
-            <div className="bg-stone-800 text-stone-50 p-6 rounded-2xl shadow-xl relative overflow-hidden flex justify-between items-center">
+          <div className="space-y-4 px-4 pt-6">
+            <div className="bg-gradient-to-br from-[#504062] to-[#68577b] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex justify-between items-center border border-white/10">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
               <div className="relative z-10">
-                <div className="text-stone-400 text-xs tracking-widest mb-1 uppercase">
+                <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
                   My Personal Spend
                 </div>
-                <div className="text-4xl font-bold font-mono">
+                <div className="text-4xl font-bold font-mono text-white">
                   $
                   {(tripData.expenses || [])
                     .reduce((sum, item) => {
                       const amount = Number(item.amount) || 0;
                       const myName = getCurrentUserNickname();
                       
-                      // 情況 A: 這筆帳有分攤 (只計算屬於我的那一份)
                       if (item.isSplit && item.splitWith?.length > 0) {
                         if (item.splitWith.includes(myName)) {
                           return sum + (amount / item.splitWith.length);
                         }
-                        return sum; // 有分攤但沒我的份，算 0
+                        return sum; 
                       } 
-                      // 情況 B: 沒分攤 (如果是我的付款，視為個人全額支出)
                       else if (item.payer === myName) {
                         return sum + amount;
                       }
@@ -2963,202 +2835,195 @@ const handleDeleteReply = async (noteId, replyId) => {
                       return sum;
                     }, 0)
                     .toLocaleString(undefined, { maximumFractionDigits: 0 })} 
-                    {/* 小數點四捨五入，保持版面乾淨 */}
                 </div>
 
                 <button
-        onClick={() => {
-          setIsEditMode(false);
-          setEditingId(null);
-          // 設定新增支出的預設值
-          setItemData({
-            payer: getCurrentUserNickname(),
-            date: new Date().toISOString().split("T")[0],
-            isSplit: false,
-            splitWith: [],
-            category: "food",
-          });
-          setIsModalOpen(true);
-        }}
-        className="bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/10"
-      >
-        <Plus size={20} />
-        <span className="text-xs font-bold">記一筆</span>
-      </button>
-                <div className="text-[10px] text-stone-500 mt-1">
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setEditingId(null);
+                    setItemData({
+                      payer: getCurrentUserNickname(),
+                      date: new Date().toISOString().split("T")[0],
+                      isSplit: false,
+                      splitWith: [],
+                      category: "food",
+                    });
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 mt-4 rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-sm"
+                >
+                  <Plus size={16} />
+                  <span className="text-xs font-bold">記一筆</span>
+                </button>
+                <div className="text-[9px] text-[#b4a0c8] mt-2">
                   *包含分帳後的預估金額
                 </div>
               </div>
               
               <button
                 onClick={handleCalculateDebts}
-                className="bg-emerald-500 hover:bg-emerald-400 text-white p-3 rounded-xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
+                className="bg-white text-[#68577b] hover:bg-[#faf9f4] p-3 rounded-2xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
               >
                 <Calculator size={20} /> AI 結算
               </button>
             </div>
 
-            {/* 下方列表：顯示與我有關的帳目 */}
-            {(tripData.expenses || [])
-              .filter((expense) => {
-                // 過濾邏輯：顯示 (我建立的) 或 (付款人是我) 或 (分帳名單有我)
-                const myNickname = getCurrentUserNickname();
-                const isCreatedByMe = expense.createdBy === user.uid;
-                const isPaidByMe = expense.payer === myNickname;
-                const isInvolved =
-                  expense.isSplit &&
-                  (expense.splitWith || []).includes(myNickname);
-                return isCreatedByMe || isPaidByMe || isInvolved;
-              })
-              .sort((a, b) => new Date(b.date) - new Date(a.date))
-              .map((expense) => {
-                const expenseIcons = {
-                  food: <Utensils size={18} />,
-                  transport: <Train size={18} />,
-                  accommodation: <Home size={18} />,
-                  shopping: <ShoppingBag size={18} />,
-                  other: <MoreHorizontal size={18} />,
-                };
-                const Icon =
-                  expenseIcons[expense.category] || expenseIcons.other;
-                const bgColor =
-                  {
-                    food: "bg-orange-100 text-orange-600",
-                    transport: "bg-emerald-100 text-emerald-600",
-                    accommodation: "bg-blue-100 text-blue-600",
-                    shopping: "bg-pink-100 text-pink-600",
-                    other: "bg-stone-100 text-stone-600",
-                  }[expense.category] || "bg-stone-100 text-stone-600";
+            <div className="space-y-3 mt-4">
+              {(tripData.expenses || [])
+                .filter((expense) => {
+                  const myNickname = getCurrentUserNickname();
+                  const isCreatedByMe = expense.createdBy === user.uid;
+                  const isPaidByMe = expense.payer === myNickname;
+                  const isInvolved =
+                    expense.isSplit &&
+                    (expense.splitWith || []).includes(myNickname);
+                  return isCreatedByMe || isPaidByMe || isInvolved;
+                })
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((expense) => {
+                  const expenseIcons = {
+                    food: <Utensils size={18} />,
+                    transport: <Train size={18} />,
+                    accommodation: <Home size={18} />,
+                    shopping: <ShoppingBag size={18} />,
+                    other: <MoreHorizontal size={18} />,
+                  };
+                  const Icon =
+                    expenseIcons[expense.category] || expenseIcons.other;
+                  const bgColor =
+                    {
+                      food: "bg-orange-100 text-orange-600",
+                      transport: "bg-emerald-100 text-emerald-600",
+                      accommodation: "bg-blue-100 text-blue-600",
+                      shopping: "bg-pink-100 text-pink-600",
+                      other: "bg-stone-100 text-stone-600",
+                    }[expense.category] || "bg-stone-100 text-stone-600";
 
-                const myNickname = getCurrentUserNickname();
-                // 計算這筆項目「我實際花了多少」
-                let myShare = 0;
-                if (expense.isSplit && expense.splitWith?.length > 0) {
-                   myShare = expense.splitWith.includes(myNickname) 
-                     ? (Number(expense.amount) / expense.splitWith.length) 
-                     : 0;
-                } else if (expense.payer === myNickname) {
-                   myShare = Number(expense.amount);
-                }
+                  const myNickname = getCurrentUserNickname();
+                  let myShare = 0;
+                  if (expense.isSplit && expense.splitWith?.length > 0) {
+                     myShare = expense.splitWith.includes(myNickname) 
+                       ? (Number(expense.amount) / expense.splitWith.length) 
+                       : 0;
+                  } else if (expense.payer === myNickname) {
+                     myShare = Number(expense.amount);
+                  }
 
-                return (
-                  <div
-                    key={expense.id}
-                    className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 flex justify-between items-center group hover:border-stone-300 transition-colors cursor-pointer"
-                    onClick={() => {
-                      setEditingId(expense.id);
-                      setItemData(expense);
-                      setIsEditMode(true);
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-full ${bgColor}`}>
-                        {Icon}
-                      </div>
-                      <div>
-                        <div className="font-bold text-stone-800 flex items-center gap-2">
-                          {expense.item}
-                          {myShare > 0 && (
-                            <span className="text-[10px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded-md font-normal">
-                              我付: ${Math.round(myShare)}
-                            </span>
-                          )}
+                  return (
+                    <div
+                      key={expense.id}
+                      className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white flex justify-between items-center group hover:bg-white transition-colors cursor-pointer"
+                      onClick={() => {
+                        setEditingId(expense.id);
+                        setItemData(expense);
+                        setIsEditMode(true);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-2xl ${bgColor} shadow-inner`}>
+                          {Icon}
                         </div>
-                        <div className="flex items-center gap-2 mt-1 text-[10px]">
-                          <span className="text-stone-400 font-mono">
-                            {expense.date}
-                          </span>
-                          <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
-                            <span className="text-stone-400">墊:</span>
-                            <span className="font-bold text-stone-600">
-                              {expense.payer}
-                            </span>
+                        <div>
+                          <div className="font-bold text-[#504062] flex items-center gap-2 text-base">
+                            {expense.item}
+                            {myShare > 0 && (
+                              <span className="text-[10px] bg-[#eedbff] text-[#68577b] px-1.5 py-0.5 rounded-md font-bold">
+                                我付: ${Math.round(myShare)}
+                              </span>
+                            )}
                           </div>
-                          {expense.isSplit && (
-                            <span className="text-purple-400 border border-purple-100 bg-purple-50 px-1.5 py-0.5 rounded">
-                              {expense.splitWith.length}人分
+                          <div className="flex items-center gap-2 mt-1 text-[10px]">
+                            <span className="text-[#b4a0c8] font-mono">
+                              {expense.date}
                             </span>
-                          )}
+                            <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
+                              <span className="text-stone-400">墊:</span>
+                              <span className="font-bold text-[#68577b]">
+                                {expense.payer}
+                              </span>
+                            </div>
+                            {expense.isSplit && (
+                              <span className="text-purple-500 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded font-medium">
+                                {expense.splitWith.length}人分
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold font-mono text-stone-800 text-lg">
-                        ${Number(expense.amount).toLocaleString()}
-                      </span>
                       
-                      {/* 只有自己建立的項目才顯示刪除按鈕 */}
-                      {expense.createdBy === user.uid && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmConfig({
-                              isOpen: true,
-                              title: "刪除支出",
-                              message: `確定要刪除「${expense.item}」嗎？`,
-                              onConfirm: () => deleteItem("expenses", expense),
-                              onCancel: () => setConfirmConfig({ isOpen: false }),
-                              isDangerous: true,
-                            });
-                          }}
-                          className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold font-mono text-[#504062] text-lg">
+                          ${Number(expense.amount).toLocaleString()}
+                        </span>
+                        
+                        {expense.createdBy === user.uid && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmConfig({
+                                isOpen: true,
+                                title: "刪除支出",
+                                message: `確定要刪除「${expense.item}」嗎？`,
+                                onConfirm: () => deleteItem("expenses", expense),
+                                onCancel: () => setConfirmConfig({ isOpen: false }),
+                                isDangerous: true,
+                              });
+                            }}
+                            className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               
             {(tripData.expenses || []).filter(e => e.createdBy === user.uid || e.payer === getCurrentUserNickname() || (e.isSplit && (e.splitWith || []).includes(getCurrentUserNickname()))).length === 0 && (
-               <div className="text-center py-10 text-stone-400 text-xs">
+               <div className="text-center py-10 text-[#b4a0c8] text-sm font-medium">
                  尚無與您相關的支出紀錄
                </div>
             )}
+            </div>
           </div>
         )}
 
-{activeTab === "notes" && (
-          <div className="space-y-4 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 px-1">
+        {/* 記事本分頁 */}
+        {activeTab === "notes" && (
+          <div className="space-y-4 pt-6 px-4">
             
             {/* 留言輸入區 */}
-            <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-stone-100">
+            <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] shadow-[0_8px_30px_rgba(104,87,123,0.06)] border border-white">
               <textarea
                 placeholder="想分享什麼？"
-                className="w-full bg-stone-50 p-4 rounded-2xl text-xs placeholder:text-[11px] outline-none border border-transparent focus:border-indigo-300 min-h-[100px] resize-y"
+                className="w-full bg-[#faf9f4] p-4 rounded-2xl text-sm placeholder:text-stone-400 outline-none border border-transparent focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all min-h-[100px] resize-y text-[#504062]"
                 value={itemData.noteContent || ""}
                 onChange={(e) => setItemData({ ...itemData, noteContent: e.target.value })}
               />
 
-              {/* 圖片預覽區 */}
               {itemData.noteImage && (
-                <div className="relative mt-2 h-20 inline-block">
-                  <img src={itemData.noteImage} className="h-full w-auto max-w-[200px] object-contain rounded-xl border bg-stone-50" alt="Preview" />
-                  <button onClick={() => setItemData({ ...itemData, noteImage: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm"><X size={12} /></button>
+                <div className="relative mt-3 h-24 inline-block">
+                  <img src={itemData.noteImage} className="h-full w-auto max-w-[200px] object-cover rounded-xl border-2 border-white shadow-sm" alt="Preview" />
+                  <button onClick={() => setItemData({ ...itemData, noteImage: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:scale-110 transition-transform"><X size={12} /></button>
                 </div>
               )}
 
               <div className="flex justify-between items-center mt-3">
-                {/* 左側：相機按鈕 */}
                 <div>
-                  <label className="cursor-pointer p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors inline-flex items-center justify-center">
+                  <label className="cursor-pointer p-3 bg-stone-50 rounded-full text-[#68577b] hover:bg-[#eadef1]/50 transition-colors inline-flex items-center justify-center border border-stone-100">
                     <Camera size={20} />
                     <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
                   </label>
                 </div>
-
-                {/* 右側：送出按鈕 */}
-                <button onClick={handleSaveNote} className="bg-stone-800 text-white px-6 py-2 rounded-xl text-sm font-bold active:scale-95 transition-transform">
-                  {isEditMode ? "更新" : "送出"}
+                <button onClick={handleSaveNote} className="bg-[#68577b] hover:bg-[#504062] text-white px-8 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all shadow-md">
+                  {isEditMode ? "更新" : "發佈"}
                 </button>
               </div>
             </div>
 
             {/* 留言列表 */}
-            <div className="space-y-4 pb-24">
+            <div className="space-y-4">
               {(tripData.notes || [])
                 .slice()
                 .sort((a, b) => {
@@ -3167,84 +3032,81 @@ const handleDeleteReply = async (noteId, replyId) => {
                   return b.time - a.time;
                 })
                 .map((note) => (
-                  <div key={note.id} className={`bg-white p-4 rounded-2xl shadow-sm border ${note.isPinned ? "border-amber-300 bg-amber-50/10" : "border-stone-100"}`}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <UserBadge nickname={note.author} emoji={note.emoji} size="sm" />
-                      <span className="font-bold text-[11px] text-stone-700">{note.author}</span>
+                  <div key={note.id} className={`p-5 rounded-3xl shadow-sm border transition-all ${note.isPinned ? "border-amber-200 bg-amber-50/40" : "border-white bg-white/60 backdrop-blur-sm"}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <UserBadge nickname={note.author} emoji={note.emoji} size="md" />
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[#504062]">{note.author}</span>
+                        <span className="text-[10px] text-stone-400 font-mono">{new Date(note.time).toLocaleString()}</span>
+                      </div>
 
                       {/* 置頂標籤 */}
                       {note.isPinned && (
-                        <span className="text-[9px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-0.5">
-                          <Pin size={8} className="fill-amber-500" /> Pinned
+                        <span className="ml-auto text-[9px] font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                          <Pin size={10} className="fill-amber-600" /> Pinned
                         </span>
                       )}
 
-                      <span className="text-[9px] text-stone-300 ml-auto">{new Date(note.time).toLocaleString()}</span>
-
-                      <div className="flex gap-1 ml-1">
-                        {/* 置頂按鈕 */}
+                      <div className={`flex gap-1 ${note.isPinned ? "" : "ml-auto"}`}>
                         <button
                           onClick={() => togglePinNote(note)}
-                          className={`p-1 hover:scale-110 transition-transform ${note.isPinned ? "text-amber-500" : "text-stone-200 hover:text-stone-400"}`}
+                          className={`p-2 rounded-xl transition-all ${note.isPinned ? "text-amber-500 bg-amber-100 hover:bg-amber-200" : "text-stone-400 hover:text-[#68577b] hover:bg-stone-100"}`}
                           title="置頂/取消置頂"
                         >
-                          <Pin size={12} className={note.isPinned ? "fill-amber-500" : ""} />
+                          <Pin size={14} className={note.isPinned ? "fill-amber-500" : ""} />
                         </button>
 
-                        <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({ noteContent: note.content, noteImage: note.image }); }} className="p-1 text-stone-200 hover:text-stone-500"><Edit size={12} /></button>
-                        <button onClick={() => deleteNote(note.id)} className="p-1 text-stone-200 hover:text-red-400"><Trash2 size={12} /></button>
+                        <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({ noteContent: note.content, noteImage: note.image }); }} className="p-2 rounded-xl text-stone-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Edit size={14} /></button>
+                        <button onClick={() => deleteNote(note.id)} className="p-2 rounded-xl text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={14} /></button>
                       </div>
                     </div>
 
-                    <div className="text-sm text-stone-600 whitespace-pre-wrap">
+                    <div className="text-sm text-stone-700 whitespace-pre-wrap leading-relaxed">
                       <LinkText text={note.content} />
                     </div>
                     {note.image && (
                       <img
                         src={note.image}
                         onClick={() => setZoomedImage(note.image)}
-                        className="mt-3 rounded-xl w-full h-auto border border-stone-100 shadow-sm cursor-zoom-in active:scale-[0.98] transition-transform"
+                        className="mt-4 rounded-2xl w-full h-auto border border-stone-200 shadow-sm cursor-zoom-in active:scale-[0.98] transition-transform"
                         alt="Note Attachment"
                       />
                     )}
 
                     {/* 回覆區 */}
-                    <div className="mt-3 pl-3 border-l-2 border-stone-50 space-y-2">
+                    <div className="mt-4 pl-4 border-l-2 border-[#eadef1] space-y-3">
                       {(note.replies || []).map((r, i) => (
-                        <div key={r.id || i} className="text-[11px] group relative">
-                          {/* 判斷：如果是編輯模式，顯示修改框 */}
+                        <div key={r.id || i} className="text-xs group relative">
                           {editingReplyId === r.id ? (
-                            <div className="flex flex-col gap-1.5 mt-1 bg-stone-50 p-2 rounded-lg border border-stone-200 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="flex flex-col gap-2 mt-1 bg-white p-3 rounded-xl border border-[#eadef1] animate-in fade-in zoom-in-95 shadow-sm">
                               <textarea
                                 value={editReplyContent}
                                 onChange={(e) => setEditReplyContent(e.target.value)}
-                                className="w-full bg-transparent text-[10px] outline-none resize-y min-h-[40px]"
+                                className="w-full bg-transparent text-xs outline-none resize-y min-h-[40px] text-[#504062]"
                                 autoFocus
                               />
-                              <div className="flex justify-end gap-2 border-t border-stone-200 pt-1.5">
-                                <button onClick={() => setEditingReplyId(null)} className="text-[9px] text-stone-400 hover:text-stone-600 px-2 py-1">取消</button>
-                                <button onClick={() => handleEditReplySave(note.id, r.id)} className="text-[9px] bg-stone-800 text-white px-3 py-1 rounded-md shadow-sm">儲存</button>
+                              <div className="flex justify-end gap-2 border-t border-stone-100 pt-2">
+                                <button onClick={() => setEditingReplyId(null)} className="text-[10px] font-bold text-stone-400 hover:text-stone-600 px-3 py-1.5 rounded-lg hover:bg-stone-50">取消</button>
+                                <button onClick={() => handleEditReplySave(note.id, r.id)} className="text-[10px] font-bold bg-[#68577b] text-white px-4 py-1.5 rounded-lg shadow-sm hover:bg-[#504062]">儲存</button>
                               </div>
                             </div>
                           ) : (
-                            /* 判斷：正常顯示模式 */
                             <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
-                                <span className="font-bold text-stone-800">{r.author}:</span>{" "}
-                                <span className="text-stone-500">
+                              <div className="flex-1 bg-white/40 p-2.5 rounded-xl">
+                                <span className="font-bold text-[#68577b]">{r.author}:</span>{" "}
+                                <span className="text-stone-600 leading-relaxed">
                                   <LinkText text={r.content} />
                                 </span>
-                                {r.isEdited && <span className="text-[8px] text-stone-300 ml-1 italic">(已編輯)</span>}
+                                {r.isEdited && <span className="text-[9px] text-stone-400 ml-2 italic">(已編輯)</span>}
                               </div>
 
-                              {/* 權限判斷：只有自己可以編輯或刪除 */}
                               {r.author === getCurrentUserNickname() && (
-                                <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shrink-0 bg-white/80 backdrop-blur-sm rounded-md px-1">
+                                <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 bg-white/80 backdrop-blur-sm rounded-lg px-1 shadow-sm border border-white">
                                   <button
                                     onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }}
-                                    className="p-1 text-stone-300 hover:text-stone-600 transition-colors"
+                                    className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
                                   >
-                                    <Edit size={10} />
+                                    <Edit size={12} />
                                   </button>
                                   <button
                                     onClick={() => {
@@ -3257,9 +3119,9 @@ const handleDeleteReply = async (noteId, replyId) => {
                                         isDangerous: true,
                                       });
                                     }}
-                                    className="p-1 text-stone-300 hover:text-red-400 transition-colors"
+                                    className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
                                   >
-                                    <Trash2 size={10} />
+                                    <Trash2 size={12} />
                                   </button>
                                 </div>
                               )}
@@ -3268,13 +3130,13 @@ const handleDeleteReply = async (noteId, replyId) => {
                         </div>
                       ))}
 
-                      {/* 新增回覆輸入框與「送出按鈕」 */}
-                      <div className="flex gap-2 items-end pt-1">
+                      {/* 新增回覆輸入框 */}
+                      <div className="flex gap-2 items-end pt-2">
                         <textarea
                           id={`reply-input-${note.id}`}
                           rows="1"
                           placeholder="回覆旅伴... (Shift+Enter 換行)"
-                          className="flex-1 w-full bg-stone-50 text-[10px] placeholder:text-[8px] px-3 py-2 rounded-xl outline-none resize-y min-h-[34px] border border-transparent focus:border-stone-200 transition-colors"
+                          className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-[#504062]"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
@@ -3284,7 +3146,7 @@ const handleDeleteReply = async (noteId, replyId) => {
                         />
                         <button
                           onClick={() => handleReplySubmit(note.id)}
-                          className="bg-stone-800 hover:bg-stone-700 text-white px-3 py-2 rounded-xl text-[10px] font-bold transition-transform active:scale-95 mb-0 shrink-0 shadow-sm"
+                          className="bg-[#68577b] hover:bg-[#504062] text-white px-4 py-3 rounded-xl text-[10px] font-bold transition-all active:scale-95 mb-0 shrink-0 shadow-md"
                         >
                           送出
                         </button>
@@ -3298,65 +3160,61 @@ const handleDeleteReply = async (noteId, replyId) => {
         
       </main>
 
+      {/* --- Bottom Navigation (Stitch 質感毛玻璃) --- */}
+      <nav className="absolute bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 bg-white/70 backdrop-blur-xl rounded-t-[2.5rem] shadow-[0_-15px_40px_rgba(104,87,123,0.08)] border-t border-white/60 transition-all">
+        {[
+          { id: "itinerary", icon: <Calendar size={22} />, label: "行程" },
+          { id: "expenses", icon: <CreditCard size={22} />, label: "記帳" },
+          { id: "notes", icon: <BookOpen size={22} />, label: "記事本" }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setIsEditMode(false);
+              setEditingId(null);
+              setItemData({});
+            }}
+            className={`flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-95 group w-20 ${
+              activeTab === tab.id
+                ? "text-[#504062] bg-[#eedbff]/80 rounded-2xl py-2.5 shadow-sm border border-[#eadef1]/50"
+                : "text-[#b4a0c8] hover:text-[#68577b] py-2.5 hover:bg-white/50 rounded-2xl"
+            }`}
+          >
+            <div className={`${activeTab !== tab.id && "group-hover:scale-110"} transition-transform`}>
+              {tab.icon}
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest mt-1">
+              {tab.label}
+            </span>
+          </button>
+        ))}
+      </nav>
 
-<nav className="absolute bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md rounded-t-[2rem] shadow-[0_-10px_30px_rgba(104,87,123,0.08)] border-t border-white/30 transition-all">
-  {[
-    { id: "itinerary", icon: <Calendar size={24} />, label: "行程" },
-    { id: "expenses", icon: <CreditCard size={24} />, label: "記帳" },
-    { id: "notes", icon: <BookOpen size={24} />, label: "記事本" }
-  ].map((tab) => (
-    <button
-      key={tab.id}
-      onClick={() => {
-        setActiveTab(tab.id);
-        setIsEditMode(false);
-        setEditingId(null);
-        setItemData({});
-      }}
-      className={`flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-95 group ${
-        activeTab === tab.id
-          ? "text-[#68577b] dark:text-purple-300 bg-[#eadef1]/60 dark:bg-purple-900/40 rounded-2xl px-6 py-2"
-          : "text-stone-400 hover:text-[#68577b] py-2"
-      }`}
-    >
-      <div className={`${activeTab !== tab.id && "group-hover:scale-110"} transition-transform`}>
-        {tab.icon}
-      </div>
-      <span className="text-[10px] font-bold uppercase tracking-widest mt-1">
-        {tab.label}
-      </span>
-    </button>
-  ))}
-</nav>
-
-{/* 整合版：新增行程與魔法球按鈕群組 */}
+      {/* --- FAB (Plus / AI Buttons) --- */}
       {!isModalOpen && activeTab === "itinerary" && (
-        // 統一的外層容器，把位置精準定在導覽列上方
         <div className="absolute bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-6 z-[60] flex flex-col-reverse items-end gap-4 pointer-events-none">
           
-          {/* 1. 主要的「新增行程」按鈕 (置於最底) */}
-<button
+          <button
             onClick={() => {
               setIsEditMode(false);
               setEditingId(null);
               setItemData({ day: 1, time: "10:00", category: "sightseeing" });
               setIsModalOpen(true);
             }}
-            className="bg-[#68577b] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-[0_15px_30px_rgba(104,87,123,0.35)] transition-all duration-300 active:scale-90 hover:bg-[#504062] hover:shadow-[0_20px_40px_rgba(104,87,123,0.45)] pointer-events-auto"
+            className="bg-[#68577b] text-white w-14 h-14 flex items-center justify-center rounded-2xl shadow-[0_15px_30px_rgba(104,87,123,0.35)] transition-all duration-300 active:scale-90 hover:bg-[#504062] hover:shadow-[0_20px_40px_rgba(104,87,123,0.45)] hover:-translate-y-1 pointer-events-auto border border-white/20"
           >
-            <Plus size={24} />
+            <Plus size={26} />
           </button>
 
-          {/* 2. 魔法球與 AI 選單 (置於新增按鈕的上方) */}
           <div className="flex flex-col-reverse items-end gap-3 pointer-events-auto">
             <button
               onClick={() => {
                 setShowAIMenu(!showAIMenu);
                 setShowExportMenu(false);
               }}
-              // 魔法球稍微做小一點 (w-12 h-12)，以襯托主按鈕
-              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
-                showAIMenu ? "bg-stone-800 rotate-45" : "bg-indigo-600 hover:bg-indigo-700"
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 border border-white/20 hover:-translate-y-1 ${
+                showAIMenu ? "bg-[#504062] rotate-45 scale-90" : "bg-[#b4a0c8] hover:bg-[#68577b]"
               }`}
             >
               {isAnalyzing || (typeof isImportLoading !== 'undefined' && isImportLoading) ? (
@@ -3364,35 +3222,34 @@ const handleDeleteReply = async (noteId, replyId) => {
               ) : (
                 <Sparkles className={`text-white transition-all ${showAIMenu ? "opacity-0" : "opacity-100"}`} size={20} />
               )}
-              {showAIMenu && <Plus className="text-white absolute rotate-0" size={20} />}
+              {showAIMenu && <Plus className="text-white absolute rotate-0" size={24} />}
             </button>
 
-            {/* 展開後的選單 */}
             {showAIMenu && (
               <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-5 duration-300 items-end mb-2">
-                <div className="px-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">AI Tools</div>
+                <div className="px-2 text-[9px] font-black text-[#b4a0c8] uppercase tracking-widest mt-2">AI Tools</div>
                 <button
                   onClick={() => { handleAIAnalyze(); setShowAIMenu(false); }}
-                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-white px-4 py-3 rounded-2xl shadow-xl hover:bg-[#faf9f4] transition-all w-48 active:scale-95"
                 >
-                  <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><Sparkles size={16} /></div>
-                  <span className="text-sm font-bold text-stone-700">智能導遊分析</span>
+                  <div className="w-8 h-8 bg-[#eedbff] text-[#68577b] rounded-xl flex items-center justify-center"><Sparkles size={16} /></div>
+                  <span className="text-sm font-bold text-[#504062]">智能導遊分析</span>
                 </button>
                 <button
                   onClick={() => { setShowOptimizeModal(true); setShowAIMenu(false); }}
-                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-white px-4 py-3 rounded-2xl shadow-xl hover:bg-[#faf9f4] transition-all w-48 active:scale-95"
                 >
                   <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center"><Route size={16} /></div>
-                  <span className="text-sm font-bold text-stone-700">路線優化建議</span>
+                  <span className="text-sm font-bold text-[#504062]">路線優化建議</span>
                 </button>
 
-                <div className="px-2 text-[10px] font-black text-stone-400 uppercase tracking-widest mt-2">Files</div>
+                <div className="px-2 text-[9px] font-black text-[#b4a0c8] uppercase tracking-widest mt-2">Files</div>
                 <button
                   onClick={() => { setIsImportOpen(true); setShowAIMenu(false); }}
-                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-stone-100 px-4 py-3 rounded-2xl shadow-xl hover:bg-stone-50 transition-all w-48"
+                  className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-white px-4 py-3 rounded-2xl shadow-xl hover:bg-[#faf9f4] transition-all w-48 active:scale-95"
                 >
                   <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><Upload size={16} /></div>
-                  <span className="text-sm font-bold text-stone-700">匯入行程檔案</span>
+                  <span className="text-sm font-bold text-[#504062]">匯入行程檔案</span>
                 </button>
 
                 <div className="relative">
@@ -3402,25 +3259,25 @@ const handleDeleteReply = async (noteId, replyId) => {
                       setMenuPos({ top: rect.top - 10, left: rect.left - 160 });
                       setShowExportMenu(!showExportMenu);
                     }}
-                    className={`flex items-center gap-3 w-48 bg-white/90 backdrop-blur-md border px-4 py-3 rounded-2xl shadow-xl transition-all ${
-                      showExportMenu ? "border-stone-800 bg-stone-50" : "border-stone-100 hover:bg-stone-50"
+                    className={`flex items-center gap-3 w-48 bg-white/90 backdrop-blur-md border px-4 py-3 rounded-2xl shadow-xl transition-all active:scale-95 ${
+                      showExportMenu ? "border-[#68577b] bg-[#faf9f4]" : "border-white hover:bg-[#faf9f4]"
                     }`}
                   >
                     <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><Download size={16} /></div>
-                    <span className="text-sm font-bold text-stone-700">匯出行程內容</span>
-                    <ChevronRight size={14} className={`ml-auto text-stone-300 transition-transform ${showExportMenu ? "rotate-90" : ""}`} />
+                    <span className="text-sm font-bold text-[#504062]">匯出行程內容</span>
+                    <ChevronRight size={14} className={`ml-auto text-[#b4a0c8] transition-transform ${showExportMenu ? "rotate-90" : ""}`} />
                   </button>
 
                   {showExportMenu && (
                     <div 
-                      className="fixed bg-white rounded-2xl shadow-2xl border border-stone-100 p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-right-2 duration-200"
+                      className="fixed bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-right-2 duration-200"
                       style={{ top: menuPos.top, left: menuPos.left }}
                     >
-                      <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-green-50 rounded-xl transition-colors whitespace-nowrap">
-                        <FileSpreadsheet size={16} /> Excel 表格
+                      <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-[#504062] hover:bg-[#faf9f4] rounded-xl transition-colors whitespace-nowrap">
+                        <FileSpreadsheet size={16} className="text-emerald-500" /> Excel 表格
                       </button>
-                      <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-600 hover:bg-pink-50 rounded-xl transition-colors whitespace-nowrap">
-                        <ImageIcon size={16} /> AI 美圖分享
+                      <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-[#504062] hover:bg-[#faf9f4] rounded-xl transition-colors whitespace-nowrap">
+                        <ImageIcon size={16} className="text-pink-500" /> AI 美圖分享
                       </button>
                     </div>
                   )}
@@ -3431,12 +3288,10 @@ const handleDeleteReply = async (noteId, replyId) => {
         </div>
       )}
 
-{isModalOpen && (
-        // 修改 1：將 items-end sm:items-center 改成統一的 items-center (永遠垂直置中)
+      {isModalOpen && (
         <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          {/* 修改 2：將動畫從 slide-in-from-bottom 改為 zoom-in-95，讓置中彈出的視覺更自然 */}
-          <div className="bg-[#FDFCF8] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] flex flex-col">
-            <h3 className="text-lg font-bold mb-6 text-stone-800 tracking-wide text-center shrink-0">
+          <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] flex flex-col border border-white">
+            <h3 className="text-xl font-serif font-bold mb-6 text-[#504062] tracking-wide text-center shrink-0">
               {isEditMode
                 ? "編輯內容"
                 : activeTab === "itinerary"
@@ -3449,7 +3304,7 @@ const handleDeleteReply = async (noteId, replyId) => {
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                      <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                         Day
                       </label>
                       <input
@@ -3459,11 +3314,11 @@ const handleDeleteReply = async (noteId, replyId) => {
                         onChange={(e) =>
                           setItemData({ ...itemData, day: e.target.value })
                         }
-                        className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors text-center font-mono"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-[#504062] font-bold"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                      <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                         Time
                       </label>
                       <input
@@ -3472,12 +3327,12 @@ const handleDeleteReply = async (noteId, replyId) => {
                         onChange={(e) =>
                           setItemData({ ...itemData, time: e.target.value })
                         }
-                        className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors text-center font-mono"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-[#504062] font-bold"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       {itemData.category === "flight"
                         ? "起降機場 (例如: TPE - NRT)"
                         : "Location"}
@@ -3496,36 +3351,37 @@ const handleDeleteReply = async (noteId, replyId) => {
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       Category
                     </label>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="grid grid-cols-3 gap-2">
                       {[
                         { id: "sightseeing", icon: <Camera size={16} />, label: "景點" },
                         { id: "food", icon: <Utensils size={16} />, label: "餐廳" },
                         { id: "transport", icon: <Train size={16} />, label: "交通" },
                         { id: "flight", icon: <Plane size={16} />, label: "航班" },
                         { id: "accommodation", icon: <Home size={16} />, label: "住宿" },
+                        { id: "activity", icon: <MapPin size={16} />, label: "活動" },
                       ].map((cat) => (
                         <button
                           key={cat.id}
                           onClick={() =>
                             setItemData({ ...itemData, category: cat.id })
                           }
-                          className={`flex-1 py-2 min-w-[3.5rem] rounded-xl border flex flex-col items-center gap-1 text-xs transition-all ${
+                          className={`py-3 rounded-2xl border flex flex-col items-center gap-1 text-xs transition-all shadow-sm ${
                             itemData.category === cat.id
-                              ? "bg-stone-800 text-white border-stone-800"
-                              : "bg-white text-stone-400 border-stone-200 hover:border-stone-300"
+                              ? "bg-[#68577b] text-white border-[#68577b]"
+                              : "bg-white text-[#b4a0c8] border-white hover:border-[#eadef1]"
                           }`}
                         >
-                          {cat.icon} {cat.label}
+                          {cat.icon} <span className="font-medium">{cat.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       {itemData.category === "flight"
                         ? "航班代號 / 航廈資訊"
                         : "Notes"}
@@ -3536,14 +3392,14 @@ const handleDeleteReply = async (noteId, replyId) => {
                       onChange={(e) =>
                         setItemData({ ...itemData, notes: e.target.value })
                       }
-                      className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors resize-y min-h-[80px]"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-[#504062]"
                     />
                   </div>
                 </>
               ) : (
                 <>
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       消費項目
                     </label>
                     <input
@@ -3553,15 +3409,15 @@ const handleDeleteReply = async (noteId, replyId) => {
                       onChange={(e) =>
                         setItemData({ ...itemData, item: e.target.value })
                       }
-                      className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-[#504062] font-bold"
                     />
                   </div>
                   
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       分類
                     </label>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="grid grid-cols-3 gap-2">
                       {[
                         { id: "food", label: "飲食", icon: <Utensils size={16} /> },
                         { id: "transport", label: "交通", icon: <Train size={16} /> },
@@ -3574,13 +3430,13 @@ const handleDeleteReply = async (noteId, replyId) => {
                           onClick={() =>
                             setItemData({ ...itemData, category: cat.id })
                           }
-                          className={`flex-1 py-2 min-w-[3.5rem] rounded-xl border flex flex-col items-center gap-1 text-xs transition-all ${
+                          className={`py-3 rounded-2xl border flex flex-col items-center gap-1 text-xs transition-all shadow-sm ${
                             itemData.category === cat.id
-                              ? "bg-stone-800 text-white border-stone-800"
-                              : "bg-white text-stone-400 border-stone-200 hover:border-stone-300"
+                              ? "bg-[#68577b] text-white border-[#68577b]"
+                              : "bg-white text-[#b4a0c8] border-white hover:border-[#eadef1]"
                           }`}
                         >
-                          {cat.icon} {cat.label}
+                          {cat.icon} <span className="font-medium">{cat.label}</span>
                         </button>
                       ))}
                     </div>
@@ -3588,7 +3444,7 @@ const handleDeleteReply = async (noteId, replyId) => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                      <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                         金額
                       </label>
                       <input
@@ -3598,11 +3454,11 @@ const handleDeleteReply = async (noteId, replyId) => {
                         onChange={(e) =>
                           setItemData({ ...itemData, amount: e.target.value })
                         }
-                        className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 font-mono"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-[#504062] font-bold text-lg"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                      <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                         日期
                       </label>
                       <input
@@ -3611,12 +3467,12 @@ const handleDeleteReply = async (noteId, replyId) => {
                         onChange={(e) =>
                           setItemData({ ...itemData, date: e.target.value })
                         }
-                        className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 font-mono text-sm"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-[#504062] font-bold"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       付款人
                     </label>
                     <input
@@ -3625,12 +3481,12 @@ const handleDeleteReply = async (noteId, replyId) => {
                       onChange={(e) =>
                         setItemData({ ...itemData, payer: e.target.value })
                       }
-                      className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-[#504062] font-bold"
                     />
                   </div>
-                  <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                  <div className="bg-white/50 p-4 rounded-2xl border border-white shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                      <label className="text-xs font-bold text-stone-500 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-[#68577b] uppercase tracking-wider">
                         需要分帳？
                       </label>
                       <button
@@ -3645,18 +3501,18 @@ const handleDeleteReply = async (noteId, replyId) => {
                                 ),
                           })
                         }
-                        className={`w-10 h-6 rounded-full transition-colors flex items-center p-1 ${
+                        className={`w-12 h-7 rounded-full transition-all flex items-center p-1 shadow-inner ${
                           itemData.isSplit
-                            ? "bg-stone-800 justify-end"
-                            : "bg-stone-300 justify-start"
+                            ? "bg-[#68577b] justify-end"
+                            : "bg-stone-200 justify-start"
                         }`}
                       >
-                        <div className="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+                        <div className="w-5 h-5 bg-white rounded-full shadow-sm"></div>
                       </button>
                     </div>
                     {itemData.isSplit && (
-                      <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                        <p className="text-[10px] text-stone-400 mb-2">
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-2 pt-2 border-t border-white/50">
+                        <p className="text-[10px] text-[#b4a0c8] mb-2 font-bold">
                           請選擇需要分攤此費用的人 (包含付款人)：
                         </p>
                         <div className="grid grid-cols-2 gap-2">
@@ -3679,28 +3535,20 @@ const handleDeleteReply = async (noteId, replyId) => {
                                     splitWith: newSplit,
                                   });
                                 }}
-                                className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${
+                                className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all shadow-sm ${
                                   isSelected
-                                    ? "bg-white border-stone-800 shadow-sm"
-                                    : "bg-transparent border-transparent hover:bg-white"
+                                    ? "bg-white border-[#68577b]"
+                                    : "bg-white/50 border-white hover:bg-white"
                                 }`}
                               >
                                 {isSelected ? (
-                                  <CheckSquare
-                                    size={16}
-                                    className="text-stone-800"
-                                  />
+                                  <CheckSquare size={16} className="text-[#68577b]" />
                                 ) : (
-                                  <Square
-                                    size={16}
-                                    className="text-stone-300"
-                                  />
+                                  <Square size={16} className="text-[#b4a0c8]" />
                                 )}
                                 <span
-                                  className={`text-xs font-medium ${
-                                    isSelected
-                                      ? "text-stone-800"
-                                      : "text-stone-400"
+                                  className={`text-xs font-bold ${
+                                    isSelected ? "text-[#504062]" : "text-stone-400"
                                   }`}
                                 >
                                   {member.nickname}
@@ -3715,32 +3563,31 @@ const handleDeleteReply = async (noteId, replyId) => {
                 </>
               )}
             </div>
-            <div className="flex gap-3 mt-8 shrink-0">
+            <div className="flex gap-3 mt-6 shrink-0 border-t border-white/50 pt-4">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 py-3 rounded-xl bg-stone-100 text-stone-600 font-medium hover:bg-stone-200 transition-colors"
+                className="flex-1 py-4 rounded-2xl bg-white border border-white shadow-sm text-stone-500 font-bold hover:bg-stone-50 transition-colors"
               >
                 取消
               </button>
               <button
                 onClick={handleSaveItem}
-                className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium hover:bg-stone-700 transition-colors"
+                className="flex-1 py-4 rounded-2xl bg-[#68577b] text-white font-bold hover:bg-[#504062] transition-colors shadow-lg shadow-[#68577b]/30"
               >
-                確認
+                確認儲存
               </button>
             </div>
           </div>
-</div>
+        </div>
       )}
 
-      {/* 🔴 新增：全螢幕圖片放大視窗 */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-[110] bg-stone-900/95 backdrop-blur-md flex items-center justify-center p-2 animate-in fade-in duration-200 cursor-zoom-out"
+          className="fixed inset-0 z-[110] bg-stone-900/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 cursor-zoom-out"
           onClick={() => setZoomedImage(null)}
         >
           <button 
-            className="absolute top-6 right-6 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-colors z-10"
+            className="absolute top-6 right-6 p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all active:scale-95 z-10"
             onClick={(e) => {
               e.stopPropagation();
               setZoomedImage(null);
@@ -3750,7 +3597,7 @@ const handleDeleteReply = async (noteId, replyId) => {
           </button>
           <img 
             src={zoomedImage} 
-            className="max-w-full max-h-[90dvh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" 
+            className="max-w-full max-h-[90dvh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300" 
             alt="Zoomed Fullscreen"
           />
         </div>
