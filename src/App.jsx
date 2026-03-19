@@ -986,7 +986,7 @@ const ItineraryCard = ({
     >
       {/* 2. 頂部大圖片區塊 (如果有上傳照片) */}
       {item.image && (
-        <div className="relative w-full h-32 sm:h-52 overflow-hidden rounded-t-3xl border-b border-white">
+        <div className="relative w-full h-32 sm:h-40 overflow-hidden rounded-t-3xl border-b border-white">
           <img 
             src={item.image} 
             alt={item.location} 
