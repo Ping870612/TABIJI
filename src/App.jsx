@@ -2415,7 +2415,7 @@ const App = () => {
     );
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#faf9f4] font-sans max-w-md mx-auto shadow-2xl relative text-stone-800 transition-colors duration-500">
+    <div className="flex flex-col h-[100dvh] w-full overflow-x-hidden bg-[#faf9f4] font-sans max-w-md mx-auto shadow-2xl relative text-stone-800 transition-colors duration-500">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <ConfirmModal {...confirmConfig} />
       <ShareModal
@@ -2721,8 +2721,8 @@ const App = () => {
         </div>
       </header>
 
-      {/* --- Main 內容區 --- */}
-      <main className="flex-1 overflow-y-auto pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
+     {/* --- Main 內容區 --- */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y w-full pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
         
         {/* 行程分頁 */}
         {activeTab === "itinerary" && tripData && (
