@@ -3146,7 +3146,7 @@ const App = () => {
                         <textarea
                           id={`reply-input-${note.id}`}
                           rows="1"
-                          placeholder="回覆旅伴... (Shift+Enter 換行)"
+                          placeholder="回覆旅伴..."
                           className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-[#504062]"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
