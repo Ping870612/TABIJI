@@ -1083,6 +1083,54 @@ const MapView = ({ points }) => {
   );
 };
 
+// --- 新增：質感折疊式地圖按鈕 ---
+const DayMapPreview = ({ points }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // 判斷今天是否有足夠的點位可以畫線
+  const validPoints = (points || []).filter(p => p.lat && p.lng);
+  const hasRoute = validPoints.length >= 2;
+
+  if (!hasRoute) return null; // 如果沒有足夠座標，按鈕自動隱藏不佔空間
+
+  return (
+    <div className="mb-6 animate-in fade-in duration-500 flex flex-col items-center">
+      {/* 質感觸發按鈕 */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-11/12 bg-white/70 backdrop-blur-md border border-white shadow-[0_8px_20px_rgba(104,87,123,0.06)] rounded-[1.5rem] p-4 flex items-center justify-between text-[#504062] hover:bg-white hover:shadow-[0_8px_25px_rgba(104,87,123,0.1)] transition-all active:scale-95 group"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#eedbff] to-[#eadef1] text-[#68577b] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+            <Map size={18} />
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="font-serif font-bold text-[15px]">本日路線總覽</span>
+            <span className="text-[10px] text-[#b4a0c8] tracking-widest font-mono">ROUTE MAP</span>
+          </div>
+        </div>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-stone-50 transition-colors group-hover:bg-[#eedbff]/50`}>
+          <ChevronRight 
+            size={16} 
+            className={`text-[#b4a0c8] group-hover:text-[#68577b] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isOpen ? "rotate-90" : ""}`} 
+          />
+        </div>
+      </button>
+
+      {/* 地圖展開區域 (抽屜動畫) */}
+      <div 
+        className={`w-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden ${
+          isOpen ? "max-h-[350px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"
+        }`}
+      >
+        <div className="px-1">
+          <MapView points={points} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const WelcomeScreen = ({
   onCreate,
   onImportTrip,
@@ -2767,17 +2815,18 @@ const App = () => {
 
      {/* --- Main 內容區 --- */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y w-full pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
-
-{/* --- 新增地圖預覽區塊 --- */}
-            <div className="mb-6 animate-in fade-in duration-500">
-              <div className="flex items-center gap-2 mb-3 ml-1 text-stone-500">
-                <Map size={16} className="text-indigo-500" />
-                <span className="text-xs font-bold tracking-widest uppercase">路線總覽</span>
-              </div>
-              {/* 傳入整趟旅程的所有點位 (未來需要替景點加上 lat, lng 屬性才能畫線) */}
-              <MapView points={tripData.itinerary || []} />
-            </div>
-            {/* --- 新增地圖預覽區塊結束 --- */}
+{/* --- 質感折疊地圖按鈕 --- */}
+            {/* 傳入當天行程的資料，這樣只會畫出那一天的路線 */}
+            <DayMapPreview 
+              points={
+                tripData.itinerary?.filter(item => 
+                  // 這裡可以篩選當天的點，如果你希望每天分開畫
+                  // 若希望畫全部，就直接傳 tripData.itinerary
+                  true 
+                ) || []
+              } 
+            />
+            {/* --- 質感折疊地圖按鈕結束 --- */}
         
         {/* 行程分頁 */}
         {activeTab === "itinerary" && tripData && (
