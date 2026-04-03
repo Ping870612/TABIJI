@@ -2764,11 +2764,16 @@ const App = () => {
      {/* --- Main 內容區 --- */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y w-full pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
 
-{Object.keys(groupedItinerary)
-              .sort((a, b) => a - b)
-              .map((day) => {
-                const dateStr = getDateForDay(day);
-                return (
+{/* --- 新增地圖預覽區塊 --- */}
+            <div className="mb-6 animate-in fade-in duration-500">
+              <div className="flex items-center gap-2 mb-3 ml-1 text-stone-500">
+                <Map size={16} className="text-indigo-500" />
+                <span className="text-xs font-bold tracking-widest uppercase">路線總覽</span>
+              </div>
+              {/* 傳入整趟旅程的所有點位 (未來需要替景點加上 lat, lng 屬性才能畫線) */}
+              <MapView points={tripData.itinerary || []} />
+            </div>
+            {/* --- 新增地圖預覽區塊結束 --- */}
         
         {/* 行程分頁 */}
         {activeTab === "itinerary" && tripData && (
