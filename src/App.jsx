@@ -1043,18 +1043,17 @@ const ItineraryCard = ({
   );
 };
 
-// --- 新增：MapView 地圖預覽組件 ---
+// --- 更新：MapView 地圖預覽組件 (支援自動置中與縮放) ---
 const MapView = ({ points }) => {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
   useEffect(() => {
-    // 確保 Leaflet 有從 CDN 載入
     if (typeof window === 'undefined' || !window.L || !mapContainerRef.current) return;
 
-    // 1. 初始化地圖 (避免重複初始化)
+    // 1. 初始化地圖 (移除原本寫死的 setView，改為動態調整)
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = window.L.map(mapContainerRef.current).setView([35.0116, 135.7681], 13); // 預設中心點
+      mapInstanceRef.current = window.L.map(mapContainerRef.current); 
 
       window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '© OpenStreetMap & CARTO',
@@ -1063,23 +1062,45 @@ const MapView = ({ points }) => {
       }).addTo(mapInstanceRef.current);
     }
 
-    // 2. 如果點位有經緯度資料 (lat, lng)，繪製路線
     const validPoints = (points || []).filter(p => p.lat && p.lng);
-// 🟢 如果有 2 個以上的點，畫路線
+
+    // 2. 使用 setTimeout 延遲執行，確保「折疊動畫展開後」才計算地圖尺寸
+    setTimeout(() => {
+      // 強制地圖重新計算自己的長寬 (解決被折疊面板卡住的問題)
+      mapInstanceRef.current.invalidateSize();
+
+      // 🟢 自動置中與縮放邏輯
+      if (validPoints.length > 0) {
+        // 把所有的經緯度收集起來，找出邊界 (Bounds)
+        const bounds = window.L.latLngBounds(validPoints.map(p => [p.lat, p.lng]));
+        
+        if (validPoints.length === 1) {
+          // 如果只有 1 個點，直接置中並設定特定的放大層級 (例如 15)
+          mapInstanceRef.current.setView([validPoints[0].lat, validPoints[0].lng], 15);
+        } else {
+          // 如果有 2 個點以上，自動縮放視野把所有點包進去，並留一點 padding (邊距)
+          mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        }
+      } else {
+        // 如果都沒點，才預設顯示京都
+        mapInstanceRef.current.setView([35.0116, 135.7681], 13);
+      }
+    }, 200); // 延遲 200 毫秒，等外層抽屜動畫跑完
+
+    // 3. 畫路線或圖釘
     if (validPoints.length >= 2 && window.L.Routing) {
       window.L.Routing.control({
         waypoints: validPoints.map(p => window.L.latLng(p.lat, p.lng)),
-        lineOptions: { styles: [{ color: '#68577b', weight: 4 }] }, // 改用深紫色搭配您的主題
+        lineOptions: { styles: [{ color: '#68577b', weight: 4 }] },
         routeWhileDragging: false,
         addWaypoints: false,
-        show: false
+        show: false,
+        fitSelectedRoutes: false // 關閉內建的縮放，交由我們上面的邏輯手動精準控制
       }).addTo(mapInstanceRef.current);
     } 
-    // 🟢 如果只有 1 個點，直接插個大頭針並置中
     else if (validPoints.length === 1) {
       const { lat, lng } = validPoints[0];
       window.L.marker([lat, lng]).addTo(mapInstanceRef.current);
-      mapInstanceRef.current.setView([lat, lng], 15);
     }
   }, [points]);
 
@@ -1087,7 +1108,7 @@ const MapView = ({ points }) => {
     <div 
       ref={mapContainerRef} 
       className="w-full h-[250px] shadow-sm border border-stone-200 rounded-2xl z-0 relative mb-2"
-      style={{ zIndex: 0 }} // 避免地圖遮擋到其他彈出式選單
+      style={{ zIndex: 0 }} 
     ></div>
   );
 };
