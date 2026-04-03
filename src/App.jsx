@@ -786,7 +786,8 @@ const LocationInput = ({ value, onChange, placeholder }) => {
   }, [wrapperRef]);
 
   const handleSearch = (query) => {
-    onChange(query);
+   onChange(query, null, null); 
+    
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     if (query.length < 2) {
       setSuggestions([]);
@@ -811,10 +812,13 @@ const LocationInput = ({ value, onChange, placeholder }) => {
   };
 
   const handleSelect = (place) => {
-    onChange(place.display_name.split(",")[0]);
+      onChange(
+      place.display_name.split(",")[0], 
+      parseFloat(place.lat), 
+      parseFloat(place.lon)
+    );
     setShowSuggestions(false);
   };
-
   return (
     <div className="relative" ref={wrapperRef}>
       <div className="relative">
@@ -3424,16 +3428,22 @@ const App = () => {
                         : "Location"}
                     </label>
                     <LocationInput
-                      placeholder={
-                        itemData.category === "flight"
-                          ? "TPE - NRT"
-                          : "搜尋地點 (例如：東京鐵塔)"
-                      }
-                      value={itemData.location || ""}
-                      onChange={(val) =>
-                        setItemData({ ...itemData, location: val })
-                      }
-                    />
+  placeholder={
+    itemData.category === "flight"
+      ? "TPE - NRT"
+      : "搜尋地點"
+  }
+  value={itemData.location || ""}
+  // 🟢 修改點：接收 val(名稱), lat(緯度), lng(經度)，並一起存入 itemData
+  onChange={(val, lat, lng) =>
+    setItemData({ 
+      ...itemData, 
+      location: val, 
+      lat: lat, 
+      lng: lng 
+    })
+  }
+/>
                   </div>
                   
                   <div>
