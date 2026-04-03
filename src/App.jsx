@@ -2268,6 +2268,8 @@ const App = () => {
           day: itemData.day || 1,
           time: itemData.time || "10:00",
           location: itemData.location || "", 
+          lat: itemData.lat || null,  // 🟢 新增這行：儲存緯度
+          lng: itemData.lng || null,  // 🟢 新增這行：儲存經度
           category: itemData.category || "sightseeing",
           notes: itemData.notes || "",
           guideInfo: itemData.guideInfo || "", 
