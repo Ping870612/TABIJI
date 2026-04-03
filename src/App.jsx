@@ -1039,6 +1039,46 @@ const ItineraryCard = ({
   );
 };
 
+// --- 新增：MapView 地圖預覽組件 ---
+const MapView = ({ points }) => {
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
+  useEffect(() => {
+    // 確保 Leaflet 有從 CDN 載入
+    if (typeof window === 'undefined' || !window.L || !mapContainerRef.current) return;
+
+    // 1. 初始化地圖 (避免重複初始化)
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = window.L.map(mapContainerRef.current).setView([35.0116, 135.7681], 13); // 預設中心點
+      
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(mapInstanceRef.current);
+    }
+
+    // 2. 如果點位有經緯度資料 (lat, lng)，繪製路線
+    const validPoints = (points || []).filter(p => p.lat && p.lng);
+    if (validPoints.length >= 2 && window.L.Routing) {
+      window.L.Routing.control({
+        waypoints: validPoints.map(p => window.L.latLng(p.lat, p.lng)),
+        lineOptions: { styles: [{ color: '#6366f1', weight: 5 }] }, // Indigo 顏色
+        routeWhileDragging: false,
+        addWaypoints: false,
+        show: false // 隱藏預設的導航文字面板
+      }).addTo(mapInstanceRef.current);
+    }
+  }, [points]);
+
+  return (
+    <div 
+      ref={mapContainerRef} 
+      className="w-full h-[250px] shadow-sm border border-stone-200 rounded-2xl z-0 relative mb-2"
+      style={{ zIndex: 0 }} // 避免地圖遮擋到其他彈出式選單
+    ></div>
+  );
+};
+
 const WelcomeScreen = ({
   onCreate,
   onImportTrip,
@@ -2723,6 +2763,12 @@ const App = () => {
 
      {/* --- Main 內容區 --- */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y w-full pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
+
+{Object.keys(groupedItinerary)
+              .sort((a, b) => a - b)
+              .map((day) => {
+                const dateStr = getDateForDay(day);
+                return (
         
         {/* 行程分頁 */}
         {activeTab === "itinerary" && tripData && (
