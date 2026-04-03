@@ -1055,9 +1055,11 @@ const MapView = ({ points }) => {
     // 1. 初始化地圖 (避免重複初始化)
     if (!mapInstanceRef.current) {
       mapInstanceRef.current = window.L.map(mapContainerRef.current).setView([35.0116, 135.7681], 13); // 預設中心點
-      
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
+
+      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap & CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
       }).addTo(mapInstanceRef.current);
     }
 
