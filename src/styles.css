@@ -5,6 +5,7 @@
 
 html, body {
   background-color: #FDFCF8;
+  font-family: 'Roboto', 'Noto Sans TC', sans-serif;
 }
 
 /* 若要自定義滾動條樣式，可保留以下設定 */
