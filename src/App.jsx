@@ -1063,14 +1063,21 @@ const MapView = ({ points }) => {
 
     // 2. 如果點位有經緯度資料 (lat, lng)，繪製路線
     const validPoints = (points || []).filter(p => p.lat && p.lng);
+// 🟢 如果有 2 個以上的點，畫路線
     if (validPoints.length >= 2 && window.L.Routing) {
       window.L.Routing.control({
         waypoints: validPoints.map(p => window.L.latLng(p.lat, p.lng)),
-        lineOptions: { styles: [{ color: '#6366f1', weight: 5 }] }, // Indigo 顏色
+        lineOptions: { styles: [{ color: '#68577b', weight: 4 }] }, // 改用深紫色搭配您的主題
         routeWhileDragging: false,
         addWaypoints: false,
-        show: false // 隱藏預設的導航文字面板
+        show: false
       }).addTo(mapInstanceRef.current);
+    } 
+    // 🟢 如果只有 1 個點，直接插個大頭針並置中
+    else if (validPoints.length === 1) {
+      const { lat, lng } = validPoints[0];
+      window.L.marker([lat, lng]).addTo(mapInstanceRef.current);
+      mapInstanceRef.current.setView([lat, lng], 15);
     }
   }, [points]);
 
@@ -1083,49 +1090,45 @@ const MapView = ({ points }) => {
   );
 };
 
-// --- 新增：質感折疊式地圖按鈕 ---
+// --- 修改：更細窄精緻的折疊地圖按鈕 ---
 const DayMapPreview = ({ points }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // 判斷今天是否有足夠的點位可以畫線
   const validPoints = (points || []).filter(p => p.lat && p.lng);
-  const hasRoute = validPoints.length >= 2;
+  const hasRoute = validPoints.length >= 1; // 只要有1個座標就顯示
 
-  if (!hasRoute) return null; // 如果沒有足夠座標，按鈕自動隱藏不佔空間
+  if (!hasRoute) return null;
 
   return (
-    <div className="mb-6 animate-in fade-in duration-500 flex flex-col items-center">
-      {/* 質感觸發按鈕 */}
+    <div className="mb-4 px-1 animate-in fade-in duration-500 w-full">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-11/12 bg-white/70 backdrop-blur-md border border-white shadow-[0_8px_20px_rgba(104,87,123,0.06)] rounded-[1.5rem] p-4 flex items-center justify-between text-[#504062] hover:bg-white hover:shadow-[0_8px_25px_rgba(104,87,123,0.1)] transition-all active:scale-95 group"
+        className="w-full bg-white/70 backdrop-blur-md border border-white shadow-[0_4px_12px_rgba(104,87,123,0.05)] rounded-2xl py-2.5 px-4 flex items-center justify-between text-[#504062] hover:bg-white hover:shadow-[0_6px_16px_rgba(104,87,123,0.08)] transition-all active:scale-95 group"
       >
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#eedbff] to-[#eadef1] text-[#68577b] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-            <Map size={18} />
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#eedbff] to-[#eadef1] text-[#68577b] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+            <Map size={14} />
           </div>
-          <div className="flex flex-col items-start">
-            <span className="font-serif font-bold text-[15px]">本日路線總覽</span>
-            <span className="text-[10px] text-[#b4a0c8] tracking-widest font-mono">ROUTE MAP</span>
+          <div className="flex items-baseline gap-2">
+            <span className="font-serif font-bold text-[13px] leading-tight">路線總覽</span>
+            <span className="text-[9px] text-[#b4a0c8] tracking-widest font-mono">MAP</span>
           </div>
         </div>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-stone-50 transition-colors group-hover:bg-[#eedbff]/50`}>
+        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-stone-50 transition-colors group-hover:bg-[#eedbff]/50">
           <ChevronRight 
-            size={16} 
+            size={14} 
             className={`text-[#b4a0c8] group-hover:text-[#68577b] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isOpen ? "rotate-90" : ""}`} 
           />
         </div>
       </button>
 
-      {/* 地圖展開區域 (抽屜動畫) */}
+      {/* 地圖展開區域 */}
       <div 
         className={`w-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden ${
-          isOpen ? "max-h-[350px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"
+          isOpen ? "max-h-[350px] opacity-100 mt-2" : "max-h-0 opacity-0 mt-0"
         }`}
       >
-        <div className="px-1">
-          <MapView points={points} />
-        </div>
+        <MapView points={points} />
       </div>
     </div>
   );
@@ -2872,7 +2875,9 @@ const App = () => {
                           />
                         </div>
                       </div>
-                      
+
+                    <DayMapPreview points={groupedItinerary[day]} />
+                    
                       <div className="space-y-4">
                         {groupedItinerary[day]
                           .sort((a, b) => a.time.localeCompare(b.time))
