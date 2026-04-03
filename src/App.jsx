@@ -191,7 +191,7 @@ const ConfirmModal = ({
   return (
     <div className="absolute inset-0 z-[60] bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
       <div className="bg-[#faf9f4] w-full max-w-xs rounded-3xl p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border border-white/50">
-        <h3 className="text-lg font-serif font-bold mb-2 text-[#504062] tracking-wide">
+        <h3 className="text-lg font-serif font-bold mb-2 text-stone-900 tracking-wide">
           {title}
         </h3>
         <p className="text-stone-500 text-sm mb-6 leading-relaxed">{message}</p>
@@ -232,7 +232,7 @@ const LinkText = ({ text }) => {
               href={part}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#68577b] font-bold hover:text-[#504062] hover:underline break-all"
+              className="text-[#68577b] font-bold hover:text-stone-900 hover:underline break-all"
               onClick={(e) => e.stopPropagation()}
             >
               {part}
@@ -331,7 +331,7 @@ const AIAnalysisModal = ({
   return (
     <div className="absolute inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] flex flex-col border border-white">
-        <div className="flex items-center gap-2 mb-4 text-[#504062] border-b border-white/50 pb-4">
+        <div className="flex items-center gap-2 mb-4 text-stone-900 border-b border-white/50 pb-4">
           <Sparkles className="text-[#68577b]" size={24} />
           <h3 className="text-xl font-serif font-bold">{title}</h3>
         </div>
@@ -443,7 +443,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
               <div className="text-xs font-bold text-[#68577b] uppercase tracking-wider mb-1">
                 {config.label} • {item.time}
               </div>
-              <h2 className="text-xl font-serif font-bold text-[#504062] leading-tight">
+              <h2 className="text-xl font-serif font-bold text-stone-900 leading-tight">
                 {item.location}
               </h2>
             </div>
@@ -461,7 +461,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
               {item.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-white border border-stone-100 text-[#504062] font-medium shadow-sm"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-white border border-stone-100 text-stone-900 font-medium shadow-sm"
                 >
                   {tag.text}
                 </span>
@@ -473,14 +473,14 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
               <div className="flex items-center gap-2 mb-2 text-[#68577b] font-bold text-sm">
                 <Sparkles size={16} /> 導遊介紹
               </div>
-              <p className="text-sm text-[#504062] leading-relaxed">
+              <p className="text-sm text-stone-900 leading-relaxed">
                 {item.guideInfo}
               </p>
             </div>
           )}
           {item.notes && (
             <div>
-              <h4 className="text-sm font-bold text-[#504062] mb-2">備註</h4>
+              <h4 className="text-sm font-bold text-stone-900 mb-2">備註</h4>
               <div className="text-sm text-stone-600 bg-white/60 p-4 rounded-2xl border border-white shadow-sm leading-relaxed whitespace-pre-wrap">
                 <LinkText text={item.notes} />
               </div>
@@ -519,7 +519,7 @@ const MemberSelectModal = ({ isOpen, members, onSelect, onCreateNew, onClose }) 
         </button>
 
         <div className="text-center mb-6 mt-2">
-          <h3 className="text-xl font-serif font-bold text-[#504062] mb-2">
+          <h3 className="text-xl font-serif font-bold text-stone-900 mb-2">
             歡迎回來！
           </h3>
           <p className="text-sm text-stone-500">
@@ -598,7 +598,7 @@ const ProfileSetupModal = ({ isOpen, onSubmit, initialName = "", members = {}, o
             <ChevronRight className="rotate-180" size={20} />
           </button>
           <div className="text-center mt-4">
-            <h3 className="text-xl font-serif font-bold text-[#504062] mb-1">
+            <h3 className="text-xl font-serif font-bold text-stone-900 mb-1">
               建立旅者檔案
             </h3>
             <p className="text-xs text-stone-500">選擇一個動物代表你吧！</p>
@@ -681,7 +681,7 @@ const FileImportModal = ({ isOpen, onClose, onImport, isLoading }) => {
         >
           <XCircle size={20} />
         </button>
-        <h3 className="text-xl font-serif font-bold text-[#504062] mb-2 flex items-center gap-2">
+        <h3 className="text-xl font-serif font-bold text-stone-900 mb-2 flex items-center gap-2">
           <FileText className="text-[#68577b]" /> 匯入行程檔案
         </h3>
         <p className="text-sm text-stone-500 mb-6 leading-relaxed">
@@ -738,7 +738,7 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
           <div className="bg-[#eedbff] p-4 rounded-full text-[#68577b] mb-2 shadow-sm">
             <Users size={32} />
           </div>
-          <h3 className="text-xl font-serif font-bold text-[#504062]">邀請朋友加入</h3>
+          <h3 className="text-xl font-serif font-bold text-stone-900">邀請朋友加入</h3>
           <p className="text-sm text-stone-500 leading-relaxed">
             將此代碼分享給您的旅伴。
             <br />
@@ -756,7 +756,7 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
             <div className="text-xs text-stone-400 font-bold uppercase tracking-widest mb-1">
               點擊複製邀請函
             </div>
-            <div className="text-3xl font-mono font-bold text-[#504062] tracking-wider group-hover:text-[#68577b]">
+            <div className="text-3xl font-mono font-bold text-stone-900 tracking-wider group-hover:text-[#68577b]">
               {tripId}
             </div>
             <div className="text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
@@ -866,7 +866,7 @@ const Tag = ({ type, text }) => {
     mustEat: "bg-orange-50 text-orange-700 border-orange-200",
     mustBuy: "bg-emerald-50 text-emerald-700 border-emerald-200",
     reservation: "bg-red-50 text-red-700 border-red-200",
-    story: "bg-[#eedbff] text-[#504062] border-[#eadef1]",
+    story: "bg-[#eedbff] text-stone-900 border-[#eadef1]",
     default: "bg-stone-100 text-stone-600 border-stone-200",
   };
   return (
@@ -929,7 +929,7 @@ const DayNavigation = ({ days, tripData, onScrollToDay }) => {
               className="flex-shrink-0 w-20 bg-white/70 backdrop-blur-sm border border-white rounded-2xl p-2.5 shadow-sm active:scale-95 transition-all text-center group hover:bg-white hover:shadow-md flex flex-col items-center gap-1"
             >
               <div className="flex items-baseline gap-1 justify-center">
-                <span className="text-xl font-serif font-black text-[#504062] leading-none">{day}</span>
+                <span className="text-xl font-serif font-black text-stone-900 leading-none">{day}</span>
                 <span className="text-[10px] text-[#b4a0c8] font-bold leading-none uppercase">Day</span>
               </div>
               
@@ -1020,7 +1020,7 @@ const ItineraryCard = ({
         </div>
         
         {/* 地點名稱 (字體調大一點，text-xl) */}
-        <h4 className="font-serif text-xl font-bold text-[#504062] truncate leading-tight mb-2">
+        <h4 className="font-serif text-xl font-bold text-stone-900 truncate leading-tight mb-2">
           {item.location}
         </h4>
         
@@ -1105,7 +1105,7 @@ const DayMapPreview = ({ points }) => {
     <div className="mb-4 px-1 animate-in fade-in duration-500 w-full">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-white/70 backdrop-blur-md border border-white shadow-[0_4px_12px_rgba(104,87,123,0.05)] rounded-2xl py-2.5 px-4 flex items-center justify-between text-[#504062] hover:bg-white hover:shadow-[0_6px_16px_rgba(104,87,123,0.08)] transition-all active:scale-95 group"
+        className="w-full bg-white/70 backdrop-blur-md border border-white shadow-[0_4px_12px_rgba(104,87,123,0.05)] rounded-2xl py-2.5 px-4 flex items-center justify-between text-stone-900 hover:bg-white hover:shadow-[0_6px_16px_rgba(104,87,123,0.08)] transition-all active:scale-95 group"
       >
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#eedbff] to-[#eadef1] text-[#68577b] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
@@ -1263,7 +1263,7 @@ const WelcomeScreen = ({
           isLoading={isImportLoading}
         />
         <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-[0_20px_60px_rgba(104,87,123,0.1)] border border-white space-y-6 animate-in zoom-in-95 duration-300">
-          <div className="flex items-center gap-2 text-[#504062] mb-2">
+          <div className="flex items-center gap-2 text-stone-900 mb-2">
             <button
               onClick={() => setMode("home")}
               className="p-2 bg-stone-50 hover:bg-[#eadef1]/50 rounded-full transition-colors"
@@ -1280,7 +1280,7 @@ const WelcomeScreen = ({
               <input
                 type="text"
                 placeholder="例如：京都, 日本"
-                className="w-full bg-stone-50 border border-transparent rounded-2xl p-4 outline-none focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-[#504062] font-medium"
+                className="w-full bg-stone-50 border border-transparent rounded-2xl p-4 outline-none focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-stone-900 font-medium"
                 value={newTripData.destination}
                 onChange={(e) =>
                   setNewTripData({
@@ -1311,7 +1311,7 @@ const WelcomeScreen = ({
                     </label>
                     <input
                       type="date"
-                      className="w-full bg-transparent pt-4 pb-1 font-bold text-[#504062] outline-none text-sm font-mono cursor-pointer h-full"
+                      className="w-full bg-transparent pt-4 pb-1 font-bold text-stone-900 outline-none text-sm font-mono cursor-pointer h-full"
                       value={newTripData.startDate}
                       onChange={handleStartDateChange}
                     />
@@ -1328,7 +1328,7 @@ const WelcomeScreen = ({
                     <input
                       type="date"
                       id="endDateInput"
-                      className="w-full bg-transparent pt-4 pb-1 font-bold text-[#504062] outline-none text-sm font-mono cursor-pointer disabled:opacity-30"
+                      className="w-full bg-transparent pt-4 pb-1 font-bold text-stone-900 outline-none text-sm font-mono cursor-pointer disabled:opacity-30"
                       value={newTripData.endDate}
                       min={newTripData.startDate}
                       disabled={!newTripData.startDate}
@@ -1404,11 +1404,11 @@ const WelcomeScreen = ({
         
         {/* Stitch Style Hero Logo */}
         <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-br from-[#eadef1] to-[#d3bee8] rounded-[2.5rem] shadow-[0_20px_40px_rgba(104,87,123,0.2)] border border-white">
-          <Sparkles className="w-12 h-12 text-[#504062]" />
+          <Sparkles className="w-12 h-12 text-stone-900" />
         </div>
         
         <div className="space-y-3">
-          <h1 className="text-4xl md:text-5xl font-serif font-black text-[#504062] tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-serif font-black text-stone-900 tracking-tight">
             旅路 <span className="italic text-[#68577b]">TABIJI</span>
           </h1>
           <p className="text-stone-500 text-sm tracking-widest uppercase">Your Journey, Refined.</p>
@@ -1427,7 +1427,7 @@ const WelcomeScreen = ({
               placeholder="輸入邀請碼 (Trip ID)"
               value={joinId}
               onChange={(e) => setJoinId(e.target.value)}
-              className="w-full bg-white border border-white shadow-sm rounded-2xl py-4 px-6 text-center text-[#504062] font-mono tracking-widest focus:ring-2 focus:ring-[#eadef1] outline-none transition-all placeholder:text-stone-300 placeholder:tracking-normal placeholder:font-sans"
+              className="w-full bg-white border border-white shadow-sm rounded-2xl py-4 px-6 text-center text-stone-900 font-mono tracking-widest focus:ring-2 focus:ring-[#eadef1] outline-none transition-all placeholder:text-stone-300 placeholder:tracking-normal placeholder:font-sans"
             />
           </div>
           <button
@@ -1461,7 +1461,7 @@ const WelcomeScreen = ({
                   className="bg-white border border-white shadow-sm p-4 rounded-2xl flex justify-between items-center hover:border-[#eadef1] hover:shadow-md cursor-pointer transition-all active:scale-95 group"
                 >
                   <div>
-                    <div className="font-serif font-bold text-lg text-[#504062] group-hover:text-[#68577b] transition-colors leading-tight mb-1">
+                    <div className="font-serif font-bold text-lg text-stone-900 group-hover:text-[#68577b] transition-colors leading-tight mb-1">
                       {h.name || "未命名旅程"}
                     </div>
                     <div className="text-[10px] text-stone-400 flex gap-2 font-medium tracking-wide">
@@ -2136,7 +2136,7 @@ const App = () => {
     return (
       <div className="absolute inset-0 z-[80] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
         <div className="bg-[#faf9f4] w-full max-w-xs rounded-[2rem] p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border border-white">
-          <h3 className="text-xl font-serif font-bold text-[#504062] mb-4 text-center">
+          <h3 className="text-xl font-serif font-bold text-stone-900 mb-4 text-center">
             路線優化設定
           </h3>
           <p className="text-sm text-stone-500 mb-6 text-center leading-relaxed">
@@ -2585,7 +2585,7 @@ const App = () => {
               <Sparkles className="text-[#68577b] animate-pulse" size={32} />
             </div>
           </div>
-          <h3 className="text-xl font-serif font-bold text-[#504062] tracking-widest animate-pulse mb-2">
+          <h3 className="text-xl font-serif font-bold text-stone-900 tracking-widest animate-pulse mb-2">
             AI 正在思考中...
           </h3>
         </div>
@@ -2615,7 +2615,7 @@ const App = () => {
                   Boarding Pass
                 </div>
                 <h1
-                  className="text-4xl font-serif font-black leading-tight text-[#504062]"
+                  className="text-4xl font-serif font-black leading-tight text-stone-900"
                   style={{ color: posterTheme.borderColor }}
                 >
                   {posterTheme.title}
@@ -2713,7 +2713,7 @@ const App = () => {
           <div className="flex-1 flex items-center min-w-0 mr-4">
             <div className="flex items-center gap-2 group flex-1 min-w-0">
               <input
-                className="text-3xl leading-none font-serif font-black bg-transparent border-b-2 border-transparent hover:border-[#eadef1] focus:border-[#68577b] px-1 pb-0 pt-1 flex-1 min-w-0 placeholder-[#b4a0c8] focus:outline-none text-[#504062] tracking-wide transition-all truncate"
+                className="text-3xl leading-none font-serif font-black bg-transparent border-b-2 border-transparent hover:border-[#eadef1] focus:border-[#68577b] px-1 pb-0 pt-1 flex-1 min-w-0 placeholder-[#b4a0c8] focus:outline-none text-stone-900 tracking-wide transition-all truncate"
                 value={localTripName}
                 placeholder="點擊輸入旅程名稱..."
                 onChange={(e) => setLocalTripName(e.target.value)}
@@ -2779,7 +2779,7 @@ const App = () => {
         <div className="flex items-center gap-1 mt-2 pl-1">
           <div className="relative flex items-center gap-1 bg-white/60 border border-white shadow-sm hover:bg-white px-2 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
             <Calendar size={10} className="text-[#b4a0c8] group-hover:text-[#68577b]" />
-            <span className="font-mono text-[9px] font-bold text-[#68577b] group-hover:text-[#504062] leading-none mt-0.5">
+            <span className="font-mono text-[9px] font-bold text-[#68577b] group-hover:text-stone-900 leading-none mt-0.5">
               {tripData.startDate || "出發日"}
             </span>
             <input 
@@ -2794,7 +2794,7 @@ const App = () => {
           <ArrowRight size={8} className="text-[#b4a0c8] mx-0.5" />
           
           <div className="relative flex items-center gap-1 bg-white/60 border border-white shadow-sm hover:bg-white px-2 py-0.5 rounded-md transition-colors cursor-pointer group overflow-hidden">
-            <span className="font-mono text-[9px] font-bold text-[#68577b] group-hover:text-[#504062] leading-none mt-0.5">
+            <span className="font-mono text-[9px] font-bold text-[#68577b] group-hover:text-stone-900 leading-none mt-0.5">
               {tripData.endDate || "回程日"}
             </span>
             <input 
@@ -2822,18 +2822,6 @@ const App = () => {
 
      {/* --- Main 內容區 --- */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y w-full pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
-{/* --- 質感折疊地圖按鈕 --- */}
-            {/* 傳入當天行程的資料，這樣只會畫出那一天的路線 */}
-            <DayMapPreview 
-              points={
-                tripData.itinerary?.filter(item => 
-                  // 這裡可以篩選當天的點，如果你希望每天分開畫
-                  // 若希望畫全部，就直接傳 tripData.itinerary
-                  true 
-                ) || []
-              } 
-            />
-            {/* --- 質感折疊地圖按鈕結束 --- */}
         
         {/* 行程分頁 */}
         {activeTab === "itinerary" && tripData && (
@@ -2859,7 +2847,7 @@ const App = () => {
                     <div className="flex justify-between items-end mb-4 px-2">
                         <div className="flex flex-col">
                           <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-serif font-black text-[#504062] leading-none">
+                            <span className="text-3xl font-serif font-black text-stone-900 leading-none">
                               {String(day).padStart(2, "0")}
                             </span>
                             <span className="text-xs font-bold text-[#b4a0c8] uppercase tracking-widest">
@@ -3049,7 +3037,7 @@ const App = () => {
                           {Icon}
                         </div>
                         <div>
-                          <div className="font-bold text-[#504062] flex items-center gap-2 text-base">
+                          <div className="font-bold text-stone-900 flex items-center gap-2 text-base">
                             {expense.item}
                             {myShare > 0 && (
                               <span className="text-[10px] bg-[#eedbff] text-[#68577b] px-1.5 py-0.5 rounded-md font-bold">
@@ -3077,7 +3065,7 @@ const App = () => {
                       </div>
                       
                       <div className="flex items-center gap-3">
-                        <span className="font-bold font-mono text-[#504062] text-lg">
+                        <span className="font-bold font-mono text-stone-900 text-lg">
                           ${Number(expense.amount).toLocaleString()}
                         </span>
                         
@@ -3121,7 +3109,7 @@ const App = () => {
             <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] shadow-[0_8px_30px_rgba(104,87,123,0.06)] border border-white">
               <textarea
                 placeholder="想分享什麼？"
-                className="w-full bg-[#faf9f4] p-4 rounded-2xl text-sm placeholder:text-stone-400 outline-none border border-transparent focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all min-h-[100px] resize-y text-[#504062]"
+                className="w-full bg-[#faf9f4] p-4 rounded-2xl text-sm placeholder:text-stone-400 outline-none border border-transparent focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all min-h-[100px] resize-y text-stone-900"
                 value={itemData.noteContent || ""}
                 onChange={(e) => setItemData({ ...itemData, noteContent: e.target.value })}
               />
@@ -3160,7 +3148,7 @@ const App = () => {
                     <div className="flex items-center gap-3 mb-3">
                       <UserBadge nickname={note.author} emoji={note.emoji} size="md" />
                       <div className="flex flex-col">
-                        <span className="font-bold text-[#504062]">{note.author}</span>
+                        <span className="font-bold text-stone-900">{note.author}</span>
                         <span className="text-[10px] text-stone-400 font-mono">{new Date(note.time).toLocaleString()}</span>
                       </div>
 
@@ -3206,7 +3194,7 @@ const App = () => {
                               <textarea
                                 value={editReplyContent}
                                 onChange={(e) => setEditReplyContent(e.target.value)}
-                                className="w-full bg-transparent text-xs outline-none resize-y min-h-[40px] text-[#504062]"
+                                className="w-full bg-transparent text-xs outline-none resize-y min-h-[40px] text-stone-900"
                                 autoFocus
                               />
                               <div className="flex justify-end gap-2 border-t border-stone-100 pt-2">
@@ -3260,7 +3248,7 @@ const App = () => {
                           id={`reply-input-${note.id}`}
                           rows="1"
                           placeholder="回覆旅伴..."
-                          className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-[#504062]"
+                          className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-stone-900"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
@@ -3322,7 +3310,7 @@ const App = () => {
                 }}
                 className={`relative z-10 flex flex-col items-center justify-center flex-1 py-2 transition-colors duration-300 ease-out active:scale-95 group ${
                   activeTab === tab.id
-                    ? "text-[#504062]"
+                    ? "text-stone-900"
                     : "text-[#b4a0c8] hover:text-[#68577b]"
                 }`}
               >
@@ -3381,14 +3369,14 @@ const App = () => {
                   className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-white px-4 py-3 rounded-2xl shadow-xl hover:bg-[#faf9f4] transition-all w-48 active:scale-95"
                 >
                   <div className="w-8 h-8 bg-[#eedbff] text-[#68577b] rounded-xl flex items-center justify-center"><Sparkles size={16} /></div>
-                  <span className="text-sm font-bold text-[#504062]">智能導遊分析</span>
+                  <span className="text-sm font-bold text-stone-900">智能導遊分析</span>
                 </button>
                 <button
                   onClick={() => { setShowOptimizeModal(true); setShowAIMenu(false); }}
                   className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-white px-4 py-3 rounded-2xl shadow-xl hover:bg-[#faf9f4] transition-all w-48 active:scale-95"
                 >
                   <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center"><Route size={16} /></div>
-                  <span className="text-sm font-bold text-[#504062]">路線優化建議</span>
+                  <span className="text-sm font-bold text-stone-900">路線優化建議</span>
                 </button>
 
                 <div className="px-2 text-[9px] font-black text-[#b4a0c8] uppercase tracking-widest mt-2">Files</div>
@@ -3397,7 +3385,7 @@ const App = () => {
                   className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-white px-4 py-3 rounded-2xl shadow-xl hover:bg-[#faf9f4] transition-all w-48 active:scale-95"
                 >
                   <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><Upload size={16} /></div>
-                  <span className="text-sm font-bold text-[#504062]">匯入行程檔案</span>
+                  <span className="text-sm font-bold text-stone-900">匯入行程檔案</span>
                 </button>
 
                 <div className="relative">
@@ -3412,7 +3400,7 @@ const App = () => {
                     }`}
                   >
                     <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><Download size={16} /></div>
-                    <span className="text-sm font-bold text-[#504062]">匯出行程內容</span>
+                    <span className="text-sm font-bold text-stone-900">匯出行程內容</span>
                     <ChevronRight size={14} className={`ml-auto text-[#b4a0c8] transition-transform ${showExportMenu ? "rotate-90" : ""}`} />
                   </button>
 
@@ -3421,10 +3409,10 @@ const App = () => {
                       className="fixed bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white p-2 z-[70] flex flex-col gap-1 animate-in slide-in-from-right-2 duration-200"
                       style={{ top: menuPos.top, left: menuPos.left }}
                     >
-                      <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-[#504062] hover:bg-[#faf9f4] rounded-xl transition-colors whitespace-nowrap">
+                      <button onClick={() => { handleExportExcel(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-900 hover:bg-[#faf9f4] rounded-xl transition-colors whitespace-nowrap">
                         <FileSpreadsheet size={16} className="text-emerald-500" /> Excel 表格
                       </button>
-                      <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-[#504062] hover:bg-[#faf9f4] rounded-xl transition-colors whitespace-nowrap">
+                      <button onClick={() => { handleExportImage(); setShowExportMenu(false); setShowAIMenu(false); }} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-stone-900 hover:bg-[#faf9f4] rounded-xl transition-colors whitespace-nowrap">
                         <ImageIcon size={16} className="text-pink-500" /> AI 美圖分享
                       </button>
                     </div>
@@ -3439,7 +3427,7 @@ const App = () => {
       {isModalOpen && (
         <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] flex flex-col border border-white">
-            <h3 className="text-xl font-serif font-bold mb-6 text-[#504062] tracking-wide text-center shrink-0">
+            <h3 className="text-xl font-serif font-bold mb-6 text-stone-900 tracking-wide text-center shrink-0">
               {isEditMode
                 ? "編輯內容"
                 : activeTab === "itinerary"
@@ -3462,7 +3450,7 @@ const App = () => {
                         onChange={(e) =>
                           setItemData({ ...itemData, day: e.target.value })
                         }
-                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-[#504062] font-bold"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-stone-900 font-bold"
                       />
                     </div>
                     <div>
@@ -3475,7 +3463,7 @@ const App = () => {
                         onChange={(e) =>
                           setItemData({ ...itemData, time: e.target.value })
                         }
-                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-[#504062] font-bold"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-stone-900 font-bold"
                       />
                     </div>
                   </div>
@@ -3546,7 +3534,7 @@ const App = () => {
                       onChange={(e) =>
                         setItemData({ ...itemData, notes: e.target.value })
                       }
-                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-[#504062]"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-stone-900"
                     />
                   </div>
 {/* --- 照片上傳區塊 --- */}
@@ -3600,7 +3588,7 @@ const App = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
           <div className="w-full max-w-2xl bg-[#faf9f4] rounded-[2.5rem] p-6 shadow-2xl border border-white">
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#eadef1]">
-              <h3 className="font-serif text-xl font-bold text-[#504062]">裁剪照片</h3>
+              <h3 className="font-serif text-xl font-bold text-stone-900">裁剪照片</h3>
               <p className="text-xs text-stone-400">請拖曳選擇最適合放上卡片的範圍</p>
             </div>
 
@@ -3685,7 +3673,7 @@ const App = () => {
                       onChange={(e) =>
                         setItemData({ ...itemData, item: e.target.value })
                       }
-                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-[#504062] font-bold"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold"
                     />
                   </div>
                   
@@ -3730,7 +3718,7 @@ const App = () => {
                         onChange={(e) =>
                           setItemData({ ...itemData, amount: e.target.value })
                         }
-                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-[#504062] font-bold text-lg"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-stone-900 font-bold text-lg"
                       />
                     </div>
                     <div>
@@ -3743,7 +3731,7 @@ const App = () => {
                         onChange={(e) =>
                           setItemData({ ...itemData, date: e.target.value })
                         }
-                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-[#504062] font-bold"
+                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-stone-900 font-bold"
                       />
                     </div>
                   </div>
@@ -3757,7 +3745,7 @@ const App = () => {
                       onChange={(e) =>
                         setItemData({ ...itemData, payer: e.target.value })
                       }
-                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-[#504062] font-bold"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold"
                     />
                   </div>
                   <div className="bg-white/50 p-4 rounded-2xl border border-white shadow-sm">
@@ -3824,7 +3812,7 @@ const App = () => {
                                 )}
                                 <span
                                   className={`text-xs font-bold ${
-                                    isSelected ? "text-[#504062]" : "text-stone-400"
+                                    isSelected ? "text-stone-900" : "text-stone-400"
                                   }`}
                                 >
                                   {member.nickname}
