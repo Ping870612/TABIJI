@@ -786,39 +786,60 @@ const LocationInput = ({ value, onChange, placeholder }) => {
   }, [wrapperRef]);
 
   const handleSearch = (query) => {
-   onChange(query, null, null); 
+    onChange(query, null, null); 
     
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     if (query.length < 2) {
       setSuggestions([]);
       return;
     }
+
+    // 🟢 優化 1：把防抖時間從 200ms 延長到 450ms。
+    // 等使用者「稍微打完一個詞」再發送搜尋，避免過度頻繁請求導致被伺服器封鎖而變慢。
     debounceTimeout.current = setTimeout(async () => {
       try {
+        // 🟢 優化 2：改用 Photon (Komoot) API，強大的模糊搜尋與地標 (POI) 支援！
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            query
-          )}&limit=5`
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`
         );
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
-        setSuggestions(data);
+
+        // 轉換 Photon 的資料格式，讓 UI 容易讀取
+        const formattedSuggestions = data.features.map((feature) => {
+          const p = feature.properties;
+          // 組合完整地址（過濾掉空白或重複的欄位）
+          const addressParts = [p.name, p.city, p.state, p.country].filter(Boolean);
+          const uniqueParts = [...new Set(addressParts)];
+
+          return {
+            place_id: p.osm_id || Math.random().toString(),
+            display_name: uniqueParts.join(", "),
+            main_name: p.name || uniqueParts[0], // 確保景點名稱是最突出的
+            lat: feature.geometry.coordinates[1],
+            lon: feature.geometry.coordinates[0],
+          };
+        });
+
+        setSuggestions(formattedSuggestions);
         setShowSuggestions(true);
       } catch (e) {
         console.warn("Location suggestion unavailable");
         setSuggestions([]);
       }
-    }, 200);
+    }, 450);
   };
 
   const handleSelect = (place) => {
-      onChange(
-      place.display_name.split(",")[0], 
+    // 🟢 將最精確的地標名稱與座標傳出去
+    onChange(
+      place.main_name, 
       parseFloat(place.lat), 
       parseFloat(place.lon)
     );
     setShowSuggestions(false);
   };
+
   return (
     <div className="relative" ref={wrapperRef}>
       <div className="relative">
@@ -840,19 +861,20 @@ const LocationInput = ({ value, onChange, placeholder }) => {
         )}
       </div>
       {showSuggestions && suggestions.length > 0 && (
-        <ul className="absolute z-50 w-full bg-white border border-stone-100 rounded-xl mt-1 shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+        <ul className="absolute z-50 w-full bg-white border border-stone-100 rounded-xl mt-1 shadow-xl max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 custom-scrollbar">
           {suggestions.map((place) => (
             <li
               key={place.place_id}
               onClick={() => handleSelect(place)}
-              className="p-3 hover:bg-[#faf9f4] cursor-pointer text-sm text-stone-600 border-b border-stone-50 last:border-0 truncate"
+              className="p-3 hover:bg-[#faf9f4] cursor-pointer text-sm text-stone-600 border-b border-stone-50 last:border-0"
             >
-              <span className="font-bold text-stone-800">
-                {place.display_name.split(",")[0]}
-              </span>
-              <span className="text-xs text-stone-400 ml-2">
-                {place.display_name.split(",").slice(1, 2).join(",")}
-              </span>
+              <div className="font-bold text-stone-800 truncate">
+                {place.main_name}
+              </div>
+              <div className="text-[10px] text-stone-400 truncate mt-0.5">
+                {/* 顯示景點後面的城市、國家等輔助資訊 */}
+                {place.display_name.split(",").slice(1).join(",")}
+              </div>
             </li>
           ))}
         </ul>
