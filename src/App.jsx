@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useJsApiLoader, Autocomplete, GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import {
   MapPin,
   Calendar,
@@ -74,6 +75,8 @@ import {
 } from "firebase/firestore";
 
 // --- 配置區塊 ---
+
+const libraries = ["places"];
 
 // 1. Firebase Config
 const firebaseConfig = {
@@ -771,28 +774,49 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
 };
 
 const LocationInput = ({ value, onChange, placeholder }) => {
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const wrapperRef = useRef(null);
-  const debounceTimeout = useRef(null);
+  const [autocomplete, setAutocomplete] = useState(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target))
-        setShowSuggestions(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [wrapperRef]);
+  const onLoad = (auto) => setAutocomplete(auto);
 
-  const handleSearch = (query) => {
-    onChange(query, null, null); 
-    
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-    if (query.length < 2) {
-      setSuggestions([]);
-      return;
+  const onPlaceChanged = () => {
+    if (autocomplete !== null) {
+      const place = autocomplete.getPlace();
+      const placeName = place.name || place.formatted_address;
+      
+      // 取得 Google 提供的經緯度，存入資料庫畫地圖用
+      const lat = place.geometry?.location?.lat() || null;
+      const lng = place.geometry?.location?.lng() || null;
+      
+      if (placeName) {
+        // 將名稱、緯度、經度一起回傳
+        onChange(placeName, lat, lng);
+      }
     }
+  };
+
+  return (
+    <div className="relative">
+      <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value, null, null)}
+          className="w-full bg-white border border-white shadow-sm rounded-xl p-3 pl-10 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-800"
+        />
+      </Autocomplete>
+      <Search className="absolute left-3 top-3.5 text-[#b4a0c8]" size={16} />
+      {value && (
+        <button
+          onClick={() => onChange("", null, null)}
+          className="absolute right-3 top-3.5 text-stone-300 hover:text-stone-500 z-10"
+        >
+          <XCircle size={16} />
+        </button>
+      )}
+    </div>
+  );
+};
 
     // 🟢 優化 1：把防抖時間從 200ms 延長到 450ms。
     // 等使用者「稍微打完一個詞」再發送搜尋，避免過度頻繁請求導致被伺服器封鎖而變慢。
@@ -1065,25 +1089,59 @@ const ItineraryCard = ({
   );
 };
 
-// --- 更新：MapView 地圖預覽組件 (支援自動置中與縮放) ---
 const MapView = ({ points }) => {
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
+  const [directionsResponse, setDirectionsResponse] = useState(null);
+
+  // 過濾出有經緯度的有效座標
+  const validPoints = (points || []).filter(p => p.lat && p.lng);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.L || !mapContainerRef.current) return;
+    if (validPoints.length >= 2 && window.google) {
+      const directionsService = new window.google.maps.DirectionsService();
+      
+      const origin = { lat: validPoints[0].lat, lng: validPoints[0].lng };
+      const destination = { lat: validPoints[validPoints.length - 1].lat, lng: validPoints[validPoints.length - 1].lng };
+      const waypoints = validPoints.slice(1, -1).map(p => ({
+        location: { lat: p.lat, lng: p.lng },
+        stopover: true
+      }));
 
-    // 1. 初始化地圖 (移除原本寫死的 setView，改為動態調整)
-    if (!mapInstanceRef.current) {
-      mapInstanceRef.current = window.L.map(mapContainerRef.current); 
-
-      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap & CARTO',
-        subdomains: 'abcd',
-        maxZoom: 20
-      }).addTo(mapInstanceRef.current);
+      directionsService.route({
+        origin: origin,
+        destination: destination,
+        waypoints: waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING
+      }).then(response => {
+        setDirectionsResponse(response);
+      }).catch(e => console.error("路線計算失敗", e));
     }
+  }, [points]);
 
+  if (!validPoints.length) {
+    return <div className="w-full h-[250px] bg-stone-100 flex items-center justify-center rounded-2xl mb-2 text-stone-400 text-sm">無座標資訊無法顯示地圖</div>;
+  }
+
+  const center = { lat: validPoints[0].lat, lng: validPoints[0].lng };
+
+  return (
+    <div className="w-full h-[250px] shadow-sm border border-stone-200 rounded-2xl z-0 relative mb-2 overflow-hidden">
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        center={center}
+        zoom={15}
+        options={{ disableDefaultUI: true }}
+      >
+        {/* 只有一個點的時候畫圖釘 */}
+        {validPoints.length === 1 && <Marker position={center} />}
+        
+        {/* 有兩個以上的點就畫路線 */}
+        {directionsResponse && (
+          <DirectionsRenderer directions={directionsResponse} />
+        )}
+      </GoogleMap>
+    </div>
+  );
+};
     const validPoints = (points || []).filter(p => p.lat && p.lng);
 
     // 2. 使用 setTimeout 延遲執行，確保「折疊動畫展開後」才計算地圖尺寸
@@ -1534,6 +1592,11 @@ const WelcomeScreen = ({
 };
 
 const App = () => {
+  // 從環境變數讀取 Key
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    libraries: libraries,
+  }); 
   // --- 1. 狀態定義 ---
   const [user, setUser] = useState(null);
   const [tripId, setTripId] = useState(null);
@@ -2937,12 +3000,9 @@ const App = () => {
                                   isDangerous: true,
                                 })
                               }
-                              onMap={(loc) =>
-                                window.open(
-                                  `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(loc)}`,
-                                  "_blank"
-                                )
-                              }
+                          onMap={(loc) =>
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc)}`, "_blank")
+}
                             />
                           ))}
                       </div>
