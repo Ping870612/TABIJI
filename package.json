@@ -15,7 +15,8 @@
     "react-scripts": "5.0.1",
     "lucide-react": "0.563.0",
     "firebase": "12.8.0",
-    "react-image-crop": "^11.0.5"
+    "react-image-crop": "^11.0.5",
+    "@react-google-maps/api": "^2.19.3"
   },
   "devDependencies": {
     "@types/react": "18.2.38",
