@@ -3127,14 +3127,9 @@ const handleCalculateDebts = async () => {
                           {Icon}
                         </div>
                         <div>
-                          <div className="font-bold text-stone-900 flex items-center gap-2 text-base">
-                            {expense.item}
-                            {myShare > 0 && (
-                              <span className="text-[10px] bg-[#eedbff] text-[#68577b] px-1.5 py-0.5 rounded-md font-bold">
-                                我付: ${Math.round(myShare)}
-                              </span>
-                            )}
-                          </div>
+                    <div className="font-bold text-stone-900 flex items-center gap-2 text-base">
+                      {expense.item}
+                            </div>
                           <div className="flex items-center gap-2 mt-1 text-[10px]">
                             <span className="text-[#b4a0c8] font-mono">
                               {expense.date}
@@ -3159,24 +3154,22 @@ const handleCalculateDebts = async () => {
                           ${Number(expense.amount).toLocaleString()}
                         </span>
                         
-                        {expense.createdBy === user.uid && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConfirmConfig({
-                                isOpen: true,
-                                title: "刪除支出",
-                                message: `確定要刪除「${expense.item}」嗎？`,
-                                onConfirm: () => deleteItem("expenses", expense),
-                                onCancel: () => setConfirmConfig({ isOpen: false }),
-                                isDangerous: true,
-                              });
-                            }}
-                            className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
+            <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setConfirmConfig({
+      isOpen: true,
+      title: "刪除支出",
+      message: `確定要刪除「${expense.item}」嗎？`,
+      onConfirm: () => deleteItem("expenses", expense),
+      onCancel: () => setConfirmConfig({ isOpen: false }),
+      isDangerous: true,
+    });
+  }}
+  className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+>
+  <Trash2 size={16} />
+</button>
                       </div>
                     </div>
                   );
