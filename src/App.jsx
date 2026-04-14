@@ -1047,17 +1047,35 @@ const ItineraryCard = ({
 
 const MapView = ({ points }) => {
   const [directionsResponse, setDirectionsResponse] = useState(null);
+  const [routeError, setRouteError] = useState(false);
+  const [mapInstance, setMapInstance] = useState(null);
 
-  // 過濾出有經緯度的有效座標
-  const validPoints = (points || []).filter(p => p.lat && p.lng);
+  // 🌟 核心修正：自動識別並分割航班段落
+  // 找出最後一個類別為 'flight' 的點，將其視為「到達目的地機場」的起點
+  const items = points || [];
+  let lastFlightIndex = -1;
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].category === 'flight') {
+      lastFlightFlightIndex = i;
+      break;
+    }
+  }
+
+  // 如果有航班，只從最後一個航班點（抵達機場）開始計算之後的陸地路徑
+  // 這樣就能忽略掉「台北 -> 日本」這段無法開車的跨海路徑
+  const effectivePoints = lastFlightIndex !== -1 
+    ? items.slice(lastFlightIndex).filter(p => p.lat && p.lng)
+    : items.filter(p => p.lat && p.lng);
 
   useEffect(() => {
-    if (validPoints.length >= 2 && window.google) {
+    setDirectionsResponse(null); // 重置狀態
+    
+    if (effectivePoints.length >= 2 && window.google) {
       const directionsService = new window.google.maps.DirectionsService();
       
-      const origin = { lat: validPoints[0].lat, lng: validPoints[0].lng };
-      const destination = { lat: validPoints[validPoints.length - 1].lat, lng: validPoints[validPoints.length - 1].lng };
-      const waypoints = validPoints.slice(1, -1).map(p => ({
+      const origin = { lat: effectivePoints[0].lat, lng: effectivePoints[0].lng };
+      const destination = { lat: effectivePoints[effectivePoints.length - 1].lat, lng: effectivePoints[effectivePoints.length - 1].lng };
+      const waypoints = effectivePoints.slice(1, -1).map(p => ({
         location: { lat: p.lat, lng: p.lng },
         stopover: true
       }));
@@ -1069,36 +1087,51 @@ const MapView = ({ points }) => {
         travelMode: window.google.maps.TravelMode.DRIVING
       }).then(response => {
         setDirectionsResponse(response);
-      }).catch(e => console.error("路線計算失敗", e));
+        setRouteError(false);
+      }).catch(e => {
+        console.warn("陸地段路線計算失敗:", e);
+        setRouteError(true); // 如果還是失敗（例如跨島），則顯示圖釘模式
+      });
     }
-  }, [points]);
+  }, [points]); // 當行程點位改變時重新計算
 
-  if (!validPoints.length) {
-    return <div className="w-full h-[250px] bg-stone-100 flex items-center justify-center rounded-2xl mb-2 text-stone-400 text-sm">無座標資訊無法顯示地圖</div>;
+  // 自動縮放地圖以包含所有有效點位
+  useEffect(() => {
+    if (mapInstance && effectivePoints.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      effectivePoints.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
+      mapInstance.fitBounds(bounds);
+    }
+  }, [mapInstance, effectivePoints, routeError]);
+
+  if (!effectivePoints.length) {
+    return <div className="w-full h-[250px] bg-stone-100 flex items-center justify-center rounded-2xl mb-2 text-stone-400 text-sm">無座標資訊</div>;
   }
 
-  const center = { lat: validPoints[0].lat, lng: validPoints[0].lng };
+  const center = { lat: effectivePoints[0].lat, lng: effectivePoints[0].lng };
 
   return (
     <div className="w-full h-[250px] shadow-sm border border-stone-200 rounded-2xl z-0 relative mb-2 overflow-hidden">
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={center}
-        zoom={15}
+        zoom={12}
         options={{ disableDefaultUI: true }}
+        onLoad={map => setMapInstance(map)}
       >
-        {/* 只有一個點的時候畫圖釘 */}
-        {validPoints.length === 1 && <Marker position={center} />}
+        {/* 只有一個點，或是路線計算失敗時，顯示各點圖釘 */}
+        {(effectivePoints.length === 1 || routeError) && effectivePoints.map((p, idx) => (
+          <Marker key={idx} position={{ lat: p.lat, lng: p.lng }} />
+        ))}
         
-        {/* 有兩個以上的點就畫路線 */}
-        {directionsResponse && (
+        {/* 顯示計算出的陸地導航路線 */}
+        {directionsResponse && !routeError && (
           <DirectionsRenderer directions={directionsResponse} />
         )}
       </GoogleMap>
     </div>
   );
 };
-
 // --- 修改：更細窄精緻的折疊地圖按鈕 ---
 const DayMapPreview = ({ points }) => {
   const [isOpen, setIsOpen] = useState(false);
