@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     // 4. 由後端呼叫 Google Gemini API
     // 這裡改用穩定的 1.5-flash 模型，速度快且便宜
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
