@@ -1760,7 +1760,7 @@ const App = () => {
       initialData
     );
     setTripId(newId);
-    fetchWeather(newId, destination, startDate, endDate);
+    updateTripWeather(newId, destination, startDate, endDate, []);
   };
 
   const createTripFromImport = async (importData) => {
@@ -1789,8 +1789,9 @@ const App = () => {
       initialData
     );
     setTripId(newId);
-    if (initialData.destination && initialData.startDate)
-      fetchWeather(newId, initialData.destination, initialData.startDate, initialData.endDate);
+if (initialData.destination && initialData.startDate) {
+      updateTripWeather(newId, initialData.destination, initialData.startDate, initialData.endDate, processedItinerary);
+    }
     showToast("旅程匯入成功！");
   };
 
@@ -1907,110 +1908,92 @@ const App = () => {
     return codes[code] || "多雲";
   };
 
-// 🌟 1. 括號裡面多加一個 endDate 參數
-  const fetchWeather = async (id, destination, startDate, endDate) => {
-    if (!destination || !startDate) {
-      showToast("無法更新：缺少地點或日期", "error");
-      return;
-    }
+// --- 整合版：智能氣象中心 ---
+  const updateTripWeather = async (id, destination, startDate, endDate, itinerary = []) => {
+    if (!destination || !startDate) return;
 
-    const tripStart = new Date(startDate);
-    let tripEnd;
-
-    // 🌟 2. 如果有真實的回程日，就用回程日；沒有才預設抓 7 天
-    if (endDate) {
-      tripEnd = new Date(endDate);
-    } else {
-      tripEnd = new Date(tripStart);
-      tripEnd.setDate(tripEnd.getDate() + 6);
-    }
-
+    // 1. 基本設定與日期限制
     const today = new Date();
-    today.setHours(0, 0, 0, 0); 
-    
+    today.setHours(0, 0, 0, 0);
     const maxAllowedDate = new Date(today);
     maxAllowedDate.setDate(maxAllowedDate.getDate() + 14);
 
-    if (tripStart > maxAllowedDate) {
-      showToast(`氣象局目前只能預測 14 天內的天氣哦！`, "error");
-      return; 
-    }
+    const formatDateString = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
 
-    let apiEndDate = tripEnd;
-    let isCut = false; // 🌟 3. 新增一個標記，看「真實行程」有沒有被切斷
+    // 2. 取得旅程總天數與分組
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date(start);
+    if (!endDate) end.setDate(start.getDate() + 6);
 
-    if (tripEnd > maxAllowedDate) {
-      apiEndDate = maxAllowedDate;
-      isCut = true; // 真的有少給天數才標記
-    }
+    const totalDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const grouped = (itinerary || []).reduce((acc, item) => {
+      const day = item.day || 1;
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(item);
+      return acc;
+    }, {});
 
-    showToast("正在連線氣象衛星抓取資料...", "success");
+    showToast("正在同步每日精準氣象...", "success");
 
     try {
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`
-      );
+      // 3. 獲取總目的地的預設座標 (作為無行程天數的備案)
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`);
       const geoData = await geoRes.json();
+      const defaultCoords = geoData[0] ? { lat: geoData[0].lat, lng: geoData[0].lon } : null;
 
-      if (!geoData || geoData.length === 0) {
-        throw new Error("找不到這個地點");
-      }
+      const newWeatherMap = {};
 
-      const { lat, lon } = geoData[0];
-
-      const formatDateString = (d) => {
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-
-      const startDateStr = formatDateString(tripStart);
-      const endDateStr = formatDateString(apiEndDate); 
-
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${startDateStr}&end_date=${endDateStr}`;
-      
-      const weatherRes = await fetch(weatherUrl);
-      const weatherData = await weatherRes.json();
-
-      if (weatherData.error) {
-         throw new Error(weatherData.reason || "API 參數錯誤");
-      }
-
-      if (!weatherData.daily) {
-        throw new Error("無法取得氣象資料");
-      }
-
-      const weatherMap = {};
-      const { time, weathercode, temperature_2m_max, temperature_2m_min } = weatherData.daily;
-
-      time.forEach((date, index) => {
-        const minT = Math.round(temperature_2m_min[index]);
-        const maxT = Math.round(temperature_2m_max[index]);
-        const code = weathercode[index];
+      // 4. 針對每一天進行氣象掃描
+      const fetchPromises = Array.from({ length: totalDays }, (_, i) => i + 1).map(async (dayNum) => {
+        const targetDate = new Date(start);
+        targetDate.setDate(targetDate.getDate() + (dayNum - 1));
         
-        weatherMap[date] = {
-          date: date,
-          temp: `${minT}~${maxT}°C`,
-          condition: getWeatherDesc(code) 
-        };
+        // 跳過過期或太遠的日期
+        if (targetDate > maxAllowedDate || targetDate < today) return;
+        const dateStr = formatDateString(targetDate);
+
+        // 優先權：1. 當天最早且有座標的景點 -> 2. 旅程總目的地座標
+        const firstValidItem = (grouped[dayNum] || [])
+          .sort((a, b) => a.time.localeCompare(b.time))
+          .find(i => i.lat && i.lng);
+
+        const lat = firstValidItem?.lat || defaultCoords?.lat;
+        const lng = firstValidItem?.lng || defaultCoords?.lng;
+
+        if (!lat || !lng) return;
+
+        try {
+          const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`;
+          const res = await fetch(weatherUrl);
+          const data = await res.json();
+
+          if (data.daily) {
+            newWeatherMap[dateStr] = {
+              date: dateStr,
+              temp: `${Math.round(data.daily.temperature_2m_min[0])}~${Math.round(data.daily.temperature_2m_max[0])}°C`,
+              condition: getWeatherDesc(data.daily.weathercode[0]),
+              locationName: firstValidItem?.location || destination // 標註來源
+            };
+          }
+        } catch (e) { console.warn(`Day ${dayNum} 失敗`, e); }
       });
 
-      await updateDoc(
-        doc(db, "artifacts", appId, "public", "data", "travel_trips", id),
-        { weather: weatherMap }
-      );
+      await Promise.all(fetchPromises);
 
-      // 🌟 4. 只有「真實行程」真的被切斷時，才顯示警告
-      if (isCut) {
-        showToast(`已更新！但因為超過14天，僅顯示部分天數的預報。`, "success");
-      } else {
-        showToast(`成功更新 ${destination} 的氣象！`);
-      }
+      // 5. 更新到 Firestore
+      await updateDoc(doc(db, "artifacts", appId, "public", "data", "travel_trips", id), {
+        weather: newWeatherMap
+      });
+      showToast("✅ 全行程精準氣象已同步！");
 
     } catch (e) {
-      console.error("Weather API Error:", e);
-      showToast(`更新失敗：${e.message}`, "error");
+      console.error(e);
+      showToast("氣象更新失敗", "error");
     }
   };
 
@@ -2822,7 +2805,7 @@ const App = () => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              fetchWeather(tripId, tripData.destination, tripData.startDate, tripData.endDate);
+              updateTripWeather(tripId, tripData.destination, tripData.startDate, tripData.endDate);
             }}
             className="ml-1 p-1 bg-white/60 border border-white shadow-sm hover:bg-orange-50 text-[#b4a0c8] hover:text-orange-500 rounded-md transition-colors"
             title="點擊更新天氣"
