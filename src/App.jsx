@@ -890,12 +890,11 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
-// --- 更新後的導覽列元件 ---
+// --- 更新後的導覽列元件 (包含動態天氣圖示) ---
 const DayNavigation = ({ days, tripData, onScrollToDay }) => {
   const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
   return (
-    // 修正：改回 top-0，因為它是在 main 裡面滾動的
     <div className="sticky top-0 z-40 bg-[#faf9f4]/90 backdrop-blur-md pb-3 pt-3 px-4 -mx-4 mb-4 shadow-[0_10px_20px_rgba(104,87,123,0.05)] border-b border-white/60 transition-all">
       <div className="flex gap-3 overflow-x-auto py-1 custom-scrollbar justify-start px-2">
         {days.map((day) => {
@@ -912,6 +911,18 @@ const DayNavigation = ({ days, tripData, onScrollToDay }) => {
           
           const weather = tripData.weather?.[dateKey];
 
+          // 🟢 1. 這裡加入動態圖示與顏色判斷邏輯
+          let Icon = Sun;
+          let iconColor = "text-orange-500"; 
+          if (weather) {
+            const condition = weather.condition || "";
+            if (condition.includes("雨")) { Icon = CloudRain; iconColor = "text-blue-500"; }
+            else if (condition.includes("雪")) { Icon = CloudSnow; iconColor = "text-sky-300"; }
+            else if (condition.includes("雷")) { Icon = CloudLightning; iconColor = "text-purple-500"; }
+            else if (condition.includes("雲") || condition.includes("陰") || condition.includes("霧")) { Icon = Cloud; iconColor = "text-stone-400"; }
+            else if (condition.includes("風")) { Icon = Wind; iconColor = "text-teal-400"; }
+          }
+
           return (
             <button
               key={day}
@@ -927,9 +938,10 @@ const DayNavigation = ({ days, tripData, onScrollToDay }) => {
                 {formattedDate} ({dayOfWeek})
               </div>
               
+              {/* 🟢 2. 套用動態圖示與顏色 */}
               {weather ? (
-                <div className="mt-1 flex items-center justify-center gap-0.5 text-[9px] text-orange-500 font-bold leading-none">
-                  <Sun size={10} />
+                <div className={`mt-1 flex items-center justify-center gap-0.5 text-[9px] font-bold leading-none ${iconColor}`}>
+                  <Icon size={10} />
                   <span className="truncate">{weather.temp}</span>
                 </div>
               ) : (
