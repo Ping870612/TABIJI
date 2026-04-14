@@ -2263,12 +2263,13 @@ if (initialData.destination && initialData.startDate) {
     );
   };
 
-  const handleCalculateDebts = async () => {
+const handleCalculateDebts = async () => {
     if (!tripData?.expenses?.length) {
       showToast("沒有支出紀錄", "error");
       return;
     }
 
+    // 1. 過濾出有意義的金額
     const validExpenses = tripData.expenses.filter((item) => {
       const amount = parseFloat(item.amount);
       return !isNaN(amount) && amount > 0;
@@ -2278,13 +2279,14 @@ if (initialData.destination && initialData.startDate) {
       setAiAnalysisResult({
         isOpen: true,
         title: "計算失敗",
-        content: "原因：偵測不到有效的金額數字。\n請檢查您的支出紀錄，確保「金額」欄位皆為大於 0 的數字。",
-        isDebtAnalysis: false, 
+        content: "原因：偵測不到有效的金額數字。\n請檢查您的支出紀錄，確保金額皆大於 0。",
+        isDebtAnalysis: false,
         isLoading: false,
       });
       return;
     }
 
+    // 2. 開啟 AI 等待視窗
     setAiAnalysisResult({
       isOpen: true,
       title: "AI 分帳計算",
@@ -2294,31 +2296,44 @@ if (initialData.destination && initialData.startDate) {
     });
 
     try {
+      // 🌟 改寫後的精確 Prompt 邏輯
       const res = await callGeminiAPI([
         {
-          text: `計算旅遊記帳 JSON: ${JSON.stringify(
-            validExpenses
-          )}。回傳純 JSON Array: [{"from": "付款人", "to": "收款人", "amount": 整數金額}]。金額請四捨五入。`,
+          text: `你是一個專業的旅遊財務官。請精確計算以下分帳 JSON 資料：${JSON.stringify(validExpenses)}。
+        
+        ### 計算規則：
+        1. 每一筆支出，請將 "amount" 除以 "splitWith" 陣列的人數，得出「每人應付額」。
+        2. "payer" 是代墊人，"splitWith" 是所有要分攤的人（包含代墊人自己）。
+        3. 請算出每個人「代墊的總額」與「自己應出的總額」之間的差額。
+        4. 最後優化還款路徑（減少轉帳次數），計算出誰該給誰多少錢以達成結清。
+        
+        ### 回傳格式：
+        請嚴格只回傳純 JSON Array 格式，不要 Markdown 標籤（如 \`\`\`json ），格式如下：
+        [{"from": "應給錢的人", "to": "收錢的人", "amount": 四捨五入後的整數}]
+        
+        若已完全結清，則回傳空陣列 []。`,
         },
       ]);
 
       if (!res) throw new Error("AI Failed");
 
+      // 3. 清洗資料並顯示結果
+      const cleanJson = res.replace(/```json|```/g, "").trim();
       setAiAnalysisResult((prev) => ({
         ...prev,
-        content: res,
+        content: cleanJson,
         isLoading: false,
       }));
     } catch (e) {
+      console.error("AI 結算失敗:", e);
       setAiAnalysisResult((prev) => ({
         ...prev,
-        content: "計算失敗，請稍後再試。",
+        content: "計算失敗，請檢查網路或金鑰權限。",
         isLoading: false,
         isDebtAnalysis: false,
       }));
     }
   };
-
   const handleSaveItem = async () => {
     const tripRef = doc(
       db,
@@ -2997,27 +3012,23 @@ if (initialData.destination && initialData.startDate) {
                 <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
                   My Personal Spend
                 </div>
-                <div className="text-4xl font-bold font-mono text-white">
-                  $
-                  {(tripData.expenses || [])
-                    .reduce((sum, item) => {
-                      const amount = Number(item.amount) || 0;
-                      const myName = getCurrentUserNickname();
-                      
-                      if (item.isSplit && item.splitWith?.length > 0) {
-                        if (item.splitWith.includes(myName)) {
-                          return sum + (amount / item.splitWith.length);
-                        }
-                        return sum; 
-                      } 
-                      else if (item.payer === myName) {
-                        return sum + amount;
-                      }
-                      
-                      return sum;
-                    }, 0)
-                    .toLocaleString(undefined, { maximumFractionDigits: 0 })} 
-                </div>
+<div className="text-4xl font-bold font-mono text-white">
+  $
+  {(tripData.expenses || [])
+    .reduce((sum, item) => {
+      const amount = Number(item.amount) || 0;
+      const myName = getCurrentUserNickname();
+      
+      // 🌟 簡化邏輯：只要付款人是我，就顯示全額
+      return item.payer === myName ? sum + amount : sum;
+    }, 0)
+    .toLocaleString()} 
+</div>
+
+{/* 這裡也建議把標籤文字改掉，讓語意更精準 */}
+<div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
+  我已墊付總額 (My Out-of-Pocket)
+</div>
 
                 <button
                   onClick={() => {
