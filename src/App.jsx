@@ -1056,7 +1056,7 @@ const MapView = ({ points }) => {
   let lastFlightIndex = -1;
   for (let i = items.length - 1; i >= 0; i--) {
     if (items[i].category === 'flight') {
-      lastFlightFlightIndex = i;
+      lastFlightIndex = i;
       break;
     }
   }
