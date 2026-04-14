@@ -1760,7 +1760,7 @@ const App = () => {
       initialData
     );
     setTripId(newId);
-    fetchWeather(newId, destination, startDate);
+    fetchWeather(newId, destination, startDate, endDate);
   };
 
   const createTripFromImport = async (importData) => {
@@ -1790,7 +1790,7 @@ const App = () => {
     );
     setTripId(newId);
     if (initialData.destination && initialData.startDate)
-      fetchWeather(newId, initialData.destination, initialData.startDate);
+      fetchWeather(newId, initialData.destination, initialData.startDate, initialData.endDate);
     showToast("旅程匯入成功！");
   };
 
@@ -1907,41 +1907,46 @@ const App = () => {
     return codes[code] || "多雲";
   };
 
-const fetchWeather = async (id, destination, startDate) => {
+// 🌟 1. 括號裡面多加一個 endDate 參數
+  const fetchWeather = async (id, destination, startDate, endDate) => {
     if (!destination || !startDate) {
       showToast("無法更新：缺少地點或日期", "error");
       return;
     }
 
-    // 1. 日期範圍防呆與智慧裁切
     const tripStart = new Date(startDate);
-    const tripEnd = new Date(tripStart);
-    tripEnd.setDate(tripEnd.getDate() + 6); // 預設往後抓 7 天
+    let tripEnd;
+
+    // 🌟 2. 如果有真實的回程日，就用回程日；沒有才預設抓 7 天
+    if (endDate) {
+      tripEnd = new Date(endDate);
+    } else {
+      tripEnd = new Date(tripStart);
+      tripEnd.setDate(tripEnd.getDate() + 6);
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0); 
     
-    // 計算 API 允許的最大日期 (通常是今天起算 + 15天，我們抓保守一點 + 14天)
     const maxAllowedDate = new Date(today);
     maxAllowedDate.setDate(maxAllowedDate.getDate() + 14);
 
-    // 如果連「出發日」都超過 14 天，那完全無法預測
     if (tripStart > maxAllowedDate) {
       showToast(`氣象局目前只能預測 14 天內的天氣哦！`, "error");
       return; 
     }
 
-    // 🌟 關鍵修復：如果「結束日」超過了 14 天的極限，就把結束日硬生生切在極限日
-    // 這樣 API 就不會因為 out of range 報錯，能給幾天就給幾天
     let apiEndDate = tripEnd;
+    let isCut = false; // 🌟 3. 新增一個標記，看「真實行程」有沒有被切斷
+
     if (tripEnd > maxAllowedDate) {
       apiEndDate = maxAllowedDate;
+      isCut = true; // 真的有少給天數才標記
     }
 
     showToast("正在連線氣象衛星抓取資料...", "success");
 
     try {
-      // 取得經緯度
       const geoRes = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`
       );
@@ -1953,7 +1958,6 @@ const fetchWeather = async (id, destination, startDate) => {
 
       const { lat, lon } = geoData[0];
 
-      // 2. 將 Date 安全轉為 YYYY-MM-DD
       const formatDateString = (d) => {
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1962,15 +1966,13 @@ const fetchWeather = async (id, destination, startDate) => {
       };
 
       const startDateStr = formatDateString(tripStart);
-      const endDateStr = formatDateString(apiEndDate); // 這裡改用安全範圍的結束日
+      const endDateStr = formatDateString(apiEndDate); 
 
-      // 呼叫 Open-Meteo API
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${startDateStr}&end_date=${endDateStr}`;
       
       const weatherRes = await fetch(weatherUrl);
       const weatherData = await weatherRes.json();
 
-      // 如果 API 還是吐出明確錯誤
       if (weatherData.error) {
          throw new Error(weatherData.reason || "API 參數錯誤");
       }
@@ -1979,7 +1981,6 @@ const fetchWeather = async (id, destination, startDate) => {
         throw new Error("無法取得氣象資料");
       }
 
-      // 整理資料存入 Firebase
       const weatherMap = {};
       const { time, weathercode, temperature_2m_max, temperature_2m_min } = weatherData.daily;
 
@@ -2000,8 +2001,8 @@ const fetchWeather = async (id, destination, startDate) => {
         { weather: weatherMap }
       );
 
-      // 如果有被裁切日期，給使用者一個溫馨小提示
-      if (tripEnd > maxAllowedDate) {
+      // 🌟 4. 只有「真實行程」真的被切斷時，才顯示警告
+      if (isCut) {
         showToast(`已更新！但因為超過14天，僅顯示部分天數的預報。`, "success");
       } else {
         showToast(`成功更新 ${destination} 的氣象！`);
@@ -2821,7 +2822,7 @@ const fetchWeather = async (id, destination, startDate) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              fetchWeather(tripId, tripData.destination, tripData.startDate);
+              fetchWeather(tripId, tripData.destination, tripData.startDate, tripData.endDate);
             }}
             className="ml-1 p-1 bg-white/60 border border-white shadow-sm hover:bg-orange-50 text-[#b4a0c8] hover:text-orange-500 rounded-md transition-colors"
             title="點擊更新天氣"
