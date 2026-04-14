@@ -1913,18 +1913,29 @@ const fetchWeather = async (id, destination, startDate) => {
       return;
     }
 
-    // 1. 檢查日期是否超過真實天氣預報的極限 (14天)
-    const tripDate = new Date(startDate);
-    const today = new Date();
-    // 清除時間，只比較日期
-    today.setHours(0, 0, 0, 0); 
-    const diffTime = tripDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // 1. 日期範圍防呆與智慧裁切
+    const tripStart = new Date(startDate);
+    const tripEnd = new Date(tripStart);
+    tripEnd.setDate(tripEnd.getDate() + 6); // 預設往後抓 7 天
 
-    // 防呆機制：真實天氣無法預測太遙遠的未來
-    if (diffDays > 14) {
-      showToast(`氣象局只能預測 14 天內的天氣 (旅程在 ${diffDays} 天後)`, "error");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    
+    // 計算 API 允許的最大日期 (通常是今天起算 + 15天，我們抓保守一點 + 14天)
+    const maxAllowedDate = new Date(today);
+    maxAllowedDate.setDate(maxAllowedDate.getDate() + 14);
+
+    // 如果連「出發日」都超過 14 天，那完全無法預測
+    if (tripStart > maxAllowedDate) {
+      showToast(`氣象局目前只能預測 14 天內的天氣哦！`, "error");
       return; 
+    }
+
+    // 🌟 關鍵修復：如果「結束日」超過了 14 天的極限，就把結束日硬生生切在極限日
+    // 這樣 API 就不會因為 out of range 報錯，能給幾天就給幾天
+    let apiEndDate = tripEnd;
+    if (tripEnd > maxAllowedDate) {
+      apiEndDate = maxAllowedDate;
     }
 
     showToast("正在連線氣象衛星抓取資料...", "success");
@@ -1942,7 +1953,7 @@ const fetchWeather = async (id, destination, startDate) => {
 
       const { lat, lon } = geoData[0];
 
-      // 2. 修復時區陷阱：安全地將 Date 轉為 YYYY-MM-DD
+      // 2. 將 Date 安全轉為 YYYY-MM-DD
       const formatDateString = (d) => {
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1950,12 +1961,8 @@ const fetchWeather = async (id, destination, startDate) => {
         return `${year}-${month}-${day}`;
       };
 
-      const start = new Date(startDate);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 6); // 取未來七天
-      
-      const startDateStr = formatDateString(start);
-      const endDateStr = formatDateString(end);
+      const startDateStr = formatDateString(tripStart);
+      const endDateStr = formatDateString(apiEndDate); // 這裡改用安全範圍的結束日
 
       // 呼叫 Open-Meteo API
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${startDateStr}&end_date=${endDateStr}`;
@@ -1963,7 +1970,7 @@ const fetchWeather = async (id, destination, startDate) => {
       const weatherRes = await fetch(weatherUrl);
       const weatherData = await weatherRes.json();
 
-      // 如果 API 吐出明確錯誤 (例如日期超出範圍)
+      // 如果 API 還是吐出明確錯誤
       if (weatherData.error) {
          throw new Error(weatherData.reason || "API 參數錯誤");
       }
@@ -1984,7 +1991,7 @@ const fetchWeather = async (id, destination, startDate) => {
         weatherMap[date] = {
           date: date,
           temp: `${minT}~${maxT}°C`,
-          condition: getWeatherDesc(code) // 使用你寫好的轉換函式
+          condition: getWeatherDesc(code) 
         };
       });
 
@@ -1993,7 +2000,12 @@ const fetchWeather = async (id, destination, startDate) => {
         { weather: weatherMap }
       );
 
-      showToast(`成功更新 ${destination} 的氣象！`);
+      // 如果有被裁切日期，給使用者一個溫馨小提示
+      if (tripEnd > maxAllowedDate) {
+        showToast(`已更新！但因為超過14天，僅顯示部分天數的預報。`, "success");
+      } else {
+        showToast(`成功更新 ${destination} 的氣象！`);
+      }
 
     } catch (e) {
       console.error("Weather API Error:", e);
