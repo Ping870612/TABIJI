@@ -1907,15 +1907,30 @@ const App = () => {
     return codes[code] || "多雲";
   };
 
-  const fetchWeather = async (id, destination, startDate) => {
+const fetchWeather = async (id, destination, startDate) => {
     if (!destination || !startDate) {
       showToast("無法更新：缺少地點或日期", "error");
       return;
     }
 
+    // 1. 檢查日期是否超過真實天氣預報的極限 (14天)
+    const tripDate = new Date(startDate);
+    const today = new Date();
+    // 清除時間，只比較日期
+    today.setHours(0, 0, 0, 0); 
+    const diffTime = tripDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // 防呆機制：真實天氣無法預測太遙遠的未來
+    if (diffDays > 14) {
+      showToast(`氣象局只能預測 14 天內的天氣 (旅程在 ${diffDays} 天後)`, "error");
+      return; 
+    }
+
     showToast("正在連線氣象衛星抓取資料...", "success");
 
     try {
+      // 取得經緯度
       const geoRes = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`
       );
@@ -1927,20 +1942,37 @@ const App = () => {
 
       const { lat, lon } = geoData[0];
 
+      // 2. 修復時區陷阱：安全地將 Date 轉為 YYYY-MM-DD
+      const formatDateString = (d) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       const start = new Date(startDate);
       const end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      const endDateStr = end.toISOString().split('T')[0];
+      end.setDate(end.getDate() + 6); // 取未來七天
+      
+      const startDateStr = formatDateString(start);
+      const endDateStr = formatDateString(end);
 
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${startDate}&end_date=${endDateStr}`;
+      // 呼叫 Open-Meteo API
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${startDateStr}&end_date=${endDateStr}`;
       
       const weatherRes = await fetch(weatherUrl);
       const weatherData = await weatherRes.json();
+
+      // 如果 API 吐出明確錯誤 (例如日期超出範圍)
+      if (weatherData.error) {
+         throw new Error(weatherData.reason || "API 參數錯誤");
+      }
 
       if (!weatherData.daily) {
         throw new Error("無法取得氣象資料");
       }
 
+      // 整理資料存入 Firebase
       const weatherMap = {};
       const { time, weathercode, temperature_2m_max, temperature_2m_min } = weatherData.daily;
 
@@ -1952,7 +1984,7 @@ const App = () => {
         weatherMap[date] = {
           date: date,
           temp: `${minT}~${maxT}°C`,
-          condition: getWeatherDesc(code)
+          condition: getWeatherDesc(code) // 使用你寫好的轉換函式
         };
       });
 
@@ -1964,8 +1996,8 @@ const App = () => {
       showToast(`成功更新 ${destination} 的氣象！`);
 
     } catch (e) {
-      console.error(e);
-      showToast("更新失敗：找不到地點或服務忙碌", "error");
+      console.error("Weather API Error:", e);
+      showToast(`更新失敗：${e.message}`, "error");
     }
   };
 
