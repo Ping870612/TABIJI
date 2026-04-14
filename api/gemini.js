@@ -43,6 +43,7 @@ export default async function handler(req, res) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Referer": "https://test4-chi-red.vercel.app/",
         },
         body: JSON.stringify({
           contents: [{ parts: parts }],
