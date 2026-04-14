@@ -28,6 +28,9 @@ import {
   Sun,
   CloudRain,
   Wind,
+  Cloud,         
+  CloudSnow,     
+  CloudLightning,
   Map,
   Search,
   History,
@@ -840,19 +843,49 @@ const Tag = ({ type, text }) => {
 const WeatherBadge = ({ date, weatherData }) => {
   if (!date || !weatherData || !weatherData[date]) return null;
   const info = weatherData[date];
+  
+  // 1. 預設圖示與顏色
   let Icon = Sun;
-  if (info.condition.includes("Rain") || info.condition.includes("雨"))
+  let iconColor = "text-orange-400"; 
+
+  const condition = info.condition || "";
+
+  // 2. 根據天氣狀況，動態切換圖示與顏色
+  if (condition.includes("雨")) {
     Icon = CloudRain;
-  else if (info.condition.includes("Cloud") || info.condition.includes("雲"))
-    Icon = CloudSun;
-  else if (info.condition.includes("Wind") || info.condition.includes("風"))
+    iconColor = "text-blue-500";
+  } else if (condition.includes("雪")) {
+    Icon = CloudSnow;
+    iconColor = "text-sky-300";
+  } else if (condition.includes("雷")) {
+    Icon = CloudLightning;
+    iconColor = "text-purple-500";
+  } else if (condition.includes("雲") || condition.includes("陰") || condition.includes("霧")) {
+    Icon = Cloud;
+    iconColor = "text-stone-400"; // 陰天給予質感的灰色
+  } else if (condition.includes("風")) {
     Icon = Wind;
+    iconColor = "text-teal-400";
+  }
+  
+  // 萃取地點名稱
+  const shortLocation = info.locationName ? info.locationName.split(',')[0] : "";
+
   return (
-    <div className="flex items-center gap-2 text-xs text-[#68577b] bg-white/60 px-3 py-1.5 rounded-full border border-white shadow-sm backdrop-blur-sm animate-in fade-in">
-      <Icon size={14} className="text-orange-400" />
-      <span>
-        {info.temp} {info.condition}
-      </span>
+    <div className="flex flex-col items-end gap-1 animate-in fade-in">
+      <div className="flex items-center gap-2 text-xs bg-white/60 px-3 py-1.5 rounded-full border border-white shadow-sm backdrop-blur-sm">
+        {/* 🟢 套用動態 Icon 與 顏色 */}
+        <Icon size={14} className={iconColor} />
+        {/* 🟢 文字改為稍微深一點的灰色，提升閱讀質感 */}
+        <span className="font-bold text-stone-700 tracking-wide">
+          {info.temp} {info.condition}
+        </span>
+      </div>
+      {shortLocation && (
+        <div className="text-[9px] text-stone-400 font-medium tracking-wide pr-1 flex items-center gap-1">
+          <MapPin size={8} /> {shortLocation}
+        </div>
+      )}
     </div>
   );
 };
@@ -1897,13 +1930,13 @@ if (initialData.destination && initialData.startDate) {
 
   const getWeatherDesc = (code) => {
     const codes = {
-      0: "晴朗 ☀️", 1: "晴朗 ☀️", 2: "多雲 ⛅", 3: "陰天 ☁️",
-      45: "霧 🌫️", 48: "霧 🌫️",
-      51: "毛毛雨 🌧️", 53: "毛毛雨 🌧️", 55: "毛毛雨 🌧️",
-      61: "下雨 ☔", 63: "下雨 ☔", 65: "豪大雨 ⛈️",
-      71: "下雪 ❄️", 73: "下雪 ❄️", 75: "暴雪 ❄️",
-      80: "陣雨 🌦️", 81: "陣雨 🌦️", 82: "強陣雨 ⛈️",
-      95: "雷雨 ⚡", 96: "雷雨 ⚡", 99: "雷雨 ⚡"
+0: "晴朗", 1: "晴朗", 2: "多雲", 3: "陰天",
+      45: "起霧", 48: "起霧",
+      51: "毛毛雨", 53: "毛毛雨", 55: "毛毛雨",
+      61: "下雨", 63: "下雨", 65: "豪大雨",
+      71: "下雪", 73: "下雪", 75: "暴雪",
+      80: "陣雨", 81: "陣雨", 82: "強陣雨",
+      95: "雷雨", 96: "雷雨", 99: "雷雨"
     };
     return codes[code] || "多雲";
   };
