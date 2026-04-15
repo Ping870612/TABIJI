@@ -1578,6 +1578,8 @@ const App = () => {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: libraries,
+    language: "zh-TW",
+    region: "TW",
   }); 
   // --- 1. 狀態定義 ---
   const [user, setUser] = useState(null);
