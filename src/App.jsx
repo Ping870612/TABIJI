@@ -240,33 +240,65 @@ const ConfirmModal = ({
 
 const LinkText = ({ text }) => {
   if (!text) return null;
-  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+
+  // 1. 先用 Markdown 格式的連結來切分字串： [顯示文字](網址)
+  const mdRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
+  const parts = text.split(mdRegex);
 
   return (
     <span>
       {parts.map((part, i) => {
-        if (part.match(/https?:\/\/[^\s]+/)) {
+        // 檢查是否為 Markdown 連結格式
+        const mdMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+        if (mdMatch) {
+          const linkText = mdMatch[1]; // 抓取中括號內的文字
+          const url = mdMatch[2];      // 抓取小括號內的網址
           return (
             <a
               key={i}
-              href={part}
+              href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#68577b] font-bold hover:text-stone-900 hover:underline break-all"
+              className="text-[#68577b] font-bold hover:text-stone-900 hover:underline break-all relative inline-flex items-center gap-1 group"
               onClick={(e) => e.stopPropagation()}
             >
-              {part}
+              <span className="border-b border-[#b4a0c8] group-hover:border-stone-900 transition-colors pb-0.5">{linkText}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-opacity mb-1"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </a>
           );
         }
+
+        // 如果不是 Markdown 格式，再檢查是否有純網址 (自動超連結)
+        const urlParts = part.split(/(https?:\/\/[^\s]+)/g);
         return (
           <span key={i}>
-            {part.split('\n').map((line, j, arr) => (
-              <React.Fragment key={j}>
-                {line}
-                {j < arr.length - 1 && <br />}
-              </React.Fragment>
-            ))}
+            {urlParts.map((urlPart, k) => {
+              if (urlPart.match(/^https?:\/\/[^\s]+$/)) {
+                return (
+                  <a
+                    key={k}
+                    href={urlPart}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#68577b] font-bold hover:text-stone-900 hover:underline break-all"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {urlPart}
+                  </a>
+                );
+              }
+              // 純文字處理換行
+              return (
+                <span key={k}>
+                  {urlPart.split('\n').map((line, j, arr) => (
+                    <React.Fragment key={`${k}-${j}`}>
+                      {line}
+                      {j < arr.length - 1 && <br />}
+                    </React.Fragment>
+                  ))}
+                </span>
+              );
+            })}
           </span>
         );
       })}
