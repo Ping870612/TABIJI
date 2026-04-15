@@ -800,17 +800,15 @@ const LocationInput = ({ value, onChange, placeholder }) => {
       const place = autocomplete.getPlace();
       const placeName = place.name || place.formatted_address;
       
-      // 取得 Google 提供的經緯度，存入資料庫畫地圖用
       const lat = place.geometry?.location?.lat() || null;
       const lng = place.geometry?.location?.lng() || null;
       
       if (placeName) {
-        // 將名稱、緯度、經度一起回傳
         onChange(placeName, lat, lng);
       }
     }
   };
-return (
+  return (
     <div className="relative">
       <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
         <input
@@ -821,7 +819,6 @@ return (
           className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 pl-11 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-900 font-bold text-base"
         />
       </Autocomplete>
-      {/* 👇 調整圖示的垂直置中位置 (改為 top-4 left-4) */}
       <Search className="absolute left-4 top-4 text-[#b4a0c8]" size={18} />
       {value && (
         <button
@@ -3456,11 +3453,9 @@ const handleCalculateDebts = async () => {
           </div>
         </div>
       </nav>
-
-      {/* --- FAB (Plus / AI Buttons) --- */}
+{/* --- FAB (Plus / AI Buttons) --- */}
       {!isModalOpen && activeTab === "itinerary" && (
         <div className="absolute bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-6 z-[60] flex flex-col-reverse items-end gap-4 pointer-events-none">
-          
           <button
             onClick={() => {
               setIsEditMode(false);
@@ -3564,11 +3559,10 @@ const handleCalculateDebts = async () => {
                 ? "新增行程"
                 : "新增支出"}
             </h3>
-            
+
             <div className="space-y-4 overflow-y-auto scrollbar-hide px-1 flex-1">
               {activeTab === "itinerary" ? (
                 <>
-                  {/* --- 修正：Day & Time 避免超出螢幕 --- */}
                   <div className="grid grid-cols-2 gap-3 w-full">
                     <div className="min-w-0">
                       <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
@@ -3598,20 +3592,6 @@ const handleCalculateDebts = async () => {
                       />
                     </div>
                   </div>
-                    <div>
-                      <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
-                        Time
-                      </label>
-                      <input
-                        type="time"
-                        value={itemData.time}
-                        onChange={(e) =>
-                          setItemData({ ...itemData, time: e.target.value })
-                        }
-                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-stone-900 font-bold"
-                      />
-                    </div>
-                  </div>
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       {itemData.category === "flight"
@@ -3619,23 +3599,23 @@ const handleCalculateDebts = async () => {
                         : "Location"}
                     </label>
                     <LocationInput
-  placeholder={
-    itemData.category === "flight"
-      ? "TPE - NRT"
-      : "搜尋地點"
-  }
-  value={itemData.location || ""}
-  onChange={(val, lat, lng) =>
-    setItemData({ 
-      ...itemData, 
-      location: val, 
-      lat: lat, 
-      lng: lng 
-    })
-  }
-/>
+                      placeholder={
+                        itemData.category === "flight"
+                          ? "TPE - NRT"
+                          : "搜尋地點"
+                      }
+                      value={itemData.location || ""}
+                      onChange={(val, lat, lng) =>
+                        setItemData({ 
+                          ...itemData, 
+                          location: val, 
+                          lat: lat, 
+                          lng: lng 
+                        })
+                      }
+                    />
                   </div>
-                  
+
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       Category
@@ -3681,7 +3661,7 @@ const handleCalculateDebts = async () => {
                       className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-stone-900"
                     />
                   </div>
-{/* --- 照片上傳區塊 --- */}
+
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       自訂照片 (選填)
@@ -3712,7 +3692,6 @@ const handleCalculateDebts = async () => {
                                 reader.onloadend = () => {
                                   setOriginalImage(reader.result);
                                   setShowCropModal(true);
-                                  // 設定比例為 16:6 (比較扁長，配合卡片的 h-32)
                                   setCrop({ unit: '%', width: 90, aspect: 21 / 9 });
                                 };
                                 reader.readAsDataURL(file);
@@ -3727,86 +3706,84 @@ const handleCalculateDebts = async () => {
                     </div>
                   </div>
 
-      {/* --- 裁剪視窗 (Modal) 放這裡，緊接在 isModalOpen 的內容裡面或外面都可以，建議放在最外層 return 前 --- */}
-      {showCropModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-[#faf9f4] rounded-[2.5rem] p-6 shadow-2xl border border-white">
-            <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#eadef1]">
-              <h3 className="font-serif text-xl font-bold text-stone-900">裁剪照片</h3>
-              <p className="text-xs text-stone-400">請拖曳選擇最適合放上卡片的範圍</p>
-            </div>
+                  {showCropModal && (
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+                      <div className="w-full max-w-2xl bg-[#faf9f4] rounded-[2.5rem] p-6 shadow-2xl border border-white">
+                        <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#eadef1]">
+                          <h3 className="font-serif text-xl font-bold text-stone-900">裁剪照片</h3>
+                          <p className="text-xs text-stone-400">請拖曳選擇最適合放上卡片的範圍</p>
+                        </div>
 
-            <div className="max-h-[60vh] overflow-y-auto rounded-2xl border-2 border-dashed border-[#eadef1] bg-white p-2 flex justify-center">
-              <ReactCrop
-                crop={crop}
-                onChange={c => setCrop(c)}
-                onComplete={c => setCompletedCrop(c)}
-                aspect={16 / 6} // 強制比例，讓它跟卡片高度完美吻合
-                className="max-w-full"
-              >
-                <img
-                  ref={imgRef}
-                  src={originalImage}
-                  alt="原始圖"
-                  onLoad={(e) => {
-                    const { width, height } = e.currentTarget;
-                    setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, 16 / 6, width, height), width, height));
-                  }}
-                />
-              </ReactCrop>
-            </div>
+                        <div className="max-h-[60vh] overflow-y-auto rounded-2xl border-2 border-dashed border-[#eadef1] bg-white p-2 flex justify-center">
+                          <ReactCrop
+                            crop={crop}
+                            onChange={c => setCrop(c)}
+                            onComplete={c => setCompletedCrop(c)}
+                            aspect={16 / 6} 
+                            className="max-w-full"
+                          >
+                            <img
+                              ref={imgRef}
+                              src={originalImage}
+                              alt="原始圖"
+                              onLoad={(e) => {
+                                const { width, height } = e.currentTarget;
+                                setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, 16 / 6, width, height), width, height));
+                              }}
+                            />
+                          </ReactCrop>
+                        </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#eadef1]">
-              <button 
-                onClick={() => { setShowCropModal(false); setOriginalImage(null); }}
-                className="px-6 py-3 rounded-xl text-sm font-bold text-stone-500 bg-white border border-stone-200 hover:bg-stone-50 transition-colors"
-              >
-                取消
-              </button>
-              <button 
-                onClick={async () => {
-                  if (completedCrop && imgRef.current) {
-                    const image = imgRef.current;
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    const scaleX = image.naturalWidth / image.width;
-                    const scaleY = image.naturalHeight / image.height;
-                    
-                    canvas.width = completedCrop.width;
-                    canvas.height = completedCrop.height;
-                    
-                    ctx.drawImage(
-                      image,
-                      completedCrop.x * scaleX,
-                      completedCrop.y * scaleY,
-                      completedCrop.width * scaleX,
-                      completedCrop.height * scaleY,
-                      0,
-                      0,
-                      completedCrop.width,
-                      completedCrop.height
-                    );
-                    
-                    const base64Image = canvas.toDataURL('image/jpeg', 0.8); // 壓縮一點避免超過 Firebase 限制
-                    setItemData({ ...itemData, image: base64Image });
-                    setShowCropModal(false);
-                    setOriginalImage(null);
-                  }
-                }}
-                className="px-8 py-3 rounded-xl text-sm font-bold text-white bg-[#68577b] hover:bg-[#504062] shadow-lg transition-all"
-              >
-                確認裁剪
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-                  
+                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#eadef1]">
+                          <button 
+                            onClick={() => { setShowCropModal(false); setOriginalImage(null); }}
+                            className="px-6 py-3 rounded-xl text-sm font-bold text-stone-500 bg-white border border-stone-200 hover:bg-stone-50 transition-colors"
+                          >
+                            取消
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              if (completedCrop && imgRef.current) {
+                                const image = imgRef.current;
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                
+                                const scaleX = image.naturalWidth / image.width;
+                                const scaleY = image.naturalHeight / image.height;
+                                
+                                canvas.width = completedCrop.width;
+                                canvas.height = completedCrop.height;
+                                
+                                ctx.drawImage(
+                                  image,
+                                  completedCrop.x * scaleX,
+                                  completedCrop.y * scaleY,
+                                  completedCrop.width * scaleX,
+                                  completedCrop.height * scaleY,
+                                  0,
+                                  0,
+                                  completedCrop.width,
+                                  completedCrop.height
+                                );
+                                
+                                const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+                                setItemData({ ...itemData, image: base64Image });
+                                setShowCropModal(false);
+                                setOriginalImage(null);
+                              }
+                            }}
+                            className="px-8 py-3 rounded-xl text-sm font-bold text-white bg-[#68577b] hover:bg-[#504062] shadow-lg transition-all"
+                          >
+                            確認裁剪
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
-                  <div>
+                  <div className="w-full min-w-0">
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       消費項目
                     </label>
@@ -3817,7 +3794,7 @@ const handleCalculateDebts = async () => {
                       onChange={(e) =>
                         setItemData({ ...itemData, item: e.target.value })
                       }
-                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold"
+                      className="w-full min-w-0 box-border bg-white border border-white shadow-sm rounded-2xl px-3 py-3 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold text-base"
                     />
                   </div>         
                   <div>
@@ -3849,12 +3826,10 @@ const handleCalculateDebts = async () => {
                     </div>
                   </div>
 
-{/* --- 升級版：金額與匯率區塊 --- */}
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       金額與匯率 ({itemData.currency || 'TWD'})
                     </label>
-                    {/* 👇 統一外框規格：p-4, rounded-2xl, w-full, box-border */}
                     <div className="bg-white/50 p-4 rounded-2xl border border-white shadow-sm space-y-3 w-full box-border">
                       <div className="flex gap-2 w-full">
                         <select 
@@ -3869,7 +3844,6 @@ const handleCalculateDebts = async () => {
                           <option value="THB">THB 泰銖</option>
                         </select>
                         
-                        {/* 👇 加上 min-w-0 防止 flex 被撐破，加上 text-base 防止手機縮放 */}
                         <input
                           type="number"
                           placeholder="外幣金額"
@@ -3891,7 +3865,6 @@ const handleCalculateDebts = async () => {
                         <div className="flex items-center justify-between px-1">
                           <div className="flex items-center gap-2 text-[11px] font-bold text-stone-500">
                             <span>匯率:</span>
-                            {/* 👇 同樣加上 text-base */}
                             <input 
                               type="number"
                               step="0.0001"
@@ -3914,38 +3887,7 @@ const handleCalculateDebts = async () => {
                       )}
                     </div>
                   </div>
-                  
-                  {/* --- 分類區塊維持原樣 --- */}
-                  <div>
-                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
-                      分類
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { id: "food", label: "飲食", icon: <Utensils size={16} /> },
-                        { id: "transport", label: "交通", icon: <Train size={16} /> },
-                        { id: "accommodation", label: "住宿", icon: <Home size={16} /> },
-                        { id: "shopping", label: "購物", icon: <ShoppingBag size={16} /> },
-                        { id: "other", label: "其他", icon: <MoreHorizontal size={16} /> },
-                      ].map((cat) => (
-                        <button
-                          key={cat.id}
-                          onClick={() =>
-                            setItemData({ ...itemData, category: cat.id })
-                          }
-                          className={`py-3 rounded-2xl border flex flex-col items-center gap-1 text-xs transition-all shadow-sm ${
-                            itemData.category === cat.id
-                              ? "bg-[#68577b] text-white border-[#68577b]"
-                              : "bg-white text-[#b4a0c8] border-white hover:border-[#eadef1]"
-                          }`}
-                        >
-                          {cat.icon} <span className="font-medium">{cat.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* --- 獨立出來的：日期區塊 (修正超出螢幕) --- */}
                   <div className="w-full min-w-0">
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       日期
@@ -3964,7 +3906,6 @@ const handleCalculateDebts = async () => {
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       付款人
                     </label>
-                    {/* 👇 統一規格為 rounded-2xl, p-4, text-base */}
                     <input
                       type="text"
                       value={itemData.payer || ""}
@@ -4092,7 +4033,6 @@ const handleCalculateDebts = async () => {
           />
         </div>
       )}
-
     </div>
   );
 };
