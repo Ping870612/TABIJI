@@ -3846,7 +3846,7 @@ const handleCalculateDebts = async () => {
                         
                         <input
                           type="number"
-                          placeholder="外幣金額"
+                          placeholder="金額"
                           className="flex-1 min-w-0 bg-white border border-white shadow-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-base font-bold text-stone-900"
                           value={itemData.foreignAmount || ""}
                           onChange={(e) => {
