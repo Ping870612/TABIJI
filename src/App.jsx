@@ -818,7 +818,6 @@ return (
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value, null, null)}
-          {/* 👇 將 className 換成這行 (加入了 rounded-2xl, p-4, text-base) */}
           className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 pl-11 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-900 font-bold text-base"
         />
       </Autocomplete>
@@ -3611,7 +3610,6 @@ const handleCalculateDebts = async () => {
       : "搜尋地點"
   }
   value={itemData.location || ""}
-  // 🟢 修改點：接收 val(名稱), lat(緯度), lng(經度)，並一起存入 itemData
   onChange={(val, lat, lng) =>
     setItemData({ 
       ...itemData, 
