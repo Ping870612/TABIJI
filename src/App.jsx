@@ -3568,8 +3568,8 @@ const handleCalculateDebts = async () => {
             <div className="space-y-4 overflow-y-auto scrollbar-hide px-1 flex-1">
               {activeTab === "itinerary" ? (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
+                  <div className="grid grid-cols-2 gap-3 w-full">
+                    <div className="min-w-0">
                       <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                         Day
                       </label>
@@ -3580,9 +3580,23 @@ const handleCalculateDebts = async () => {
                         onChange={(e) =>
                           setItemData({ ...itemData, day: e.target.value })
                         }
-                        className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-stone-900 font-bold"
+                        className="w-full min-w-0 box-border bg-white border border-white shadow-sm rounded-2xl px-3 py-3 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-stone-900 font-bold text-base"
                       />
                     </div>
+                    <div className="min-w-0">
+                      <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
+                        Time
+                      </label>
+                      <input
+                        type="time"
+                        value={itemData.time}
+                        onChange={(e) =>
+                          setItemData({ ...itemData, time: e.target.value })
+                        }
+                        className="w-full min-w-0 box-border bg-white border border-white shadow-sm rounded-2xl px-3 py-3 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all text-center font-mono text-stone-900 font-bold text-base"
+                      />
+                    </div>
+                  </div>
                     <div>
                       <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                         Time
@@ -3929,20 +3943,20 @@ const handleCalculateDebts = async () => {
                       ))}
                     </div>
                   </div>
-
-                  {/* --- 獨立出來的：日期區塊 --- */}
-                  <div>
+                  
+                  {/* --- 獨立出來的：日期區塊 (修正超出螢幕) --- */}
+                  <div className="w-full min-w-0">
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       日期
                     </label>
-                    {/* 👇 統一規格為 rounded-2xl, p-4, text-base */}
                     <input
                       type="date"
                       value={itemData.date}
                       onChange={(e) =>
                         setItemData({ ...itemData, date: e.target.value })
                       }
-                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold text-base font-mono"
+                      {/* 加入 box-border, min-w-0, px-3 py-3, text-base */}
+                      className="w-full min-w-0 box-border bg-white border border-white shadow-sm rounded-2xl px-3 py-3 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold text-base font-mono"
                     />
                   </div>
                   
