@@ -3198,6 +3198,8 @@ const handleCalculateDebts = async () => {
     <span className="text-[9px] text-stone-400 font-mono">
       {expense.foreignAmount} {expense.currency}
     </span>
+
+                      )}
                         
             <button
   onClick={(e) => {
