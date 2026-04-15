@@ -810,8 +810,7 @@ const LocationInput = ({ value, onChange, placeholder }) => {
       }
     }
   };
-
-  return (
+return (
     <div className="relative">
       <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
         <input
@@ -819,16 +818,18 @@ const LocationInput = ({ value, onChange, placeholder }) => {
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value, null, null)}
-          className="w-full bg-white border border-white shadow-sm rounded-xl p-3 pl-10 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-800"
+          {/* 👇 將 className 換成這行 (加入了 rounded-2xl, p-4, text-base) */}
+          className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 pl-11 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-900 font-bold text-base"
         />
       </Autocomplete>
-      <Search className="absolute left-3 top-3.5 text-[#b4a0c8]" size={16} />
+      {/* 👇 調整圖示的垂直置中位置 (改為 top-4 left-4) */}
+      <Search className="absolute left-4 top-4 text-[#b4a0c8]" size={18} />
       {value && (
         <button
           onClick={() => onChange("", null, null)}
-          className="absolute right-3 top-3.5 text-stone-300 hover:text-stone-500 z-10"
+          className="absolute right-4 top-4 text-stone-300 hover:text-stone-500 z-10"
         >
-          <XCircle size={16} />
+          <XCircle size={18} />
         </button>
       )}
     </div>
@@ -3835,17 +3836,16 @@ const handleCalculateDebts = async () => {
                     </div>
                   </div>
 
-                  {/* 👇👇 貼上這段新的程式碼 👇👇 */}
-                  
-                  {/* --- 升級版：金額與匯率區塊 --- */}
+{/* --- 升級版：金額與匯率區塊 --- */}
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       金額與匯率 ({itemData.currency || 'TWD'})
                     </label>
-                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 space-y-3">
-                      <div className="flex gap-2">
+                    {/* 👇 統一外框規格：p-4, rounded-2xl, w-full, box-border */}
+                    <div className="bg-white/50 p-4 rounded-2xl border border-white shadow-sm space-y-3 w-full box-border">
+                      <div className="flex gap-2 w-full">
                         <select 
-                          className="bg-white border border-stone-200 rounded-lg px-2 py-2 text-xs font-bold outline-none"
+                          className="bg-white border border-white shadow-sm rounded-xl px-3 py-3 text-base font-bold outline-none focus:ring-2 focus:ring-[#eadef1] text-[#68577b] shrink-0"
                           value={itemData.currency || "TWD"}
                           onChange={(e) => setItemData({ ...itemData, currency: e.target.value })}
                         >
@@ -3856,10 +3856,11 @@ const handleCalculateDebts = async () => {
                           <option value="THB">THB 泰銖</option>
                         </select>
                         
+                        {/* 👇 加上 min-w-0 防止 flex 被撐破，加上 text-base 防止手機縮放 */}
                         <input
                           type="number"
-                          placeholder="金額"
-                          className="flex-1 bg-white border border-stone-200 rounded-lg p-2 outline-none font-mono text-sm"
+                          placeholder="外幣金額"
+                          className="flex-1 min-w-0 bg-white border border-white shadow-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#eadef1] font-mono text-base font-bold text-stone-900"
                           value={itemData.foreignAmount || ""}
                           onChange={(e) => {
                             const fAmount = e.target.value;
@@ -3875,12 +3876,13 @@ const handleCalculateDebts = async () => {
 
                       {itemData.currency !== "TWD" && (
                         <div className="flex items-center justify-between px-1">
-                          <div className="flex items-center gap-1 text-[10px] text-stone-400">
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-stone-500">
                             <span>匯率:</span>
+                            {/* 👇 同樣加上 text-base */}
                             <input 
                               type="number"
                               step="0.0001"
-                              className="w-16 bg-transparent border-b border-stone-200 text-stone-600 outline-none"
+                              className="w-20 bg-white border border-white shadow-sm rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#eadef1] text-base text-[#68577b] font-mono"
                               value={itemData.exchangeRate || ""}
                               onChange={(e) => {
                                 const newRate = e.target.value;
@@ -3892,42 +3894,72 @@ const handleCalculateDebts = async () => {
                               }}
                             />
                           </div>
-                          <div className="text-[10px] text-indigo-500 font-bold">
-                            約台幣 ${Number(itemData.amount).toLocaleString()} 元
+                          <div className="text-[11px] text-[#68577b] font-bold">
+                            約台幣 ${Number(itemData.amount).toLocaleString()}
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
+                  
+                  {/* --- 分類區塊維持原樣 --- */}
+                  <div>
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
+                      分類
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: "food", label: "飲食", icon: <Utensils size={16} /> },
+                        { id: "transport", label: "交通", icon: <Train size={16} /> },
+                        { id: "accommodation", label: "住宿", icon: <Home size={16} /> },
+                        { id: "shopping", label: "購物", icon: <ShoppingBag size={16} /> },
+                        { id: "other", label: "其他", icon: <MoreHorizontal size={16} /> },
+                      ].map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() =>
+                            setItemData({ ...itemData, category: cat.id })
+                          }
+                          className={`py-3 rounded-2xl border flex flex-col items-center gap-1 text-xs transition-all shadow-sm ${
+                            itemData.category === cat.id
+                              ? "bg-[#68577b] text-white border-[#68577b]"
+                              : "bg-white text-[#b4a0c8] border-white hover:border-[#eadef1]"
+                          }`}
+                        >
+                          {cat.icon} <span className="font-medium">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* --- 獨立出來的：日期區塊 --- */}
                   <div>
-                    <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                    <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       日期
                     </label>
+                    {/* 👇 統一規格為 rounded-2xl, p-4, text-base */}
                     <input
                       type="date"
                       value={itemData.date}
                       onChange={(e) =>
                         setItemData({ ...itemData, date: e.target.value })
                       }
-                      className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 font-mono text-sm"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold text-base font-mono"
                     />
                   </div>
-                  
-                  {/* 👆👆 貼上到這裡為止 👆👆 */}
                   
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
                       付款人
                     </label>
+                    {/* 👇 統一規格為 rounded-2xl, p-4, text-base */}
                     <input
                       type="text"
                       value={itemData.payer || ""}
                       onChange={(e) =>
                         setItemData({ ...itemData, payer: e.target.value })
                       }
-                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold"
+                      className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold text-base"
                     />
                   </div>
                   <div className="bg-white/50 p-4 rounded-2xl border border-white shadow-sm">
