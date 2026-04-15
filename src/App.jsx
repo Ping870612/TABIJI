@@ -163,6 +163,20 @@ async function callImagenAPI(imagePrompt) {
   }
 }
 
+// --- 匯率抓取函式 (新增在此) ---
+async function fetchExchangeRate(baseCurrency) {
+  try {
+    // 使用 ExchangeRate-API 免費版介面
+    const response = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
+    if (!response.ok) throw new Error("API 請求失敗");
+    const data = await response.json();
+    return data.rates["TWD"] || 1; // 抓取該幣別對台幣的匯率
+  } catch (error) {
+    console.error("匯率抓取錯誤:", error);
+    return null;
+  }
+}
+
 // --- UI Components ---
 
 const Toast = ({ message, type, onClose }) => {
@@ -1789,6 +1803,30 @@ const App = () => {
     return onAuthStateChanged(auth, setUser);
   }, []);
 
+  // --- 自動更新匯率監控 (新增在此) ---
+useEffect(() => {
+  // 如果不是在編輯記帳，或是幣別是台幣，就不執行
+  if (activeTab !== "expenses" || !isModalOpen || itemData.currency === "TWD") {
+    if (itemData.currency === "TWD" && itemData.exchangeRate !== 1) {
+       setItemData(prev => ({ ...prev, exchangeRate: 1 }));
+    }
+    return;
+  }
+
+  const updateRate = async () => {
+    const rate = await fetchExchangeRate(itemData.currency);
+    if (rate) {
+      setItemData(prev => ({
+        ...prev,
+        exchangeRate: rate,
+        // 如果已經有輸入外幣，順便幫使用者算好台幣
+        amount: prev.foreignAmount ? Math.round(prev.foreignAmount * rate) : prev.amount
+      }));
+    }
+  };
+  updateRate();
+}, [itemData.currency, isModalOpen]); // 當幣別切換或視窗打開時觸發
+  
   useEffect(() => {
     if (!user || !tripId) return;
     const unsubscribe = onSnapshot(
@@ -3049,6 +3087,9 @@ const handleCalculateDebts = async () => {
                       isSplit: false,
                       splitWith: [],
                       category: "food",
+                      foreignAmount: "",  
+                      exchangeRate: 1,  
+                      amount: ""
                     });
                     setIsModalOpen(true);
                   }}
@@ -3149,10 +3190,14 @@ const handleCalculateDebts = async () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold font-mono text-stone-900 text-lg">
-                          ${Number(expense.amount).toLocaleString()}
-                        </span>
+                      <div className="flex flex-col items-end gap-0">
+  <span className="font-bold font-mono text-stone-800 text-lg">
+    ${Number(expense.amount).toLocaleString()}
+  </span>
+  {expense.currency && expense.currency !== "TWD" && (
+    <span className="text-[9px] text-stone-400 font-mono">
+      {expense.foreignAmount} {expense.currency}
+    </span>
                         
             <button
   onClick={(e) => {
@@ -3759,6 +3804,69 @@ const handleCalculateDebts = async () => {
                       className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold"
                     />
                   </div>
+
+                  {/* --- 新增匯率換算區塊 --- */}
+<div>
+  <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+    金額與匯率 ({itemData.currency || 'TWD'})
+  </label>
+  <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 space-y-3">
+    <div className="flex gap-2">
+      <select 
+        className="bg-white border border-stone-200 rounded-lg px-2 py-2 text-xs font-bold outline-none"
+        value={itemData.currency || "TWD"}
+        onChange={(e) => setItemData({ ...itemData, currency: e.target.value })}
+      >
+        <option value="TWD">TWD 台幣</option>
+        <option value="JPY">JPY 日幣</option>
+        <option value="KRW">KRW 韓元</option>
+        <option value="USD">USD 美金</option>
+        <option value="THB">THB 泰銖</option>
+      </select>
+      
+      <input
+        type="number"
+        placeholder="外幣金額"
+        className="flex-1 bg-white border border-stone-200 rounded-lg p-2 outline-none font-mono text-sm"
+        value={itemData.foreignAmount || ""}
+        onChange={(e) => {
+          const fAmount = e.target.value;
+          const rate = itemData.exchangeRate || 1;
+          setItemData({ 
+            ...itemData, 
+            foreignAmount: fAmount, 
+            amount: fAmount ? Math.round(fAmount * rate) : "" 
+          });
+        }}
+      />
+    </div>
+
+    {itemData.currency !== "TWD" && (
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-1 text-[10px] text-stone-400">
+          <span>匯率:</span>
+          <input 
+            type="number"
+            step="0.0001"
+            className="w-16 bg-transparent border-b border-stone-200 text-stone-600 outline-none"
+            value={itemData.exchangeRate || ""}
+            onChange={(e) => {
+              const newRate = e.target.value;
+              setItemData({ 
+                ...itemData, 
+                exchangeRate: newRate,
+                amount: itemData.foreignAmount ? Math.round(itemData.foreignAmount * newRate) : itemData.amount
+              });
+            }}
+          />
+        </div>
+        <div className="text-[10px] text-indigo-500 font-bold">
+          約台幣 ${Number(itemData.amount).toLocaleString()} 元
+        </div>
+      </div>
+    )}
+  </div>
+</div>
                   
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
