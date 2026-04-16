@@ -1589,7 +1589,7 @@ const App = () => {
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const [showAIMenu, setShowAIMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState("itinerary");
+  const [activeTab, setActiveTab] = useState("expenses");
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -3458,8 +3458,8 @@ const handleCalculateDebts = async () => {
             {/* 3. 前方的透明點擊按鈕 */}
             {[
               { id: "itinerary", icon: <Calendar size={20} />, label: "行程" },
-              { id: "expenses", icon: <CreditCard size={20} />, label: "記帳" },
-              { id: "notes", icon: <BookOpen size={20} />, label: "記事本" }
+              { id: "notes", icon: <BookOpen size={20} />, label: "記事本" },
+              { id: "expenses", icon: <CreditCard size={20} />, label: "記帳" }
             ].map((tab) => (
               <button
                 key={tab.id}
