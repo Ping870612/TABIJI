@@ -2986,451 +2986,468 @@ const handleCalculateDebts = async () => {
         </div>
       </header>
 
-     {/* --- Main 內容區 --- */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y w-full pb-[120px] pt-0 relative scroll-smooth bg-[#faf9f4]">
+{/* --- Main 內容區 --- */}
+      <main className="flex-1 overflow-hidden w-full relative bg-[#faf9f4]">
         
-        {/* 行程分頁 */}
-        {activeTab === "itinerary" && tripData && (
-          <>
-            <DayNavigation 
-              days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
-              tripData={tripData}
-              onScrollToDay={scrollToDay}
-            />
+        {/* 🌟 核心修改：橫向滑動容器 (寬度 300% 容納三個分頁) */}
+        <div
+          className="flex h-full w-[300%] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+          style={{
+            transform:
+              activeTab === "itinerary"
+                ? "translateX(0%)"
+                : activeTab === "notes"
+                ? "translateX(-33.3333%)"
+                : "translateX(-66.6666%)",
+          }}
+        >
+          {/* ========================================= */}
+          {/* 1. 行程分頁 (左邊) */}
+          {/* ========================================= */}
+          <div className="w-1/3 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
+            {tripData && (
+              <>
+                <DayNavigation 
+                  days={Object.keys(groupedItinerary).sort((a, b) => a - b)} 
+                  tripData={tripData}
+                  onScrollToDay={scrollToDay}
+                />
 
-            <div className="px-4">
-             {Object.keys(groupedItinerary)
-              .sort((a, b) => a - b)
-              .map((day) => {
-                const dateStr = getDateForDay(day);
-                return (
-                  <div
-                    key={day}
-                    id={`day-section-${day}`}
-                    // 修正重點：加上 scroll-mt-32，這樣跳轉時才不會被毛玻璃標題蓋住
-                    className="mb-10 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-32"
-                  >
-                    <div className="flex justify-between items-end mb-4 px-2">
-                        <div className="flex flex-col">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-serif font-black text-stone-900 leading-none">
-                              {String(day).padStart(2, "0")}
-                            </span>
-                            <span className="text-xs font-bold text-[#b4a0c8] uppercase tracking-widest">
-                              Day {day}
-                            </span>
+                <div className="px-4">
+                 {Object.keys(groupedItinerary)
+                  .sort((a, b) => a - b)
+                  .map((day) => {
+                    const dateStr = getDateForDay(day);
+                    return (
+                      <div
+                        key={day}
+                        id={`day-section-${day}`}
+                        className="mb-10 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-500 scroll-mt-32"
+                      >
+                        <div className="flex justify-between items-end mb-4 px-2">
+                            <div className="flex flex-col">
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-serif font-black text-stone-900 leading-none">
+                                  {String(day).padStart(2, "0")}
+                                </span>
+                                <span className="text-xs font-bold text-[#b4a0c8] uppercase tracking-widest">
+                                  Day {day}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-[#68577b] font-mono font-medium pl-0.5 mt-1">
+                                {dateStr}
+                              </span>
+                            </div>
+                            <div className="origin-bottom-right">
+                              <WeatherBadge
+                                date={dateStr}
+                                weatherData={tripData.weather}
+                              />
+                            </div>
                           </div>
-                          <span className="text-[10px] text-[#68577b] font-mono font-medium pl-0.5 mt-1">
-                            {dateStr}
-                          </span>
-                        </div>
-                        <div className="origin-bottom-right">
-                          <WeatherBadge
-                            date={dateStr}
-                            weatherData={tripData.weather}
-                          />
-                        </div>
-                      </div>
 
-                    <DayMapPreview points={groupedItinerary[day]} />
-                    
-                      <div className="space-y-4">
-                        {groupedItinerary[day]
-                          .sort((a, b) => a.time.localeCompare(b.time))
-                          .map((item) => (
-                            <ItineraryCard
-                              key={item.id}
-                              item={item}
-                              members={tripData.members}
-                              onSelect={setSelectedItem}
-                              onEdit={(i) => {
-                                setEditingId(i.id);
-                                setItemData(i);
-                                setIsEditMode(true);
-                                setIsModalOpen(true);
-                              }}
-                              onDelete={(i) =>
-                                setConfirmConfig({
-                                  isOpen: true,
-                                  title: "刪除項目",
-                                  message: "確定要刪除嗎？",
-                                  onConfirm: () => deleteItem("itinerary", i),
-                                  onCancel: () =>
-                                    setConfirmConfig({ isOpen: false }),
-                                  isDangerous: true,
-                                })
-                              }
-                          onMap={(loc) =>
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc)}`, "_blank")
-}
-                            />
-                          ))}
-                      </div>
+                        <DayMapPreview points={groupedItinerary[day]} />
+                        
+                          <div className="space-y-4">
+                            {groupedItinerary[day]
+                              .sort((a, b) => a.time.localeCompare(b.time))
+                              .map((item) => (
+                                <ItineraryCard
+                                  key={item.id}
+                                  item={item}
+                                  members={tripData.members}
+                                  onSelect={setSelectedItem}
+                                  onEdit={(i) => {
+                                    setEditingId(i.id);
+                                    setItemData(i);
+                                    setIsEditMode(true);
+                                    setIsModalOpen(true);
+                                  }}
+                                  onDelete={(i) =>
+                                    setConfirmConfig({
+                                      isOpen: true,
+                                      title: "刪除項目",
+                                      message: "確定要刪除嗎？",
+                                      onConfirm: () => deleteItem("itinerary", i),
+                                      onCancel: () =>
+                                        setConfirmConfig({ isOpen: false }),
+                                      isDangerous: true,
+                                    })
+                                  }
+                                  onMap={(loc) =>
+                                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc)}`, "_blank")
+                                  }
+                                />
+                              ))}
+                          </div>
+                        </div>
+                    );
+                  })}
+                {(!tripData.itinerary || tripData.itinerary.length === 0) && (
+                  <div className="text-center py-20 opacity-40 flex flex-col items-center">
+                    <div className="w-20 h-20 bg-stone-200 rounded-full flex items-center justify-center mb-4">
+                      <Map className="w-10 h-10 text-stone-400" />
                     </div>
-                  );
-                })}
-              {(!tripData.itinerary || tripData.itinerary.length === 0) && (
-                <div className="text-center py-20 opacity-40 flex flex-col items-center">
-                  <div className="w-20 h-20 bg-stone-200 rounded-full flex items-center justify-center mb-4">
-                    <Map className="w-10 h-10 text-stone-400" />
+                    <p className="tracking-widest font-serif text-[#68577b]">旅程空白中...</p>
                   </div>
-                  <p className="tracking-widest font-serif text-[#68577b]">旅程空白中...</p>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+                )}
+              </div>
+              </>
+            )}
+          </div>
 
-        {/* 記帳分頁 */}
-        {activeTab === "expenses" && (
-          <div className="space-y-4 px-4 pt-6">
-            <div className="bg-gradient-to-br from-[#504062] to-[#68577b] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex justify-between items-center border border-white/10">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-              <div className="relative z-10">
-                <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
-                  My Personal Spend
-                </div>
-<div className="text-4xl font-bold font-mono text-white">
-  $
-  {(tripData.expenses || [])
-    .reduce((sum, item) => {
-      const amount = Number(item.amount) || 0;
-      const myName = getCurrentUserNickname();
-      
-      // 🌟 簡化邏輯：只要付款人是我，就顯示全額
-      return item.payer === myName ? sum + amount : sum;
-    }, 0)
-    .toLocaleString()} 
-</div>
+          {/* ========================================= */}
+          {/* 2. 記事本分頁 (中間) */}
+          {/* ========================================= */}
+          <div className="w-1/3 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
+            <div className="space-y-4 pt-6 px-4">
+              
+              {/* 留言輸入區 */}
+              <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] shadow-[0_8px_30px_rgba(104,87,123,0.06)] border border-white">
+                <textarea
+                  placeholder="想分享什麼？"
+                  className="w-full bg-[#faf9f4] p-4 rounded-2xl text-sm placeholder:text-stone-400 outline-none border border-transparent focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all min-h-[100px] resize-y text-stone-900"
+                  value={itemData.noteContent || ""}
+                  onChange={(e) => setItemData({ ...itemData, noteContent: e.target.value })}
+                />
 
-{/* 這裡也建議把標籤文字改掉，讓語意更精準 */}
-<div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
-  我已墊付總額 (My Out-of-Pocket)
-</div>
+                {itemData.noteImage && (
+                  <div className="relative mt-3 h-24 inline-block">
+                    <img src={itemData.noteImage} className="h-full w-auto max-w-[200px] object-cover rounded-xl border-2 border-white shadow-sm" alt="Preview" />
+                    <button onClick={() => setItemData({ ...itemData, noteImage: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:scale-110 transition-transform"><X size={12} /></button>
+                  </div>
+                )}
 
-                <button
-                  onClick={() => {
-                    setIsEditMode(false);
-                    setEditingId(null);
-                    setItemData({
-                      payer: getCurrentUserNickname(),
-                      date: new Date().toISOString().split("T")[0],
-                      isSplit: false,
-                      splitWith: [],
-                      category: "food",
-                      foreignAmount: "",  
-                      exchangeRate: 1,  
-                      amount: ""
-                    });
-                    setIsModalOpen(true);
-                  }}
-                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 mt-4 rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-sm"
-                >
-                  <Plus size={16} />
-                  <span className="text-xs font-bold">記一筆</span>
-                </button>
-                <div className="text-[9px] text-[#b4a0c8] mt-2">
-                  *包含分帳後的預估金額
+                <div className="flex justify-between items-center mt-3">
+                  <div>
+                    <label className="cursor-pointer p-3 bg-stone-50 rounded-full text-[#68577b] hover:bg-[#eadef1]/50 transition-colors inline-flex items-center justify-center border border-stone-100">
+                      <Camera size={20} />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
+                    </label>
+                  </div>
+                  <button onClick={handleSaveNote} className="bg-[#68577b] hover:bg-[#504062] text-white px-8 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all shadow-md">
+                    {isEditMode ? "更新" : "發佈"}
+                  </button>
                 </div>
               </div>
-              
-              <button
-                onClick={handleCalculateDebts}
-                className="bg-white text-[#68577b] hover:bg-[#faf9f4] p-3 rounded-2xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
-              >
-                <Calculator size={20} /> AI 結算
-              </button>
-            </div>
 
-            <div className="space-y-3 mt-4">
-              {(tripData.expenses || [])
-                .filter((expense) => {
-                  const myNickname = getCurrentUserNickname();
-                  const isCreatedByMe = expense.createdBy === user.uid;
-                  const isPaidByMe = expense.payer === myNickname;
-                  const isInvolved =
-                    expense.isSplit &&
-                    (expense.splitWith || []).includes(myNickname);
-                  return isCreatedByMe || isPaidByMe || isInvolved;
-                })
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map((expense) => {
-                  const expenseIcons = {
-                    food: <Utensils size={18} />,
-                    transport: <Train size={18} />,
-                    accommodation: <Home size={18} />,
-                    shopping: <ShoppingBag size={18} />,
-                    other: <MoreHorizontal size={18} />,
-                  };
-                  const Icon =
-                    expenseIcons[expense.category] || expenseIcons.other;
-                  const bgColor =
-                    {
-                      food: "bg-orange-100 text-orange-600",
-                      transport: "bg-emerald-100 text-emerald-600",
-                      accommodation: "bg-blue-100 text-blue-600",
-                      shopping: "bg-pink-100 text-pink-600",
-                      other: "bg-stone-100 text-stone-600",
-                    }[expense.category] || "bg-stone-100 text-stone-600";
-
-                  const myNickname = getCurrentUserNickname();
-                  let myShare = 0;
-                  if (expense.isSplit && expense.splitWith?.length > 0) {
-                     myShare = expense.splitWith.includes(myNickname) 
-                       ? (Number(expense.amount) / expense.splitWith.length) 
-                       : 0;
-                  } else if (expense.payer === myNickname) {
-                     myShare = Number(expense.amount);
-                  }
-
-                  return (
-                    <div
-                      key={expense.id}
-                      className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white flex justify-between items-center group hover:bg-white transition-colors cursor-pointer"
-                      onClick={() => {
-                        setEditingId(expense.id);
-                        setItemData(expense);
-                        setIsEditMode(true);
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-2xl ${bgColor} shadow-inner`}>
-                          {Icon}
+              {/* 留言列表 */}
+              <div className="space-y-4">
+                {(tripData.notes || [])
+                  .slice()
+                  .sort((a, b) => {
+                    if (a.isPinned && !b.isPinned) return -1;
+                    if (!a.isPinned && b.isPinned) return 1;
+                    return b.time - a.time;
+                  })
+                  .map((note) => (
+                    <div key={note.id} className={`p-5 rounded-3xl shadow-sm border transition-all ${note.isPinned ? "border-amber-200 bg-amber-50/40" : "border-white bg-white/60 backdrop-blur-sm"}`}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <UserBadge nickname={note.author} emoji={note.emoji} size="md" />
+                        <div className="flex flex-col">
+                          <span className="font-bold text-stone-900">{note.author}</span>
+                          <span className="text-[10px] text-stone-400 font-mono">{new Date(note.time).toLocaleString()}</span>
                         </div>
-                        <div>
-                    <div className="font-bold text-stone-900 flex items-center gap-2 text-base">
-                      {expense.item}
-                            </div>
-                          <div className="flex items-center gap-2 mt-1 text-[10px]">
-                            <span className="text-[#b4a0c8] font-mono">
-                              {expense.date}
-                            </span>
-                            <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
-                              <span className="text-stone-400">墊:</span>
-                              <span className="font-bold text-[#68577b]">
-                                {expense.payer}
-                              </span>
-                            </div>
-                            {expense.isSplit && (
-                              <span className="text-purple-500 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded font-medium">
-                                {expense.splitWith.length}人分
-                              </span>
+
+                        {/* 置頂標籤 */}
+                        {note.isPinned && (
+                          <span className="ml-auto text-[9px] font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                            <Pin size={10} className="fill-amber-600" /> Pinned
+                          </span>
+                        )}
+
+                        <div className={`flex gap-1 ${note.isPinned ? "" : "ml-auto"}`}>
+                          <button
+                            onClick={() => togglePinNote(note)}
+                            className={`p-2 rounded-xl transition-all ${note.isPinned ? "text-amber-500 bg-amber-100 hover:bg-amber-200" : "text-stone-400 hover:text-[#68577b] hover:bg-stone-100"}`}
+                            title="置頂/取消置頂"
+                          >
+                            <Pin size={14} className={note.isPinned ? "fill-amber-500" : ""} />
+                          </button>
+
+                          <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({ noteContent: note.content, noteImage: note.image }); }} className="p-2 rounded-xl text-stone-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Edit size={14} /></button>
+                          <button onClick={() => deleteNote(note.id)} className="p-2 rounded-xl text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={14} /></button>
+                        </div>
+                      </div>
+
+                      <div className="text-sm text-stone-700 whitespace-pre-wrap leading-relaxed">
+                        <LinkText text={note.content} />
+                      </div>
+                      {note.image && (
+                        <img
+                          src={note.image}
+                          onClick={() => setZoomedImage(note.image)}
+                          className="mt-4 rounded-2xl w-full h-auto border border-stone-200 shadow-sm cursor-zoom-in active:scale-[0.98] transition-transform"
+                          alt="Note Attachment"
+                        />
+                      )}
+
+                      {/* 回覆區 */}
+                      <div className="mt-4 pl-4 border-l-2 border-[#eadef1] space-y-3">
+                        {(note.replies || []).map((r, i) => (
+                          <div key={r.id || i} className="text-xs group relative">
+                            {editingReplyId === r.id ? (
+                              <div className="flex flex-col gap-2 mt-1 bg-white p-3 rounded-xl border border-[#eadef1] animate-in fade-in zoom-in-95 shadow-sm">
+                                <textarea
+                                  value={editReplyContent}
+                                  onChange={(e) => setEditReplyContent(e.target.value)}
+                                  className="w-full bg-transparent text-xs outline-none resize-y min-h-[40px] text-stone-900"
+                                  autoFocus
+                                />
+                                <div className="flex justify-end gap-2 border-t border-stone-100 pt-2">
+                                  <button onClick={() => setEditingReplyId(null)} className="text-[10px] font-bold text-stone-400 hover:text-stone-600 px-3 py-1.5 rounded-lg hover:bg-stone-50">取消</button>
+                                  <button onClick={() => handleEditReplySave(note.id, r.id)} className="text-[10px] font-bold bg-[#68577b] text-white px-4 py-1.5 rounded-lg shadow-sm hover:bg-[#504062]">儲存</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 bg-white/40 p-2.5 rounded-xl">
+                                  <span className="font-bold text-[#68577b]">{r.author}:</span>{" "}
+                                  <span className="text-stone-600 leading-relaxed">
+                                    <LinkText text={r.content} />
+                                  </span>
+                                  {r.isEdited && <span className="text-[9px] text-stone-400 ml-2 italic">(已編輯)</span>}
+                                </div>
+
+                                {r.author === getCurrentUserNickname() && (
+                                  <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 bg-white/80 backdrop-blur-sm rounded-lg px-1 shadow-sm border border-white">
+                                    <button
+                                      onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }}
+                                      className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
+                                    >
+                                      <Edit size={12} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setConfirmConfig({
+                                          isOpen: true,
+                                          title: "刪除回覆",
+                                          message: "確定要刪除這則回覆嗎？",
+                                          onConfirm: () => { handleDeleteReply(note.id, r.id); setConfirmConfig({ isOpen: false }); },
+                                          onCancel: () => setConfirmConfig({ isOpen: false }),
+                                          isDangerous: true,
+                                        });
+                                      }}
+                                      className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
+                        ))}
+
+                        {/* 新增回覆輸入框 */}
+                        <div className="flex gap-2 items-end pt-2">
+                          <textarea
+                            id={`reply-input-${note.id}`}
+                            rows="1"
+                            placeholder="回覆旅伴..."
+                            className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-stone-900"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleReplySubmit(note.id);
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => handleReplySubmit(note.id)}
+                            className="bg-[#68577b] hover:bg-[#504062] text-white px-4 py-3 rounded-xl text-[10px] font-bold transition-all active:scale-95 mb-0 shrink-0 shadow-md"
+                          >
+                            送出
+                          </button>
                         </div>
                       </div>
-                      
-                      <div className="flex flex-col items-end gap-0">
-  <span className="font-bold font-mono text-stone-800 text-lg">
-    ${Number(expense.amount).toLocaleString()}
-  </span>
-  {expense.currency && expense.currency !== "TWD" && (
-    <span className="text-[9px] text-stone-400 font-mono">
-      {expense.foreignAmount} {expense.currency}
-    </span>
-
-                      )}
-                        
-            <button
-  onClick={(e) => {
-    e.stopPropagation();
-    setConfirmConfig({
-      isOpen: true,
-      title: "刪除支出",
-      message: `確定要刪除「${expense.item}」嗎？`,
-      onConfirm: () => deleteItem("expenses", expense),
-      onCancel: () => setConfirmConfig({ isOpen: false }),
-      isDangerous: true,
-    });
-  }}
-  className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
->
-  <Trash2 size={16} />
-</button>
-                      </div>
                     </div>
-                  );
-                })}
-              
-            {(tripData.expenses || []).filter(e => e.createdBy === user.uid || e.payer === getCurrentUserNickname() || (e.isSplit && (e.splitWith || []).includes(getCurrentUserNickname()))).length === 0 && (
-               <div className="text-center py-10 text-[#b4a0c8] text-sm font-medium">
-                 尚無與您相關的支出紀錄
-               </div>
-            )}
-            </div>
-          </div>
-        )}
-
-        {/* 記事本分頁 */}
-        {activeTab === "notes" && (
-          <div className="space-y-4 pt-6 px-4">
-            
-            {/* 留言輸入區 */}
-            <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] shadow-[0_8px_30px_rgba(104,87,123,0.06)] border border-white">
-              <textarea
-                placeholder="想分享什麼？"
-                className="w-full bg-[#faf9f4] p-4 rounded-2xl text-sm placeholder:text-stone-400 outline-none border border-transparent focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all min-h-[100px] resize-y text-stone-900"
-                value={itemData.noteContent || ""}
-                onChange={(e) => setItemData({ ...itemData, noteContent: e.target.value })}
-              />
-
-              {itemData.noteImage && (
-                <div className="relative mt-3 h-24 inline-block">
-                  <img src={itemData.noteImage} className="h-full w-auto max-w-[200px] object-cover rounded-xl border-2 border-white shadow-sm" alt="Preview" />
-                  <button onClick={() => setItemData({ ...itemData, noteImage: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:scale-110 transition-transform"><X size={12} /></button>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center mt-3">
-                <div>
-                  <label className="cursor-pointer p-3 bg-stone-50 rounded-full text-[#68577b] hover:bg-[#eadef1]/50 transition-colors inline-flex items-center justify-center border border-stone-100">
-                    <Camera size={20} />
-                    <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
-                  </label>
-                </div>
-                <button onClick={handleSaveNote} className="bg-[#68577b] hover:bg-[#504062] text-white px-8 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all shadow-md">
-                  {isEditMode ? "更新" : "發佈"}
-                </button>
+                  ))}
               </div>
             </div>
+          </div>
 
-            {/* 留言列表 */}
-            <div className="space-y-4">
-              {(tripData.notes || [])
-                .slice()
-                .sort((a, b) => {
-                  if (a.isPinned && !b.isPinned) return -1;
-                  if (!a.isPinned && b.isPinned) return 1;
-                  return b.time - a.time;
-                })
-                .map((note) => (
-                  <div key={note.id} className={`p-5 rounded-3xl shadow-sm border transition-all ${note.isPinned ? "border-amber-200 bg-amber-50/40" : "border-white bg-white/60 backdrop-blur-sm"}`}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <UserBadge nickname={note.author} emoji={note.emoji} size="md" />
-                      <div className="flex flex-col">
-                        <span className="font-bold text-stone-900">{note.author}</span>
-                        <span className="text-[10px] text-stone-400 font-mono">{new Date(note.time).toLocaleString()}</span>
-                      </div>
+          {/* ========================================= */}
+          {/* 3. 記帳分頁 (右邊) */}
+          {/* ========================================= */}
+          <div className="w-1/3 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
+            <div className="space-y-4 px-4 pt-6">
+              <div className="bg-gradient-to-br from-[#504062] to-[#68577b] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex justify-between items-center border border-white/10">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="relative z-10">
+                  <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
+                    My Personal Spend
+                  </div>
+                  <div className="text-4xl font-bold font-mono text-white">
+                    $
+                    {(tripData.expenses || [])
+                      .reduce((sum, item) => {
+                        const amount = Number(item.amount) || 0;
+                        const myName = getCurrentUserNickname();
+                        // 🌟 簡化邏輯：只要付款人是我，就顯示全額
+                        return item.payer === myName ? sum + amount : sum;
+                      }, 0)
+                      .toLocaleString()} 
+                  </div>
 
-                      {/* 置頂標籤 */}
-                      {note.isPinned && (
-                        <span className="ml-auto text-[9px] font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm">
-                          <Pin size={10} className="fill-amber-600" /> Pinned
-                        </span>
-                      )}
+                  <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
+                    我已墊付總額 (My Out-of-Pocket)
+                  </div>
 
-                      <div className={`flex gap-1 ${note.isPinned ? "" : "ml-auto"}`}>
-                        <button
-                          onClick={() => togglePinNote(note)}
-                          className={`p-2 rounded-xl transition-all ${note.isPinned ? "text-amber-500 bg-amber-100 hover:bg-amber-200" : "text-stone-400 hover:text-[#68577b] hover:bg-stone-100"}`}
-                          title="置頂/取消置頂"
-                        >
-                          <Pin size={14} className={note.isPinned ? "fill-amber-500" : ""} />
-                        </button>
+                  <button
+                    onClick={() => {
+                      setIsEditMode(false);
+                      setEditingId(null);
+                      setItemData({
+                        payer: getCurrentUserNickname(),
+                        date: new Date().toISOString().split("T")[0],
+                        isSplit: false,
+                        splitWith: [],
+                        category: "food",
+                        foreignAmount: "",  
+                        exchangeRate: 1,  
+                        amount: ""
+                      });
+                      setIsModalOpen(true);
+                    }}
+                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 mt-4 rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-sm"
+                  >
+                    <Plus size={16} />
+                    <span className="text-xs font-bold">記一筆</span>
+                  </button>
+                  <div className="text-[9px] text-[#b4a0c8] mt-2">
+                    *包含分帳後的預估金額
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleCalculateDebts}
+                  className="bg-white text-[#68577b] hover:bg-[#faf9f4] p-3 rounded-2xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
+                >
+                  <Calculator size={20} /> AI 結算
+                </button>
+              </div>
 
-                        <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({ noteContent: note.content, noteImage: note.image }); }} className="p-2 rounded-xl text-stone-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Edit size={14} /></button>
-                        <button onClick={() => deleteNote(note.id)} className="p-2 rounded-xl text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={14} /></button>
-                      </div>
-                    </div>
+              <div className="space-y-3 mt-4">
+                {(tripData.expenses || [])
+                  .filter((expense) => {
+                    const myNickname = getCurrentUserNickname();
+                    const isCreatedByMe = expense.createdBy === user.uid;
+                    const isPaidByMe = expense.payer === myNickname;
+                    const isInvolved =
+                      expense.isSplit &&
+                      (expense.splitWith || []).includes(myNickname);
+                    return isCreatedByMe || isPaidByMe || isInvolved;
+                  })
+                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .map((expense) => {
+                    const expenseIcons = {
+                      food: <Utensils size={18} />,
+                      transport: <Train size={18} />,
+                      accommodation: <Home size={18} />,
+                      shopping: <ShoppingBag size={18} />,
+                      other: <MoreHorizontal size={18} />,
+                    };
+                    const Icon =
+                      expenseIcons[expense.category] || expenseIcons.other;
+                    const bgColor =
+                      {
+                        food: "bg-orange-100 text-orange-600",
+                        transport: "bg-emerald-100 text-emerald-600",
+                        accommodation: "bg-blue-100 text-blue-600",
+                        shopping: "bg-pink-100 text-pink-600",
+                        other: "bg-stone-100 text-stone-600",
+                      }[expense.category] || "bg-stone-100 text-stone-600";
 
-                    <div className="text-sm text-stone-700 whitespace-pre-wrap leading-relaxed">
-                      <LinkText text={note.content} />
-                    </div>
-                    {note.image && (
-                      <img
-                        src={note.image}
-                        onClick={() => setZoomedImage(note.image)}
-                        className="mt-4 rounded-2xl w-full h-auto border border-stone-200 shadow-sm cursor-zoom-in active:scale-[0.98] transition-transform"
-                        alt="Note Attachment"
-                      />
-                    )}
+                    const myNickname = getCurrentUserNickname();
+                    let myShare = 0;
+                    if (expense.isSplit && expense.splitWith?.length > 0) {
+                        myShare = expense.splitWith.includes(myNickname) 
+                          ? (Number(expense.amount) / expense.splitWith.length) 
+                          : 0;
+                    } else if (expense.payer === myNickname) {
+                        myShare = Number(expense.amount);
+                    }
 
-                    {/* 回覆區 */}
-                    <div className="mt-4 pl-4 border-l-2 border-[#eadef1] space-y-3">
-                      {(note.replies || []).map((r, i) => (
-                        <div key={r.id || i} className="text-xs group relative">
-                          {editingReplyId === r.id ? (
-                            <div className="flex flex-col gap-2 mt-1 bg-white p-3 rounded-xl border border-[#eadef1] animate-in fade-in zoom-in-95 shadow-sm">
-                              <textarea
-                                value={editReplyContent}
-                                onChange={(e) => setEditReplyContent(e.target.value)}
-                                className="w-full bg-transparent text-xs outline-none resize-y min-h-[40px] text-stone-900"
-                                autoFocus
-                              />
-                              <div className="flex justify-end gap-2 border-t border-stone-100 pt-2">
-                                <button onClick={() => setEditingReplyId(null)} className="text-[10px] font-bold text-stone-400 hover:text-stone-600 px-3 py-1.5 rounded-lg hover:bg-stone-50">取消</button>
-                                <button onClick={() => handleEditReplySave(note.id, r.id)} className="text-[10px] font-bold bg-[#68577b] text-white px-4 py-1.5 rounded-lg shadow-sm hover:bg-[#504062]">儲存</button>
+                    return (
+                      <div
+                        key={expense.id}
+                        className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white flex justify-between items-center group hover:bg-white transition-colors cursor-pointer"
+                        onClick={() => {
+                          setEditingId(expense.id);
+                          setItemData(expense);
+                          setIsEditMode(true);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-2xl ${bgColor} shadow-inner`}>
+                            {Icon}
+                          </div>
+                          <div>
+                      <div className="font-bold text-stone-900 flex items-center gap-2 text-base">
+                        {expense.item}
                               </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 bg-white/40 p-2.5 rounded-xl">
-                                <span className="font-bold text-[#68577b]">{r.author}:</span>{" "}
-                                <span className="text-stone-600 leading-relaxed">
-                                  <LinkText text={r.content} />
+                            <div className="flex items-center gap-2 mt-1 text-[10px]">
+                              <span className="text-[#b4a0c8] font-mono">
+                                {expense.date}
+                              </span>
+                              <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
+                                <span className="text-stone-400">墊:</span>
+                                <span className="font-bold text-[#68577b]">
+                                  {expense.payer}
                                 </span>
-                                {r.isEdited && <span className="text-[9px] text-stone-400 ml-2 italic">(已編輯)</span>}
                               </div>
-
-                              {r.author === getCurrentUserNickname() && (
-                                <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 bg-white/80 backdrop-blur-sm rounded-lg px-1 shadow-sm border border-white">
-                                  <button
-                                    onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }}
-                                    className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
-                                  >
-                                    <Edit size={12} />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setConfirmConfig({
-                                        isOpen: true,
-                                        title: "刪除回覆",
-                                        message: "確定要刪除這則回覆嗎？",
-                                        onConfirm: () => { handleDeleteReply(note.id, r.id); setConfirmConfig({ isOpen: false }); },
-                                        onCancel: () => setConfirmConfig({ isOpen: false }),
-                                        isDangerous: true,
-                                      });
-                                    }}
-                                    className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                                  >
-                                    <Trash2 size={12} />
-                                  </button>
-                                </div>
+                              {expense.isSplit && (
+                                <span className="text-purple-500 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded font-medium">
+                                  {expense.splitWith.length}人分
+                                </span>
                               )}
                             </div>
-                          )}
+                          </div>
                         </div>
-                      ))}
-
-                      {/* 新增回覆輸入框 */}
-                      <div className="flex gap-2 items-end pt-2">
-                        <textarea
-                          id={`reply-input-${note.id}`}
-                          rows="1"
-                          placeholder="回覆旅伴..."
-                          className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-stone-900"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleReplySubmit(note.id);
-                            }
-                          }}
-                        />
-                        <button
-                          onClick={() => handleReplySubmit(note.id)}
-                          className="bg-[#68577b] hover:bg-[#504062] text-white px-4 py-3 rounded-xl text-[10px] font-bold transition-all active:scale-95 mb-0 shrink-0 shadow-md"
-                        >
-                          送出
-                        </button>
+                        
+                        <div className="flex flex-col items-end gap-0">
+                          <span className="font-bold font-mono text-stone-800 text-lg">
+                            ${Number(expense.amount).toLocaleString()}
+                          </span>
+                          {expense.currency && expense.currency !== "TWD" && (
+                            <span className="text-[9px] text-stone-400 font-mono">
+                              {expense.foreignAmount} {expense.currency}
+                            </span>
+                          )}
+                            
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmConfig({
+                                isOpen: true,
+                                title: "刪除支出",
+                                message: `確定要刪除「${expense.item}」嗎？`,
+                                onConfirm: () => deleteItem("expenses", expense),
+                                onCancel: () => setConfirmConfig({ isOpen: false }),
+                                isDangerous: true,
+                              });
+                            }}
+                            className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
+                
+              {(tripData.expenses || []).filter(e => e.createdBy === user.uid || e.payer === getCurrentUserNickname() || (e.isSplit && (e.splitWith || []).includes(getCurrentUserNickname()))).length === 0 && (
+                 <div className="text-center py-10 text-[#b4a0c8] text-sm font-medium">
+                   尚無與您相關的支出紀錄
+                 </div>
+              )}
+              </div>
             </div>
           </div>
-        )}
-        
+
+        </div>
       </main>
 
    {/* --- Bottom Navigation (完美膠囊比例 + 果凍滑動動畫版) --- */}
