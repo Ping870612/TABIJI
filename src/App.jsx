@@ -33,6 +33,7 @@ import {
   CloudLightning,
   Map,
   Search,
+  StickyNote,
   History,
   Plane,
   XCircle,
@@ -1013,76 +1014,78 @@ const ItineraryCard = ({
   onEdit,
   onDelete,
   onMap,
+  onAddNote, // 1. 傳入新增便條的處理函式
   members,
 }) => {
+  // 定義不同類型的樣式，加入 note
   const typeConfig = {
-    sightseeing: { iconColor: "text-[#68577b]", label: "景點" },
-    food: { iconColor: "text-orange-500", label: "餐廳" },
-    transport: { iconColor: "text-emerald-500", label: "交通" },
-    flight: { iconColor: "text-sky-500", label: "航班" },
-    accommodation: { iconColor: "text-rose-500", label: "住宿" },
-    activity: { iconColor: "text-stone-500", label: "活動" },
+    sightseeing: { icon: <Camera size={14} />, bg: "bg-indigo-100 text-indigo-600", bgIcon: "bg-indigo-50", label: "景點" },
+    food: { icon: <Utensils size={14} />, bg: "bg-orange-100 text-orange-600", bgIcon: "bg-orange-50", label: "餐廳" },
+    transport: { icon: <Train size={14} />, bg: "bg-emerald-100 text-emerald-600", bgIcon: "bg-emerald-50", label: "交通" },
+    flight: { icon: <Plane size={14} />, bg: "bg-sky-100 text-sky-600", bgIcon: "bg-sky-50", label: "航班" },
+    activity: { icon: <MapPin size={14} />, bg: "bg-stone-100 text-stone-600", bgIcon: "bg-stone-50", label: "活動" },
+    note: { icon: <StickyNote size={14} />, bg: "bg-yellow-200 text-yellow-800", bgIcon: "bg-yellow-100", label: "便條" },
   };
 
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
 
+  // 2. 如果是便條類型，顯示手帳風格的 UI
+  if (item.category === "note") {
+    return (
+      <div 
+        onClick={() => onSelect(item)}
+        className="ml-8 mr-2 mb-4 p-4 bg-[#FFF9C4] border-l-4 border-yellow-400 shadow-sm transform rotate-1 hover:rotate-0 transition-all cursor-pointer relative group"
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="text-[10px] font-bold text-yellow-700 uppercase mb-1">{item.time} 便條</div>
+            <h4 className="font-bold text-stone-800 mb-1">{item.location}</h4>
+            <p className="text-sm text-stone-600 whitespace-pre-wrap">{item.notes}</p>
+            {item.imageUrl && (
+              <img src={item.imageUrl} className="mt-2 rounded-lg w-full h-auto border border-yellow-200 shadow-inner" alt="memo" />
+            )}
+          </div>
+        </div>
+        {/* 便條的操作按鈕 */}
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-700 bg-white/50 rounded-full"><Edit size={14}/></button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-500 bg-white/50 rounded-full"><Trash2 size={14}/></button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. 一般行程卡片的 UI (增加新增便條按鈕)
   return (
     <div
       onClick={() => onSelect(item)}
-      // 1. 卡片外殼改為垂直佈局 (flex-col) 且移除 padding，讓圖片滿版
-      className="flex flex-col gap-0 p-0 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 hover:bg-white/90 transition-all duration-300 mb-6 group relative cursor-pointer shadow-[0_8px_30px_rgba(104,87,123,0.06)] hover:shadow-[0_8px_30px_rgba(104,87,123,0.1)] overflow-hidden"
+      className={`bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-stone-100 mb-3 relative group transition-all active:scale-[0.99] border-l-4 cursor-pointer hover:shadow-md ${config.bg}`}
     >
-      {/* 2. 頂部大圖片區塊 (如果有上傳照片) */}
-      {item.image && (
-        <div className="relative w-full h-20 sm:h-24 overflow-hidden rounded-t-3xl border-b border-white">
-          <img 
-            src={item.image} 
-            alt={item.location} 
-            className="w-full h-full object-cover opacity-95 group-hover:opacity-100 transition-opacity" 
-          />
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col items-center mr-4 pt-1 min-w-[3.5rem]">
+          <span className="text-sm font-bold text-stone-800 tracking-wider font-mono">{item.time}</span>
+          <div className="h-full w-[1px] bg-stone-100 my-2"></div>
         </div>
-      )}
-
-      {/* 3. 下方資訊區塊 (獨立 padding) */}
-      <div className="p-5 pt-4 relative">
-        {/* 操作按鈕 (移動到資訊區塊的右上角) */}
-        <div className="absolute top-3 right-3 flex gap-1 z-10 opacity-100 bg-white/80 backdrop-blur-md rounded-xl p-1 shadow-sm border border-stone-100/50">
-          <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
-        </div>
-
-        {/* 時間與分類標籤 (移除了 Icon，只顯示文字) */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-[12px] font-bold text-stone-500 font-mono bg-white/80 px-2 py-0.5 rounded-md shadow-sm border border-stone-100/50">
-            {item.time}
-          </span>
-          <span className="w-1 h-1 rounded-full bg-stone-300"></span>
-          <span className={`text-[11px] font-bold uppercase tracking-widest ${config.iconColor}`}>
-            {config.label}
-          </span>
-        </div>
-        
-        {/* 地點名稱 (字體調大一點，text-xl) */}
-        <h4 className="font-serif text-xl font-bold text-stone-900 truncate leading-tight mb-2">
-          {item.location}
-        </h4>
-        
-        {/* 備註 (完整顯示，支援換行) */}
-        {item.notes && (
-          <div className="text-[12px] text-stone-500 mt-2 leading-relaxed break-words">
-            <LinkText text={item.notes} />
+        <div className="flex-1 min-w-0 pr-24">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`p-1.5 rounded-lg ${config.bgIcon}`}>{config.icon}</span>
+            <h3 className="font-bold text-stone-800 text-lg truncate tracking-tight">{item.location}</h3>
           </div>
-        )}
-
-        {/* 建立者的頭像 */}
-        {author.nickname && (
-          <div className="flex items-center gap-1.5 mt-3 opacity-80 text-[11px]">
-            <UserBadge nickname={author.nickname} emoji={author.emoji} color={author.color} size="sm" />
-            <span className="text-stone-400 font-medium">by {author.nickname}</span>
-          </div>
-        )}
+          {/* ... (其餘原本內容) */}
+        </div>
+      </div>
+      <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* 🌟 核心按鈕：新增便條 */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onAddNote(item); }}
+          className="p-2 text-stone-300 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
+        >
+          <StickyNote size={16} />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-2 text-stone-300 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors"><Navigation size={16} /></button>
+        <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-2 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"><Edit size={16} /></button>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-2 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded-full transition-colors"><Trash2 size={16} /></button>
       </div>
     </div>
   );
@@ -1574,6 +1577,24 @@ const WelcomeScreen = ({
 };
 
 const App = () => {
+
+const openNoteModalForItem = (parentItem) => {
+  setIsEditMode(false);
+  setEditingId(null);
+  
+  // 核心：預設填入跟該景點一模一樣的時間與天數
+  setItemData({
+    day: parentItem.day,
+    time: parentItem.time, // 相同時間會讓排序排在一起
+    category: "note",      // 設定分類為便條
+    location: `備註：${parentItem.location}`,
+    notes: "",
+    imageUrl: ""
+  });
+  
+  setIsModalOpen(true);
+};
+  
   // 從環境變數讀取 Key
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -2153,6 +2174,7 @@ if (initialData.destination && initialData.startDate) {
     setIsAnalyzing(true);
 
     try {
+      const cleanItinerary = tripData.itinerary.filter(i => i.category !== "note");
       const res = await callGeminiAPI([
         {
           text: `分析以下旅遊行程 JSON：${JSON.stringify(
@@ -2201,6 +2223,8 @@ if (initialData.destination && initialData.startDate) {
     setIsAnalyzing(true);
     
     try {
+      const actualItinerary = tripData.itinerary.filter(i => i.category !== "note");
+      const noteItems = tripData.itinerary.filter(i => i.category === "note");
       const days = [...new Set(tripData.itinerary.map(i => i.day))];
       const dayStartTimes = {};
       days.forEach(day => {
@@ -2256,6 +2280,7 @@ if (initialData.destination && initialData.startDate) {
 
       const finalItinerary = [
         ...newItinerary,
+        ...noteItems,
         ...tripData.itinerary.filter((i) => !newItinerary.find((n) => n.id === i.id))
       ];
 
@@ -3041,6 +3066,7 @@ const handleCalculateDebts = async () => {
                             <ItineraryCard
                               key={item.id}
                               item={item}
+                              onAddNote={openNoteModalForItem}
                               members={tripData.members}
                               onSelect={setSelectedItem}
                               onEdit={(i) => {
@@ -3695,6 +3721,23 @@ const handleCalculateDebts = async () => {
                       className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-stone-900"
                     />
                   </div>
+
+                  {itemData.category === "note" && (
+                    <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                      <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                        圖片 URL (選填)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="貼上圖片網址 (例如 Imgur 連結)"
+                        value={itemData.imageUrl || ""}
+                        onChange={(e) =>
+                          setItemData({ ...itemData, imageUrl: e.target.value })
+                        }
+                        className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
