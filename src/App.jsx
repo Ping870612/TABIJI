@@ -482,7 +482,50 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
   
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
+if (item.category === "note") {
+    return (
+      <div
+        onClick={() => onSelect(item)}
+        className="flex flex-col p-4 ml-10 rounded-br-2xl rounded-bl-2xl rounded-tr-2xl bg-[#FFF9C4] border border-[#FBC02D] hover:bg-[#FFF59D] transition-all duration-300 mb-6 group relative cursor-pointer shadow-[2px_4px_12px_rgba(0,0,0,0.08)] transform rotate-1 hover:rotate-0"
+      >
+        {/* 左上角折角裝飾 */}
+        <div className="absolute top-0 left-0 w-0 h-0 border-t-[12px] border-r-[12px] border-t-[#faf9f4] border-r-[#FBC02D]"></div>
 
+        {/* 操作按鈕 (隱藏導航，保留編輯與刪除) */}
+        <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-yellow-700 hover:bg-yellow-200 rounded-lg transition-colors"><Edit size={14} /></button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-yellow-700 hover:text-red-500 hover:bg-yellow-200 rounded-lg transition-colors"><Trash2 size={14} /></button>
+        </div>
+
+        {/* 時間與圖示 */}
+        <div className="flex items-center gap-2 mb-1">
+          <StickyNote size={14} className="text-yellow-600" />
+          <span className="text-[12px] font-bold text-yellow-700 font-mono">{item.time}</span>
+        </div>
+
+        {/* 便條標題 (自動移除"備註："前綴比較美觀) */}
+        <h4 className="font-serif text-lg font-bold text-stone-800 leading-tight mb-2">
+          {item.location.replace("備註：", "")}
+        </h4>
+
+        {/* 便條文字內容 */}
+        {item.notes && (
+          <div className="text-[13px] text-stone-700 leading-relaxed whitespace-pre-wrap">
+            <LinkText text={item.notes} />
+          </div>
+        )}
+
+        {/* 圖片支援 */}
+        {item.imageUrl && (
+          <div className="mt-3 rounded-xl overflow-hidden border border-yellow-300 shadow-sm">
+            <img src={item.imageUrl} alt="note" className="w-full h-auto object-cover" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  
   return (
     <div className="absolute inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
       <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] overflow-y-auto scrollbar-hide border border-white">
