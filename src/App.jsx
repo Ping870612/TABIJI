@@ -33,7 +33,6 @@ import {
   CloudLightning,
   Map,
   Search,
-  StickyNote,
   History,
   Plane,
   XCircle,
@@ -473,59 +472,11 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
     flight: { icon: <Plane size={24} />, bgIcon: "bg-sky-100 text-sky-600", label: "航班" },
     accommodation: { icon: <Home size={24} />, bgIcon: "bg-rose-100 text-rose-600", label: "住宿" },
     activity: { icon: <MapPin size={24} />, bgIcon: "bg-stone-100 text-stone-600", label: "活動" },
-    note: {
-      icon: <StickyNote size={24} />,
-      bg: "bg-yellow-100 text-yellow-700",
-      label: "便條",
-    },
   };
   
   const config = typeConfig[item.category] || typeConfig.activity;
   const author = members?.[item.createdBy] || {};
-if (item.category === "note") {
-    return (
-      <div
-        onClick={() => onSelect(item)}
-        className="flex flex-col p-4 ml-10 rounded-br-2xl rounded-bl-2xl rounded-tr-2xl bg-[#FFF9C4] border border-[#FBC02D] hover:bg-[#FFF59D] transition-all duration-300 mb-6 group relative cursor-pointer shadow-[2px_4px_12px_rgba(0,0,0,0.08)] transform rotate-1 hover:rotate-0"
-      >
-        {/* 左上角折角裝飾 */}
-        <div className="absolute top-0 left-0 w-0 h-0 border-t-[12px] border-r-[12px] border-t-[#faf9f4] border-r-[#FBC02D]"></div>
 
-        {/* 操作按鈕 (隱藏導航，保留編輯與刪除) */}
-        <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-yellow-700 hover:bg-yellow-200 rounded-lg transition-colors"><Edit size={14} /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-yellow-700 hover:text-red-500 hover:bg-yellow-200 rounded-lg transition-colors"><Trash2 size={14} /></button>
-        </div>
-
-        {/* 時間與圖示 */}
-        <div className="flex items-center gap-2 mb-1">
-          <StickyNote size={14} className="text-yellow-600" />
-          <span className="text-[12px] font-bold text-yellow-700 font-mono">{item.time}</span>
-        </div>
-
-        {/* 便條標題 (自動移除"備註："前綴比較美觀) */}
-        <h4 className="font-serif text-lg font-bold text-stone-800 leading-tight mb-2">
-          {item.location.replace("備註：", "")}
-        </h4>
-
-        {/* 便條文字內容 */}
-        {item.notes && (
-          <div className="text-[13px] text-stone-700 leading-relaxed whitespace-pre-wrap">
-            <LinkText text={item.notes} />
-          </div>
-        )}
-
-        {/* 圖片支援 */}
-        {item.imageUrl && (
-          <div className="mt-3 rounded-xl overflow-hidden border border-yellow-300 shadow-sm">
-            <img src={item.imageUrl} alt="note" className="w-full h-auto object-cover" />
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  
   return (
     <div className="absolute inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
       <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] overflow-y-auto scrollbar-hide border border-white">
@@ -548,15 +499,7 @@ if (item.category === "note") {
                 {item.location}
               </h2>
             </div>
-            </div>
-{item.category === "note" && (
-            <div className="mt-2 space-y-2">
-              <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed">{item.notes}</p>
-              {item.imageUrl && (
-                <img src={item.imageUrl} className="rounded-lg w-full h-auto border border-yellow-200 shadow-sm" alt="note" />
-              )}
           </div>
-  )}
           <a
             href={`https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(item.location)}`}
             target="_blank"
@@ -1070,7 +1013,6 @@ const ItineraryCard = ({
   onEdit,
   onDelete,
   onMap,
-  onAddNote,
   members,
 }) => {
   const typeConfig = {
@@ -1106,15 +1048,6 @@ const ItineraryCard = ({
       <div className="p-5 pt-4 relative">
         {/* 操作按鈕 (移動到資訊區塊的右上角) */}
         <div className="absolute top-3 right-3 flex gap-1 z-10 opacity-100 bg-white/80 backdrop-blur-md rounded-xl p-1 shadow-sm border border-stone-100/50">
-          <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddNote(item);
-          }}
-          className="p-2 text-stone-300 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
-        >
-          <StickyNote size={14} />
-        </button>
           <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
           <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
@@ -2220,7 +2153,6 @@ if (initialData.destination && initialData.startDate) {
     setIsAnalyzing(true);
 
     try {
-      const cleanItinerary = tripData.itinerary.filter(i => i.category !== "note");
       const res = await callGeminiAPI([
         {
           text: `分析以下旅遊行程 JSON：${JSON.stringify(
@@ -2269,9 +2201,6 @@ if (initialData.destination && initialData.startDate) {
     setIsAnalyzing(true);
     
     try {
-
-      const actualItinerary = tripData.itinerary.filter(i => i.category !== "note");
-      const noteItems = tripData.itinerary.filter(i => i.category === "note");
       const days = [...new Set(tripData.itinerary.map(i => i.day))];
       const dayStartTimes = {};
       days.forEach(day => {
@@ -2483,21 +2412,6 @@ const handleCalculateDebts = async () => {
       }));
     }
   };
-
-  const openNoteModalForItem = (parentItem) => {
-    setIsEditMode(false);
-    setEditingId(null);
-    setItemData({
-      day: parentItem.day,
-      time: parentItem.time, // 讓便條的時間與景點相同，排序時就會靠在一起
-      category: "note",      // 設定分類為「便條」
-      location: `備註：${parentItem.location}`,
-      notes: "",
-      imageUrl: ""           // 預留圖片網址欄位
-    });
-    setIsModalOpen(true);
-  };
-  
   const handleSaveItem = async () => {
     const tripRef = doc(
       db,
@@ -2529,7 +2443,6 @@ const handleCalculateDebts = async () => {
           lng: itemData.lng || null,  // 🟢 新增這行：儲存經度
           category: itemData.category || "sightseeing",
           notes: itemData.notes || "",
-          imageUrl: itemData.imageUrl || "",
           guideInfo: itemData.guideInfo || "", 
           tags: itemData.tags || [],
           image: itemData.image || null,
@@ -3130,7 +3043,6 @@ const handleCalculateDebts = async () => {
                               item={item}
                               members={tripData.members}
                               onSelect={setSelectedItem}
-                              onAddNote={openNoteModalForItem}
                               onEdit={(i) => {
                                 setEditingId(i.id);
                                 setItemData(i);
@@ -3149,7 +3061,7 @@ const handleCalculateDebts = async () => {
                                 })
                               }
                           onMap={(loc) =>
-  window.open(`https://maps.google.com/?q=${encodeURIComponent(loc)}`, "_blank")
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc)}`, "_blank")
 }
                             />
                           ))}
@@ -3783,21 +3695,6 @@ const handleCalculateDebts = async () => {
                       className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-stone-900"
                     />
                   </div>
-
-                  {itemData.category === "note" && (
-                    <div className="mt-3">
-                      <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
-                        圖片連結 (選填)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="貼上圖片網址"
-                        value={itemData.imageUrl || ""}
-                        onChange={(e) => setItemData({ ...itemData, imageUrl: e.target.value })}
-                        className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors"
-                      />
-                    </div>
-                  )}
 
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
