@@ -511,8 +511,8 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
               {item.imageUrl && (
                 <img src={item.imageUrl} className="rounded-lg w-full h-auto border border-yellow-200 shadow-sm" alt="note" />
               )}
-            
           </div>
+  )}
           <a
             href={`https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(item.location)}`}
             target="_blank"
@@ -2485,6 +2485,7 @@ const handleCalculateDebts = async () => {
           lng: itemData.lng || null,  // 🟢 新增這行：儲存經度
           category: itemData.category || "sightseeing",
           notes: itemData.notes || "",
+          imageUrl: itemData.imageUrl || "",
           guideInfo: itemData.guideInfo || "", 
           tags: itemData.tags || [],
           image: itemData.image || null,
@@ -3104,7 +3105,7 @@ const handleCalculateDebts = async () => {
                                 })
                               }
                           onMap={(loc) =>
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc)}`, "_blank")
+  window.open(`https://maps.google.com/?q=${encodeURIComponent(loc)}`, "_blank")
 }
                             />
                           ))}
