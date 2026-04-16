@@ -33,6 +33,7 @@ import {
   CloudLightning,
   Map,
   Search,
+  StickyNote,
   History,
   Plane,
   XCircle,
@@ -472,6 +473,11 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
     flight: { icon: <Plane size={24} />, bgIcon: "bg-sky-100 text-sky-600", label: "航班" },
     accommodation: { icon: <Home size={24} />, bgIcon: "bg-rose-100 text-rose-600", label: "住宿" },
     activity: { icon: <MapPin size={24} />, bgIcon: "bg-stone-100 text-stone-600", label: "活動" },
+    note: {
+      icon: <StickyNote size={24} />,
+      bg: "bg-yellow-100 text-yellow-700",
+      label: "便條",
+    },
   };
   
   const config = typeConfig[item.category] || typeConfig.activity;
@@ -499,6 +505,13 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
                 {item.location}
               </h2>
             </div>
+{item.category === "note" && (
+            <div className="mt-2 space-y-2">
+              <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed">{item.notes}</p>
+              {item.imageUrl && (
+                <img src={item.imageUrl} className="rounded-lg w-full h-auto border border-yellow-200 shadow-sm" alt="note" />
+              )}
+            
           </div>
           <a
             href={`https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(item.location)}`}
@@ -1013,6 +1026,7 @@ const ItineraryCard = ({
   onEdit,
   onDelete,
   onMap,
+  onAddNote,
   members,
 }) => {
   const typeConfig = {
@@ -1048,6 +1062,15 @@ const ItineraryCard = ({
       <div className="p-5 pt-4 relative">
         {/* 操作按鈕 (移動到資訊區塊的右上角) */}
         <div className="absolute top-3 right-3 flex gap-1 z-10 opacity-100 bg-white/80 backdrop-blur-md rounded-xl p-1 shadow-sm border border-stone-100/50">
+          <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddNote(item);
+          }}
+          className="p-2 text-stone-300 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
+        >
+          <StickyNote size={14} />
+        </button>
           <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
           <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
@@ -2153,6 +2176,7 @@ if (initialData.destination && initialData.startDate) {
     setIsAnalyzing(true);
 
     try {
+      const cleanItinerary = tripData.itinerary.filter(i => i.category !== "note");
       const res = await callGeminiAPI([
         {
           text: `分析以下旅遊行程 JSON：${JSON.stringify(
@@ -2201,6 +2225,9 @@ if (initialData.destination && initialData.startDate) {
     setIsAnalyzing(true);
     
     try {
+
+      const actualItinerary = tripData.itinerary.filter(i => i.category !== "note");
+      const noteItems = tripData.itinerary.filter(i => i.category === "note");
       const days = [...new Set(tripData.itinerary.map(i => i.day))];
       const dayStartTimes = {};
       days.forEach(day => {
@@ -2412,6 +2439,21 @@ const handleCalculateDebts = async () => {
       }));
     }
   };
+
+  const openNoteModalForItem = (parentItem) => {
+    setIsEditMode(false);
+    setEditingId(null);
+    setItemData({
+      day: parentItem.day,
+      time: parentItem.time, // 讓便條的時間與景點相同，排序時就會靠在一起
+      category: "note",      // 設定分類為「便條」
+      location: `備註：${parentItem.location}`,
+      notes: "",
+      imageUrl: ""           // 預留圖片網址欄位
+    });
+    setIsModalOpen(true);
+  };
+  
   const handleSaveItem = async () => {
     const tripRef = doc(
       db,
@@ -3043,6 +3085,7 @@ const handleCalculateDebts = async () => {
                               item={item}
                               members={tripData.members}
                               onSelect={setSelectedItem}
+                              onAddNote={openNoteModalForItem}
                               onEdit={(i) => {
                                 setEditingId(i.id);
                                 setItemData(i);
@@ -3695,6 +3738,21 @@ const handleCalculateDebts = async () => {
                       className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#eadef1] transition-all resize-y min-h-[80px] text-stone-900"
                     />
                   </div>
+
+                  {itemData.category === "note" && (
+                    <div className="mt-3">
+                      <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider ml-1 mb-1 block">
+                        圖片連結 (選填)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="貼上圖片網址"
+                        value={itemData.imageUrl || ""}
+                        onChange={(e) => setItemData({ ...itemData, imageUrl: e.target.value })}
+                        className="w-full bg-white border border-stone-200 rounded-xl p-3 outline-none focus:border-stone-400 transition-colors"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="text-[10px] text-[#b4a0c8] font-bold uppercase tracking-wider ml-1 mb-1 block">
