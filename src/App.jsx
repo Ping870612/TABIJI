@@ -505,6 +505,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
                 {item.location}
               </h2>
             </div>
+            </div>
 {item.category === "note" && (
             <div className="mt-2 space-y-2">
               <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed">{item.notes}</p>
