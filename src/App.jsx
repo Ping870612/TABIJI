@@ -3462,7 +3462,7 @@ const handleCalculateDebts = async () => {
               style={{
                 transform: `translateX(${
                   activeTab === "itinerary" ? "0%" :
-                  activeTab === "expenses" ? "100%" : "200%"
+                  activeTab === "notes" ? "100%" : "200%"
                 })`,
                 // 彈簧曲線，讓滑動時有 Q 彈回饋感
                 transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" 
