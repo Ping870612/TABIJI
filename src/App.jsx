@@ -1589,7 +1589,7 @@ const App = () => {
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const [showAIMenu, setShowAIMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState("expenses");
+  const [activeTab, setActiveTab] = useState("itinerary");
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
