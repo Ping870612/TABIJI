@@ -952,13 +952,13 @@ const WeatherBadge = ({ date, weatherData }) => {
   );
 };
 
-// --- 更新後的導覽列元件 (包含動態天氣圖示) ---
+// --- 升級版：動態天氣天數導覽列 ---
 const DayNavigation = ({ days, tripData, onScrollToDay }) => {
   const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
   return (
-    <div className="sticky top-0 z-40 bg-[#faf9f4]/90 backdrop-blur-md pb-3 pt-3 px-4 -mx-4 mb-4 shadow-[0_10px_20px_rgba(104,87,123,0.05)] border-b border-white/60 transition-all">
-      <div className="flex gap-3 overflow-x-auto py-1 custom-scrollbar justify-start px-2">
+    <div className="sticky top-0 z-40 bg-[#faf9f4]/90 backdrop-blur-md pb-4 pt-3 px-4 -mx-4 mb-4 shadow-[0_10px_20px_rgba(104,87,123,0.05)] border-b border-white/60 transition-all">
+      <div className="flex gap-3 overflow-x-auto py-2 custom-scrollbar justify-start px-2">
         {days.map((day) => {
           const dateObj = new Date(tripData.startDate);
           dateObj.setDate(dateObj.getDate() + (parseInt(day) - 1));
@@ -972,43 +972,70 @@ const DayNavigation = ({ days, tripData, onScrollToDay }) => {
           const dateKey = `${y}-${m}-${d}`;
           
           const weather = tripData.weather?.[dateKey];
+          const condition = weather?.condition || "";
 
-          // 🟢 1. 這裡加入動態圖示與顏色判斷邏輯
+          // 1. 根據天氣定義專屬風格與動畫
           let Icon = Sun;
-          let iconColor = "text-orange-500"; 
-          if (weather) {
-            const condition = weather.condition || "";
-            if (condition.includes("雨")) { Icon = CloudRain; iconColor = "text-blue-500"; }
-            else if (condition.includes("雪")) { Icon = CloudSnow; iconColor = "text-sky-300"; }
-            else if (condition.includes("雷")) { Icon = CloudLightning; iconColor = "text-purple-500"; }
-            else if (condition.includes("雲") || condition.includes("陰") || condition.includes("霧")) { Icon = Cloud; iconColor = "text-stone-400"; }
-            else if (condition.includes("風")) { Icon = Wind; iconColor = "text-teal-400"; }
+          let bgStyle = "from-white/80 to-white/50 border-white text-stone-900"; // 預設
+          let iconColor = "text-stone-400";
+          let animClass = "";
+
+          if (condition.includes("晴")) {
+            Icon = Sun;
+            bgStyle = "from-orange-50 to-amber-100 border-orange-200 text-orange-900 shadow-orange-100/50";
+            iconColor = "text-orange-500";
+            animClass = "animate-[spin_8s_linear_infinite]";
+          } else if (condition.includes("雨")) {
+            Icon = CloudRain;
+            bgStyle = "from-blue-50 to-indigo-100 border-blue-200 text-indigo-900 shadow-blue-100/50";
+            iconColor = "text-blue-500";
+            animClass = "animate-bounce";
+          } else if (condition.includes("雲") || condition.includes("陰")) {
+            Icon = Cloud;
+            bgStyle = "from-stone-50 to-gray-200 border-stone-200 text-stone-700 shadow-stone-100/50";
+            iconColor = "text-stone-400";
+            animClass = "animate-pulse";
+          } else if (condition.includes("雪")) {
+            Icon = CloudSnow;
+            bgStyle = "from-slate-50 to-sky-100 border-sky-200 text-sky-900 shadow-sky-100/50";
+            iconColor = "text-sky-400";
+            animClass = "animate-pulse";
           }
 
           return (
             <button
               key={day}
               onClick={() => onScrollToDay(day)}
-              className="flex-shrink-0 w-20 bg-white/70 backdrop-blur-sm border border-white rounded-2xl p-2.5 shadow-sm active:scale-95 transition-all text-center group hover:bg-white hover:shadow-md flex flex-col items-center gap-1"
+              className={`flex-shrink-0 w-20 bg-gradient-to-br border rounded-[1.5rem] p-3 shadow-sm active:scale-95 transition-all text-center group hover:shadow-md flex flex-col items-center gap-1 ${bgStyle}`}
             >
-              <div className="flex items-baseline gap-1 justify-center">
-                <span className="text-xl font-serif font-black text-stone-900 leading-none">{day}</span>
-                <span className="text-[10px] text-[#b4a0c8] font-bold leading-none uppercase">Day</span>
+              {/* 天數顯示：Day X */}
+              <div className="flex items-baseline gap-0.5 justify-center">
+                <span className="text-[9px] font-black uppercase tracking-tighter opacity-60">D</span>
+                <span className="text-2xl font-serif font-black leading-none">{day}</span>
               </div>
               
-              <div className="text-[9px] text-[#68577b] font-bold leading-none truncate w-full mt-1">
-                {formattedDate} ({dayOfWeek})
+              {/* 日期與星期 */}
+              <div className="text-[10px] font-bold leading-none opacity-80 mt-0.5">
+                {formattedDate} <span className="opacity-60">({dayOfWeek})</span>
               </div>
               
-              {/* 🟢 2. 套用動態圖示與顏色 */}
-              {weather ? (
-                <div className={`mt-1 flex items-center justify-center gap-0.5 text-[9px] font-bold leading-none ${iconColor}`}>
-                  <Icon size={10} />
-                  <span className="truncate">{weather.temp}</span>
-                </div>
-              ) : (
-                <div className="mt-1 text-[8px] text-stone-400 font-bold italic leading-none">無資訊</div>
-              )}
+              {/* 下方天氣小圖示區塊 */}
+              <div className="mt-2 flex flex-col items-center gap-1">
+                {weather ? (
+                  <>
+                    <div className={`p-1.5 rounded-full bg-white/40 shadow-inner ${animClass}`}>
+                      <Icon size={14} className={iconColor} />
+                    </div>
+                    <span className="text-[10px] font-black font-mono tracking-tighter">
+                      {weather.temp.split('~')[1] || weather.temp}
+                    </span>
+                  </>
+                ) : (
+                  <div className="h-8 flex items-center justify-center">
+                    <Calendar size={14} className="opacity-20" />
+                  </div>
+                )}
+              </div>
             </button>
           );
         })}
