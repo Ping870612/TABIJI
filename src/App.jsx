@@ -3168,8 +3168,8 @@ const handleSaveNote = async () => {
       <main className="flex-1 overflow-hidden w-full relative bg-[#faf9f4]">
         
         {/* 🌟 核心修改：寬度改為 400% 容納四個分頁，推移比例改為 25%、50%、75% */}
-        <div
-          className="flex h-full w-[400%] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+<div
+          className="flex h-full w-[400%] transition-transform duration-500 ease-out"
           style={{
             transform:
               activeTab === "itinerary" ? "translateX(0%)" :
