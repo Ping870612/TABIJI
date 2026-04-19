@@ -886,71 +886,53 @@ const Tag = ({ type, text }) => {
 const WeatherBadge = ({ date, weatherData }) => {
   if (!date || !weatherData || !weatherData[date]) return null;
   const info = weatherData[date];
-
-  // 1. 預設圖示與漸層樣式 (晴天)
+  
+  // 1. 預設圖示與顏色
   let Icon = Sun;
-  let styleConfig = "from-orange-50 to-amber-100 text-orange-600 border-orange-200 shadow-orange-100/50";
-  let iconAnim = "animate-[spin_10s_linear_infinite]"; // 太陽緩慢轉動
+  let iconColor = "text-orange-400"; 
 
   const condition = info.condition || "";
 
-  // 2. 根據天氣狀況，動態切換漸層色系與微動畫
+  // 2. 根據天氣狀況，動態切換圖示與顏色
   if (condition.includes("雨")) {
     Icon = CloudRain;
-    styleConfig = "from-blue-50 to-indigo-100 text-blue-600 border-blue-200 shadow-blue-100/50";
-    iconAnim = "animate-[bounce_2s_ease-in-out_infinite]"; // 雨滴微跳動
+    iconColor = "text-blue-500";
   } else if (condition.includes("雪")) {
     Icon = CloudSnow;
-    styleConfig = "from-slate-50 to-sky-100 text-sky-600 border-sky-200 shadow-sky-100/50";
-    iconAnim = "animate-[pulse_3s_ease-in-out_infinite]";
+    iconColor = "text-sky-300";
   } else if (condition.includes("雷")) {
     Icon = CloudLightning;
-    styleConfig = "from-purple-50 to-fuchsia-100 text-purple-600 border-purple-200 shadow-purple-100/50";
-    iconAnim = "animate-[pulse_1s_ease-in-out_infinite]";
+    iconColor = "text-purple-500";
   } else if (condition.includes("雲") || condition.includes("陰") || condition.includes("霧")) {
     Icon = Cloud;
-    styleConfig = "from-stone-50 to-gray-200 text-stone-600 border-stone-200 shadow-stone-100/50";
-    iconAnim = "animate-[pulse_4s_ease-in-out_infinite]"; // 雲朵微呼吸
+    iconColor = "text-stone-400"; // 陰天給予質感的灰色
   } else if (condition.includes("風")) {
     Icon = Wind;
-    styleConfig = "from-teal-50 to-emerald-100 text-teal-600 border-teal-200 shadow-teal-100/50";
-    iconAnim = "animate-[pulse_2s_ease-in-out_infinite]";
+    iconColor = "text-teal-400";
   }
-
+  
   // 萃取地點名稱
   const shortLocation = info.locationName ? info.locationName.split(',')[0] : "";
 
   return (
-    <div className="flex flex-col items-end gap-1.5 animate-in fade-in duration-500">
-      
-      {/* 🟢 全新漸層天氣卡片 */}
-      <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-2xl border bg-gradient-to-br shadow-sm backdrop-blur-md transition-all hover:scale-105 cursor-default ${styleConfig}`}>
-        
-        {/* 獨立包裝的 Icon 區塊 (自帶微動畫) */}
-        <div className={`bg-white/60 p-1.5 rounded-full shadow-sm backdrop-blur-sm flex items-center justify-center ${iconAnim}`}>
-          <Icon size={14} className="drop-shadow-sm" />
-        </div>
-        
-        {/* 文字排版：強調溫度，弱化天氣文字 */}
-        <div className="flex flex-col items-start leading-none justify-center py-0.5">
-          <span className="font-black text-[13px] tracking-wide font-mono">
-            {info.temp}
-          </span>
-          <span className="font-bold text-[9px] opacity-80 mt-0.5 tracking-wider">
-            {info.condition}
-          </span>
-        </div>
+    <div className="flex flex-col items-end gap-1 animate-in fade-in">
+      <div className="flex items-center gap-2 text-xs bg-white/60 px-3 py-1.5 rounded-full border border-white shadow-sm backdrop-blur-sm">
+        {/* 🟢 套用動態 Icon 與 顏色 */}
+        <Icon size={14} className={iconColor} />
+        {/* 🟢 文字改為稍微深一點的灰色，提升閱讀質感 */}
+        <span className="font-bold text-stone-700 tracking-wide">
+          {info.temp} {info.condition}
+        </span>
       </div>
-
-      {/* 地點小標籤也稍微美化 */}
       {shortLocation && (
-        <div className="text-[9px] text-[#b4a0c8] font-bold tracking-widest pr-1 flex items-center gap-1 uppercase">
+        <div className="text-[9px] text-stone-400 font-medium tracking-wide pr-1 flex items-center gap-1">
           <MapPin size={8} /> {shortLocation}
         </div>
       )}
     </div>
   );
 };
+
 
 // --- 精緻原尺寸版：動態天氣天數導覽列 ---
 const DayNavigation = ({ days, tripData, onScrollToDay }) => {
