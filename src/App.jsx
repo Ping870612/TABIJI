@@ -2529,7 +2529,7 @@ const handleCalculateDebts = async () => {
       const list = activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
 
       // 🌟 只要這串字超過 1000 字，代表它是一坨沒處理過的圖片代碼，就啟動上傳！
-      let finalImageUrl = itemData.image;
+      let finalImageUrl = itemData.image || null;
       if (itemData.image && typeof itemData.image === 'string' && itemData.image.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
         setIsUploading(true); // 開啟上傳動畫
@@ -2623,7 +2623,7 @@ const handleSaveNote = async () => {
     
     try {
 // 🌟 記事本的圖片一樣用長度 1000 來攔截！
-      let finalNoteImageUrl = itemData.noteImage;
+      let finalNoteImageUrl = itemData.noteImage || null;
       if (itemData.noteImage && typeof itemData.noteImage === 'string' && itemData.noteImage.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
         setIsUploading(true); 
