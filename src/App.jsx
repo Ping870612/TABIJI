@@ -103,15 +103,39 @@ const appId =
 // 🌟 1. 貼上你剛剛複製的 ImgBB API Key
 const IMGBB_API_KEY = "787712ddc2bb46a69c1a29f33b847415";
 
-// 🌟 2. 新增上傳工具函式
+// --- 🌟 1. 幫手機專屬打造的 Base64 轉實體檔案 (Blob) 函式 ---
+function base64ToBlob(dataURI) {
+  try {
+    const splitDataURI = dataURI.split(',');
+    const byteString = splitDataURI[0].indexOf('base64') >= 0 
+      ? atob(splitDataURI[1]) 
+      : decodeURI(splitDataURI[1]);
+    // 萃取檔案格式 (例如 image/jpeg)
+    const mimeString = splitDataURI[0].split(':')[1].split(';')[0];
+    
+    // 轉換成二進位數據
+    const ia = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ia], { type: mimeString });
+  } catch(e) {
+    console.error("檔案轉換失敗", e);
+    return null;
+  }
+}
+
+// --- 🌟 2. 升級版的 ImgBB 上傳函式 (對手機極度友善) ---
 async function uploadImageToImgBB(base64Image) {
   if (!base64Image) return null;
   try {
-    // ImgBB 只需要純圖片數據，要把前面的 "data:image/jpeg;base64," 切掉
-    const base64Data = base64Image.split(',')[1];
+    // 把超長字串還原成輕巧的真實檔案
+    const imageBlob = base64ToBlob(base64Image);
+    if (!imageBlob) throw new Error("圖片轉換失敗");
     
     const formData = new FormData();
-    formData.append("image", base64Data);
+    // 第三個參數給予一個假檔名，讓 ImgBB 把它當作真正的圖片檔案接收
+    formData.append("image", imageBlob, "upload.jpg");
 
     const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
       method: "POST",
@@ -121,7 +145,7 @@ async function uploadImageToImgBB(base64Image) {
     const data = await response.json();
     
     if (data.success) {
-      return data.data.url; // 成功！回傳短短的圖片網址
+      return data.data.url; // 成功回傳短短的網址！
     } else {
       throw new Error(data.error?.message || "ImgBB 上傳失敗");
     }
@@ -2472,18 +2496,18 @@ const handleCalculateDebts = async () => {
     try {
       const list = activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
 
-      // 🌟🌟🌟 新增這段：攔截圖片並上傳到 ImgBB
+      // 🌟 只要這串字超過 1000 字，代表它是一坨沒處理過的圖片代碼，就啟動上傳！
       let finalImageUrl = itemData.image;
-      if (itemData.image && itemData.image.length > 1000) {
+      if (itemData.image && typeof itemData.image === 'string' && itemData.image.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
-        setIsUploading(true); // 開啟全螢幕旋轉動畫，防止使用者亂點
+        setIsUploading(true); // 開啟上傳動畫
         
         const uploadedUrl = await uploadImageToImgBB(itemData.image);
         
-        setIsUploading(false); // 關閉動畫
+        setIsUploading(false); // 關閉上傳動畫
         
         if (uploadedUrl) {
-          finalImageUrl = uploadedUrl; // 把肥大的 Base64 換成網址！
+          finalImageUrl = uploadedUrl;
         } else {
           showToast("圖片上傳失敗，將不包含圖片儲存", "error");
           finalImageUrl = null;
@@ -2566,18 +2590,18 @@ const handleSaveNote = async () => {
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     
     try {
-      // 🌟🌟🌟 新增這段：攔截「記事本」的圖片並上傳到 ImgBB
+// 🌟 記事本的圖片一樣用長度 1000 來攔截！
       let finalNoteImageUrl = itemData.noteImage;
-      if (itemData.noteImage && itemData.noteImage.length > 1000) {
+      if (itemData.noteImage && typeof itemData.noteImage === 'string' && itemData.noteImage.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
-        setIsUploading(true); // 開啟全螢幕旋轉動畫
+        setIsUploading(true); 
         
         const uploadedUrl = await uploadImageToImgBB(itemData.noteImage);
         
-        setIsUploading(false); // 關閉動畫
+        setIsUploading(false); 
         
         if (uploadedUrl) {
-          finalNoteImageUrl = uploadedUrl; // 換成網址
+          finalNoteImageUrl = uploadedUrl; 
         } else {
           showToast("圖片上傳失敗，將不包含圖片儲存", "error");
           finalNoteImageUrl = null;
