@@ -534,78 +534,110 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
 
   return (
     <div className="absolute inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-      <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative max-h-[80vh] overflow-y-auto scrollbar-hide border border-white">
+      <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2rem] shadow-2xl relative max-h-[85vh] overflow-hidden flex flex-col border border-white">
+        
+        {/* 右上角關閉按鈕 - 移動到頂層確保不被圖片蓋住 */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-white rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 z-10 shadow-sm"
+          className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md rounded-full text-stone-400 hover:text-stone-600 z-20 shadow-sm transition-colors"
         >
           <X size={20} />
         </button>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4 border-b border-white/50 pb-4">
-            <div className={`p-4 rounded-2xl ${config.bgIcon} shadow-sm`}>
-              {config.icon}
-            </div>
-            <div>
-              <div className="text-xs font-bold text-[#68577b] uppercase tracking-wider mb-1">
-                {config.label} • {item.time}
-              </div>
-              <h2 className="text-xl font-serif font-bold text-stone-900 leading-tight">
-                {item.location}
-              </h2>
+
+        {/* 🌟 1. 頂部照片區塊 (如果有照片才顯示) */}
+        {item.image && (
+          <div className="w-full relative shrink-0 overflow-hidden border-b border-white">
+            {/* 設定比例為接近 21:9 (使用 aspect-[21/9]) */}
+            <div className="w-full aspect-[21/9]">
+              <img 
+                src={item.image} 
+                alt={item.location} 
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(item.location)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 bg-white text-[#68577b] border border-white shadow-sm font-medium py-3 rounded-xl hover:bg-stone-50 transition-colors"
-          >
-            <MapPin size={18} /> 在 Google Maps 開啟
-          </a>
-          {(item.tags || []).length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {item.tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-white border border-stone-100 text-stone-900 font-medium shadow-sm"
-                >
-                  {tag.text}
-                </span>
-              ))}
-            </div>
-          )}
-          {item.guideInfo && (
-            <div className="bg-gradient-to-br from-[#eedbff]/30 to-white/60 p-4 rounded-2xl border border-white shadow-sm">
-              <div className="flex items-center gap-2 mb-2 text-[#68577b] font-bold text-sm">
-                <Sparkles size={16} /> 導遊介紹
+        )}
+
+        {/* 2. 下方內容滾動區 */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide p-6 pt-5">
+          <div className="flex flex-col gap-5">
+            
+            {/* 標題與類型 */}
+            <div className="flex items-center gap-4 border-b border-white/50 pb-4">
+              <div className={`p-4 rounded-2xl ${config.bgIcon} shadow-sm shrink-0`}>
+                {config.icon}
               </div>
-              <p className="text-sm text-stone-900 leading-relaxed">
-                {item.guideInfo}
-              </p>
-            </div>
-          )}
-          {item.notes && (
-            <div>
-              <h4 className="text-sm font-bold text-stone-900 mb-2">備註</h4>
-              <div className="text-sm text-stone-600 bg-white/60 p-4 rounded-2xl border border-white shadow-sm leading-relaxed whitespace-pre-wrap">
-                <LinkText text={item.notes} />
-              </div>
-            </div>
-          )}
-          {author.nickname && (
-            <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-white/50 text-xs text-stone-400">
-              <span>Added by</span>
-              <div className="flex items-center gap-1">
-                <div className="w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center text-xs">
-                  {author.emoji || "👤"}
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-[#68577b] uppercase tracking-wider mb-1">
+                  {config.label} • {item.time}
                 </div>
-                <span className="font-bold text-stone-600">
-                  {author.nickname}
-                </span>
+                <h2 className="text-xl font-serif font-bold text-stone-900 leading-tight break-words">
+                  {item.location}
+                </h2>
               </div>
             </div>
-          )}
+
+            {/* 地圖按鈕 */}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 bg-white text-[#68577b] border border-white shadow-sm font-medium py-3 rounded-xl hover:bg-stone-50 transition-colors"
+            >
+              <MapPin size={18} /> 在 Google Maps 開啟
+            </a>
+
+            {/* 標籤 */}
+            {(item.tags || []).length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {item.tags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-white border border-stone-100 text-stone-900 font-medium shadow-sm"
+                  >
+                    {tag.text}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* 導遊介紹 (AI 生成) */}
+            {item.guideInfo && (
+              <div className="bg-gradient-to-br from-[#eedbff]/30 to-white/60 p-4 rounded-2xl border border-white shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-[#68577b] font-bold text-sm">
+                  <Sparkles size={16} /> 導遊介紹
+                </div>
+                <p className="text-sm text-stone-900 leading-relaxed">
+                  {item.guideInfo}
+                </p>
+              </div>
+            )}
+
+            {/* 備註 */}
+            {item.notes && (
+              <div>
+                <h4 className="text-sm font-bold text-stone-900 mb-2">備註</h4>
+                <div className="text-sm text-stone-600 bg-white/60 p-4 rounded-2xl border border-white shadow-sm leading-relaxed whitespace-pre-wrap">
+                  <LinkText text={item.notes} />
+                </div>
+              </div>
+            )}
+
+            {/* 建立者資訊 */}
+            {author.nickname && (
+              <div className="flex items-center justify-end gap-2 mt-2 pt-4 border-t border-white/50 text-xs text-stone-400">
+                <span>Added by</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center text-xs">
+                    {author.emoji || "👤"}
+                  </div>
+                  <span className="font-bold text-stone-600">
+                    {author.nickname}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
