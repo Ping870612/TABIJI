@@ -3464,7 +3464,242 @@ const handleSaveNote = async () => {
                             ) : (
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 bg-white/40 p-2.5 rounded-xl">
-                                  <span className
+                                  <span className="font-bold text-[#68577b]">{r.author}:</span>{" "}
+                                  <span className="text-stone-600 leading-relaxed">
+                                    <LinkText text={r.content} />
+                                  </span>
+                                  {r.isEdited && <span className="text-[9px] text-stone-400 ml-2 italic">(已編輯)</span>}
+                                </div>
+
+                                {r.author === getCurrentUserNickname() && (
+                                  <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 bg-white/80 backdrop-blur-sm rounded-lg px-1 shadow-sm border border-white">
+                                    <button
+                                      onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }}
+                                      className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
+                                    >
+                                      <Edit size={12} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setConfirmConfig({
+                                          isOpen: true,
+                                          title: "刪除回覆",
+                                          message: "確定要刪除這則回覆嗎？",
+                                          onConfirm: () => { handleDeleteReply(note.id, r.id); setConfirmConfig({ isOpen: false }); },
+                                          onCancel: () => setConfirmConfig({ isOpen: false }),
+                                          isDangerous: true,
+                                        });
+                                      }}
+                                      className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* 新增回覆輸入框 */}
+                        <div className="flex gap-2 items-end pt-2">
+                          <textarea
+                            id={`reply-input-${note.id}`}
+                            rows="1"
+                            placeholder="回覆旅伴..."
+                            className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-stone-900"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleReplySubmit(note.id);
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => handleReplySubmit(note.id)}
+                            className="bg-[#68577b] hover:bg-[#504062] text-white px-4 py-3 rounded-xl text-[10px] font-bold transition-all active:scale-95 mb-0 shrink-0 shadow-md"
+                          >
+                            送出
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ========================================= */}
+          {/* 4. 記帳分頁 (右一) */}
+          {/* ========================================= */}
+          <div className="w-1/4 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
+            <div className="space-y-4 px-4 pt-6">
+              <div className="bg-gradient-to-br from-[#504062] to-[#68577b] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex justify-between items-center border border-white/10">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="relative z-10">
+                  <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
+                    My Personal Spend
+                  </div>
+                  <div className="text-4xl font-bold font-mono text-white">
+                    $
+                    {(tripData?.expenses || [])
+                      .reduce((sum, item) => {
+                        const amount = Number(item.amount) || 0;
+                        const myName = getCurrentUserNickname();
+                        return item.payer === myName ? sum + amount : sum;
+                      }, 0)
+                      .toLocaleString()} 
+                  </div>
+
+                  <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
+                    我已墊付總額 (My Out-of-Pocket)
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setIsEditMode(false);
+                      setEditingId(null);
+                      setItemData({
+                        payer: getCurrentUserNickname(),
+                        date: new Date().toISOString().split("T")[0],
+                        isSplit: false,
+                        splitWith: [],
+                        category: "food",
+                        foreignAmount: "",  
+                        exchangeRate: 1,  
+                        amount: ""
+                      });
+                      setIsModalOpen(true);
+                    }}
+                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 mt-4 rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-sm"
+                  >
+                    <Plus size={16} />
+                    <span className="text-xs font-bold">記一筆</span>
+                  </button>
+                  <div className="text-[9px] text-[#b4a0c8] mt-2">
+                    *包含分帳後的預估金額
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleCalculateDebts}
+                  className="bg-white text-[#68577b] hover:bg-[#faf9f4] p-3 rounded-2xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
+                >
+                  <Calculator size={20} /> AI 結算
+                </button>
+              </div>
+
+              <div className="space-y-3 mt-4">
+                {(tripData?.expenses || [])
+                  .filter((expense) => {
+                    const myNickname = getCurrentUserNickname();
+                    const isCreatedByMe = expense.createdBy === user.uid;
+                    const isPaidByMe = expense.payer === myNickname;
+                    const isInvolved =
+                      expense.isSplit &&
+                      (expense.splitWith || []).includes(myNickname);
+                    return isCreatedByMe || isPaidByMe || isInvolved;
+                  })
+                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .map((expense) => {
+                    const expenseIcons = {
+                      food: <Utensils size={18} />,
+                      transport: <Train size={18} />,
+                      accommodation: <Home size={18} />,
+                      shopping: <ShoppingBag size={18} />,
+                      other: <MoreHorizontal size={18} />,
+                    };
+                    const Icon =
+                      expenseIcons[expense.category] || expenseIcons.other;
+                    const bgColor =
+                      {
+                        food: "bg-orange-100 text-orange-600",
+                        transport: "bg-emerald-100 text-emerald-600",
+                        accommodation: "bg-blue-100 text-blue-600",
+                        shopping: "bg-pink-100 text-pink-600",
+                        other: "bg-stone-100 text-stone-600",
+                      }[expense.category] || "bg-stone-100 text-stone-600";
+
+                    return (
+                      <div
+                        key={expense.id}
+                        className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white flex justify-between items-center group hover:bg-white transition-colors cursor-pointer"
+                        onClick={() => {
+                          setEditingId(expense.id);
+                          setItemData(expense);
+                          setIsEditMode(true);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-2xl ${bgColor} shadow-inner`}>
+                            {Icon}
+                          </div>
+                          <div>
+                            <div className="font-bold text-stone-900 flex items-center gap-2 text-base">
+                              {expense.item}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-[10px]">
+                              <span className="text-[#b4a0c8] font-mono">
+                                {expense.date}
+                              </span>
+                              <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
+                                <span className="text-stone-400">墊:</span>
+                                <span className="font-bold text-[#68577b]">
+                                  {expense.payer}
+                                </span>
+                              </div>
+                              {expense.isSplit && (
+                                <span className="text-purple-500 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded font-medium">
+                                  {expense.splitWith.length}人分
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-end gap-0">
+                          <span className="font-bold font-mono text-stone-800 text-lg">
+                            ${Number(expense.amount).toLocaleString()}
+                          </span>
+                          {expense.currency && expense.currency !== "TWD" && (
+                            <span className="text-[9px] text-stone-400 font-mono">
+                              {expense.foreignAmount} {expense.currency}
+                            </span>
+                          )}
+                            
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmConfig({
+                                isOpen: true,
+                                title: "刪除支出",
+                                message: `確定要刪除「${expense.item}」嗎？`,
+                                onConfirm: () => deleteItem("expenses", expense),
+                                onCancel: () => setConfirmConfig({ isOpen: false }),
+                                isDangerous: true,
+                              });
+                            }}
+                            className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                
+              {(tripData?.expenses || []).filter(e => e.createdBy === user.uid || e.payer === getCurrentUserNickname() || (e.isSplit && (e.splitWith || []).includes(getCurrentUserNickname()))).length === 0 && (
+                 <div className="text-center py-10 text-[#b4a0c8] text-sm font-medium">
+                   尚無與您相關的支出紀錄
+                 </div>
+              )}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
 
 {/* --- Bottom Navigation (完美膠囊比例 + 4選項果凍動畫) --- */}
       <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[340px]">
