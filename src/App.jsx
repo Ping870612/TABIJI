@@ -2473,7 +2473,7 @@ const handleCalculateDebts = async () => {
 
       // 🌟🌟🌟 新增這段：攔截圖片並上傳到 ImgBB
       let finalImageUrl = itemData.image;
-      if (itemData.image && itemData.image.startsWith('data:image')) {
+      if (itemData.image && itemData.image.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
         setIsAnalyzing(true); // 開啟全螢幕旋轉動畫，防止使用者亂點
         
@@ -2544,7 +2544,7 @@ const handleCalculateDebts = async () => {
   const handleNoteImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { showToast("圖片需小於 2MB", "error"); return; }
+      if (file.size > 15 * 1024 * 1024) { showToast("圖片需小於 15MB", "error"); return; }
       const reader = new FileReader();
       reader.onloadend = () => setItemData({ ...itemData, noteImage: reader.result });
       reader.readAsDataURL(file);
@@ -2567,7 +2567,7 @@ const handleSaveNote = async () => {
     try {
       // 🌟🌟🌟 新增這段：攔截「記事本」的圖片並上傳到 ImgBB
       let finalNoteImageUrl = itemData.noteImage;
-      if (itemData.noteImage && itemData.noteImage.startsWith('data:image')) {
+      if (itemData.noteImage && itemData.noteImage.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
         setIsAnalyzing(true); // 開啟全螢幕旋轉動畫
         
@@ -3819,7 +3819,7 @@ const handleSaveNote = async () => {
                             onChange={(e) => {
                               const file = e.target.files[0];
                               if (file) {
-                                if (file.size > 5 * 1024 * 1024) { showToast("圖片需小於 5MB", "error"); return; }
+                                if (file.size > 15 * 1024 * 1024) { showToast("圖片需小於 15MB", "error"); return; }
                                 const reader = new FileReader();
                                 reader.onloadend = () => {
                                   setOriginalImage(reader.result);
@@ -3898,7 +3898,7 @@ const handleSaveNote = async () => {
                                   completedCrop.height
                                 );
                                 
-                                const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+                                const base64Image = canvas.toDataURL('image/jpeg', 1.0);
                                 setItemData({ ...itemData, image: base64Image });
                                 setShowCropModal(false);
                                 setOriginalImage(null);
