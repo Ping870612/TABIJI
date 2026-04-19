@@ -1690,6 +1690,7 @@ const App = () => {
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
   const [localTripName, setLocalTripName] = useState("");
+  const [newChecklistText, setNewChecklistText] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const [showAIMenu, setShowAIMenu] = useState(false);
@@ -2754,6 +2755,42 @@ const handleSaveNote = async () => {
     showToast("已刪除");
   };
 
+  // --- 🌟 行李清單相關邏輯 ---
+  const handleAddChecklist = async () => {
+    if (!newChecklistText.trim() || !tripId) return;
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    const newItem = {
+      id: "check_" + Date.now(),
+      text: newChecklistText.trim(),
+      isCompleted: false,
+      createdBy: user.uid
+    };
+    try {
+      await updateDoc(tripRef, { checklist: arrayUnion(newItem) });
+      setNewChecklistText(""); // 清空輸入框
+      showToast("已新增清單項目");
+    } catch (e) {
+      showToast("新增失敗", "error");
+    }
+  };
+
+  const toggleChecklist = async (item) => {
+    if (!tripId) return;
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    const updatedList = (tripData.checklist || []).map(i =>
+      i.id === item.id ? { ...i, isCompleted: !i.isCompleted } : i
+    );
+    await updateDoc(tripRef, { checklist: updatedList });
+  };
+
+  const deleteChecklist = async (item) => {
+    if (!tripId) return;
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
+    const updatedList = (tripData.checklist || []).filter(i => i.id !== item.id);
+    await updateDoc(tripRef, { checklist: updatedList });
+    showToast("已刪除項目");
+  };
+
   const handleDeleteTrip = async () => {
     if (!tripId) return;
     try {
@@ -3130,22 +3167,21 @@ const handleSaveNote = async () => {
 {/* --- Main 內容區 --- */}
       <main className="flex-1 overflow-hidden w-full relative bg-[#faf9f4]">
         
-        {/* 🌟 核心修改：橫向滑動容器 (寬度 300% 容納三個分頁) */}
+        {/* 🌟 核心修改：寬度改為 400% 容納四個分頁，推移比例改為 25%、50%、75% */}
         <div
-          className="flex h-full w-[300%] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+          className="flex h-full w-[400%] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
           style={{
             transform:
-              activeTab === "itinerary"
-                ? "translateX(0%)"
-                : activeTab === "notes"
-                ? "translateX(-33.3333%)"
-                : "translateX(-66.6666%)",
+              activeTab === "itinerary" ? "translateX(0%)" :
+              activeTab === "checklist" ? "translateX(-25%)" :
+              activeTab === "notes"     ? "translateX(-50%)" :
+                                          "translateX(-75%)",
           }}
         >
           {/* ========================================= */}
-          {/* 1. 行程分頁 (左邊) */}
+          {/* 1. 行程分頁 (左一) */}
           {/* ========================================= */}
-          <div className="w-1/3 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
+          <div className="w-1/4 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
             {tripData && (
               <>
                 <DayNavigation 
@@ -3216,7 +3252,7 @@ const handleSaveNote = async () => {
                                     })
                                   }
                                   onMap={(loc) =>
-                                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc)}`, "_blank")
+                                    window.open(`http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(loc)}`, "_blank")
                                   }
                                 />
                               ))}
@@ -3238,9 +3274,95 @@ const handleSaveNote = async () => {
           </div>
 
           {/* ========================================= */}
-          {/* 2. 記事本分頁 (中間) */}
+          {/* 🌟 2. 行李清單分頁 (左二) 🌟 */}
           {/* ========================================= */}
-          <div className="w-1/3 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
+          <div className="w-1/4 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
+            <div className="space-y-4 px-4 pt-6 max-w-lg mx-auto">
+              
+              {/* 進度條 */}
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-white">
+                <div className="flex justify-between items-end mb-3">
+                  <div>
+                    <h3 className="text-xl font-serif font-bold text-stone-900">行李清單</h3>
+                    <p className="text-[10px] text-stone-500 mt-1 tracking-widest uppercase">Packing List</p>
+                  </div>
+                  <div className="text-[#68577b] font-bold font-mono text-2xl">
+                    {(tripData?.checklist || []).filter(i => i.isCompleted).length} 
+                    <span className="text-sm text-stone-400"> / {(tripData?.checklist || []).length}</span>
+                  </div>
+                </div>
+                
+                <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#b4a0c8] to-[#68577b] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] rounded-full"
+                    style={{ width: `${(tripData?.checklist || []).length === 0 ? 0 : ((tripData?.checklist || []).filter(i => i.isCompleted).length / (tripData?.checklist || []).length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* 輸入框 */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="新增物品 (護照、轉接頭...)"
+                  className="flex-1 bg-white border border-white shadow-sm rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-[#eadef1] text-stone-900 font-bold text-base"
+                  value={newChecklistText}
+                  onChange={(e) => setNewChecklistText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddChecklist()}
+                />
+                <button 
+                  onClick={handleAddChecklist}
+                  className="bg-[#68577b] hover:bg-[#504062] text-white w-14 rounded-2xl flex items-center justify-center shadow-md active:scale-95 transition-all"
+                >
+                  <Plus size={24} />
+                </button>
+              </div>
+
+              {/* 待辦事項列表 */}
+              <div className="space-y-2.5 mt-2">
+                {(tripData?.checklist || [])
+                  .slice()
+                  .sort((a, b) => (a.isCompleted === b.isCompleted ? 0 : a.isCompleted ? 1 : -1))
+                  .map(item => (
+                  <div 
+                    key={item.id} 
+                    className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${item.isCompleted ? 'bg-white/40 border-transparent opacity-60' : 'bg-white border-white shadow-sm hover:border-[#eadef1]'}`}
+                  >
+                    <button 
+                      onClick={() => toggleChecklist(item)}
+                      className="flex items-center gap-3 flex-1 text-left group"
+                    >
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-colors duration-300 ${item.isCompleted ? 'bg-[#68577b] border-[#68577b] text-white' : 'border-[#b4a0c8] text-transparent group-hover:border-[#68577b]'}`}>
+                        <CheckSquare size={14} className={item.isCompleted ? 'opacity-100' : 'opacity-0'} />
+                      </div>
+                      <span className={`font-bold text-base transition-all duration-300 ${item.isCompleted ? 'text-stone-400 line-through decoration-stone-300' : 'text-stone-700'}`}>
+                        {item.text}
+                      </span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => deleteChecklist(item)}
+                      className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors ml-2"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                
+                {(!tripData?.checklist || tripData?.checklist.length === 0) && (
+                  <div className="text-center py-10 text-[#b4a0c8] text-sm font-bold tracking-widest">
+                    清單空空的，開始新增要帶的東西吧！
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+
+          {/* ========================================= */}
+          {/* 3. 記事本分頁 (右二) */}
+          {/* ========================================= */}
+          <div className="w-1/4 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
             <div className="space-y-4 pt-6 px-4">
               
               {/* 留言輸入區 */}
@@ -3274,7 +3396,7 @@ const handleSaveNote = async () => {
 
               {/* 留言列表 */}
               <div className="space-y-4">
-                {(tripData.notes || [])
+                {(tripData?.notes || [])
                   .slice()
                   .sort((a, b) => {
                     if (a.isPinned && !b.isPinned) return -1;
@@ -3290,7 +3412,6 @@ const handleSaveNote = async () => {
                           <span className="text-[10px] text-stone-400 font-mono">{new Date(note.time).toLocaleString()}</span>
                         </div>
 
-                        {/* 置頂標籤 */}
                         {note.isPinned && (
                           <span className="ml-auto text-[9px] font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm">
                             <Pin size={10} className="fill-amber-600" /> Pinned
@@ -3343,279 +3464,32 @@ const handleSaveNote = async () => {
                             ) : (
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 bg-white/40 p-2.5 rounded-xl">
-                                  <span className="font-bold text-[#68577b]">{r.author}:</span>{" "}
-                                  <span className="text-stone-600 leading-relaxed">
-                                    <LinkText text={r.content} />
-                                  </span>
-                                  {r.isEdited && <span className="text-[9px] text-stone-400 ml-2 italic">(已編輯)</span>}
-                                </div>
+                                  <span className
 
-                                {r.author === getCurrentUserNickname() && (
-                                  <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 bg-white/80 backdrop-blur-sm rounded-lg px-1 shadow-sm border border-white">
-                                    <button
-                                      onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }}
-                                      className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
-                                    >
-                                      <Edit size={12} />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setConfirmConfig({
-                                          isOpen: true,
-                                          title: "刪除回覆",
-                                          message: "確定要刪除這則回覆嗎？",
-                                          onConfirm: () => { handleDeleteReply(note.id, r.id); setConfirmConfig({ isOpen: false }); },
-                                          onCancel: () => setConfirmConfig({ isOpen: false }),
-                                          isDangerous: true,
-                                        });
-                                      }}
-                                      className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                                    >
-                                      <Trash2 size={12} />
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-
-                        {/* 新增回覆輸入框 */}
-                        <div className="flex gap-2 items-end pt-2">
-                          <textarea
-                            id={`reply-input-${note.id}`}
-                            rows="1"
-                            placeholder="回覆旅伴..."
-                            className="flex-1 w-full bg-white text-xs placeholder:text-[10px] px-4 py-3 rounded-2xl outline-none resize-y min-h-[40px] border border-white shadow-sm focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all text-stone-900"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleReplySubmit(note.id);
-                              }
-                            }}
-                          />
-                          <button
-                            onClick={() => handleReplySubmit(note.id)}
-                            className="bg-[#68577b] hover:bg-[#504062] text-white px-4 py-3 rounded-xl text-[10px] font-bold transition-all active:scale-95 mb-0 shrink-0 shadow-md"
-                          >
-                            送出
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ========================================= */}
-          {/* 3. 記帳分頁 (右邊) */}
-          {/* ========================================= */}
-          <div className="w-1/3 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
-            <div className="space-y-4 px-4 pt-6">
-              <div className="bg-gradient-to-br from-[#504062] to-[#68577b] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex justify-between items-center border border-white/10">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                <div className="relative z-10">
-                  <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
-                    My Personal Spend
-                  </div>
-                  <div className="text-4xl font-bold font-mono text-white">
-                    $
-                    {(tripData.expenses || [])
-                      .reduce((sum, item) => {
-                        const amount = Number(item.amount) || 0;
-                        const myName = getCurrentUserNickname();
-                        // 🌟 簡化邏輯：只要付款人是我，就顯示全額
-                        return item.payer === myName ? sum + amount : sum;
-                      }, 0)
-                      .toLocaleString()} 
-                  </div>
-
-                  <div className="text-[#eadef1] text-xs tracking-widest mb-1 uppercase font-medium">
-                    我已墊付總額 (My Out-of-Pocket)
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setIsEditMode(false);
-                      setEditingId(null);
-                      setItemData({
-                        payer: getCurrentUserNickname(),
-                        date: new Date().toISOString().split("T")[0],
-                        isSplit: false,
-                        splitWith: [],
-                        category: "food",
-                        foreignAmount: "",  
-                        exchangeRate: 1,  
-                        amount: ""
-                      });
-                      setIsModalOpen(true);
-                    }}
-                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 mt-4 rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 border border-white/20 shadow-sm"
-                  >
-                    <Plus size={16} />
-                    <span className="text-xs font-bold">記一筆</span>
-                  </button>
-                  <div className="text-[9px] text-[#b4a0c8] mt-2">
-                    *包含分帳後的預估金額
-                  </div>
-                </div>
-                
-                <button
-                  onClick={handleCalculateDebts}
-                  className="bg-white text-[#68577b] hover:bg-[#faf9f4] p-3 rounded-2xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
-                >
-                  <Calculator size={20} /> AI 結算
-                </button>
-              </div>
-
-              <div className="space-y-3 mt-4">
-                {(tripData.expenses || [])
-                  .filter((expense) => {
-                    const myNickname = getCurrentUserNickname();
-                    const isCreatedByMe = expense.createdBy === user.uid;
-                    const isPaidByMe = expense.payer === myNickname;
-                    const isInvolved =
-                      expense.isSplit &&
-                      (expense.splitWith || []).includes(myNickname);
-                    return isCreatedByMe || isPaidByMe || isInvolved;
-                  })
-                  .sort((a, b) => new Date(b.date) - new Date(a.date))
-                  .map((expense) => {
-                    const expenseIcons = {
-                      food: <Utensils size={18} />,
-                      transport: <Train size={18} />,
-                      accommodation: <Home size={18} />,
-                      shopping: <ShoppingBag size={18} />,
-                      other: <MoreHorizontal size={18} />,
-                    };
-                    const Icon =
-                      expenseIcons[expense.category] || expenseIcons.other;
-                    const bgColor =
-                      {
-                        food: "bg-orange-100 text-orange-600",
-                        transport: "bg-emerald-100 text-emerald-600",
-                        accommodation: "bg-blue-100 text-blue-600",
-                        shopping: "bg-pink-100 text-pink-600",
-                        other: "bg-stone-100 text-stone-600",
-                      }[expense.category] || "bg-stone-100 text-stone-600";
-
-                    const myNickname = getCurrentUserNickname();
-                    let myShare = 0;
-                    if (expense.isSplit && expense.splitWith?.length > 0) {
-                        myShare = expense.splitWith.includes(myNickname) 
-                          ? (Number(expense.amount) / expense.splitWith.length) 
-                          : 0;
-                    } else if (expense.payer === myNickname) {
-                        myShare = Number(expense.amount);
-                    }
-
-                    return (
-                      <div
-                        key={expense.id}
-                        className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white flex justify-between items-center group hover:bg-white transition-colors cursor-pointer"
-                        onClick={() => {
-                          setEditingId(expense.id);
-                          setItemData(expense);
-                          setIsEditMode(true);
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`p-3 rounded-2xl ${bgColor} shadow-inner`}>
-                            {Icon}
-                          </div>
-                          <div>
-                      <div className="font-bold text-stone-900 flex items-center gap-2 text-base">
-                        {expense.item}
-                              </div>
-                            <div className="flex items-center gap-2 mt-1 text-[10px]">
-                              <span className="text-[#b4a0c8] font-mono">
-                                {expense.date}
-                              </span>
-                              <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
-                                <span className="text-stone-400">墊:</span>
-                                <span className="font-bold text-[#68577b]">
-                                  {expense.payer}
-                                </span>
-                              </div>
-                              {expense.isSplit && (
-                                <span className="text-purple-500 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded font-medium">
-                                  {expense.splitWith.length}人分
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-0">
-                          <span className="font-bold font-mono text-stone-800 text-lg">
-                            ${Number(expense.amount).toLocaleString()}
-                          </span>
-                          {expense.currency && expense.currency !== "TWD" && (
-                            <span className="text-[9px] text-stone-400 font-mono">
-                              {expense.foreignAmount} {expense.currency}
-                            </span>
-                          )}
-                            
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConfirmConfig({
-                                isOpen: true,
-                                title: "刪除支出",
-                                message: `確定要刪除「${expense.item}」嗎？`,
-                                onConfirm: () => deleteItem("expenses", expense),
-                                onCancel: () => setConfirmConfig({ isOpen: false }),
-                                isDangerous: true,
-                              });
-                            }}
-                            className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                
-              {(tripData.expenses || []).filter(e => e.createdBy === user.uid || e.payer === getCurrentUserNickname() || (e.isSplit && (e.splitWith || []).includes(getCurrentUserNickname()))).length === 0 && (
-                 <div className="text-center py-10 text-[#b4a0c8] text-sm font-medium">
-                   尚無與您相關的支出紀錄
-                 </div>
-              )}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </main>
-
-   {/* --- Bottom Navigation (完美膠囊比例 + 果凍滑動動畫版) --- */}
+{/* --- Bottom Navigation (完美膠囊比例 + 4選項果凍動畫) --- */}
       <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[340px]">
-        {/* 1. 外層懸浮毛玻璃：四個角弧度完全相同 (rounded-full) */}
         <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full border border-white/80 shadow-[0_15px_40px_rgba(104,87,123,0.12)]">
           <div className="relative flex w-full">
             
-            {/* 2. 背後滑動的紫色果凍色塊 (弧度也是完美的 rounded-full) */}
+            {/* 紫色果凍色塊滑動邏輯：寬度改為 w-1/4，對應四個選項 */}
             <div
-              className="absolute top-0 bottom-0 w-1/3 p-0.5 transition-transform duration-500"
+              className="absolute top-0 bottom-0 w-1/4 p-0.5 transition-transform duration-500"
               style={{
                 transform: `translateX(${
                   activeTab === "itinerary" ? "0%" :
-                  activeTab === "notes" ? "100%" : "200%"
+                  activeTab === "checklist" ? "100%" :
+                  activeTab === "notes" ? "200%" : "300%"
                 })`,
-                // 彈簧曲線，讓滑動時有 Q 彈回饋感
                 transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" 
               }}
             >
-               {/* 實際的紫色漸層方塊 */}
                <div className="w-full h-full bg-gradient-to-b from-[#faf9f4] to-[#eedbff] rounded-full shadow-sm border border-white"></div>
             </div>
 
-            {/* 3. 前方的透明點擊按鈕 */}
+            {/* 選單按鈕順序：行程 -> 清單 -> 記事本 -> 記帳 */}
             {[
               { id: "itinerary", icon: <Calendar size={20} />, label: "行程" },
+              { id: "checklist", icon: <CheckSquare size={20} />, label: "清單" },
               { id: "notes", icon: <BookOpen size={20} />, label: "記事本" },
               { id: "expenses", icon: <CreditCard size={20} />, label: "記帳" }
             ].map((tab) => (
@@ -3633,7 +3507,6 @@ const handleSaveNote = async () => {
                     : "text-[#b4a0c8] hover:text-[#68577b]"
                 }`}
               >
-                {/* 圖示點擊時微向上浮動 */}
                 <div className={`transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${activeTab === tab.id ? "scale-110 -translate-y-0.5" : "group-hover:scale-110 group-hover:-translate-y-0.5"}`}>
                   {tab.icon}
                 </div>
@@ -3645,6 +3518,7 @@ const handleSaveNote = async () => {
           </div>
         </div>
       </nav>
+                                    
 {/* --- FAB (Plus / AI Buttons) --- */}
       {!isModalOpen && activeTab === "itinerary" && (
         <div className="absolute bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-6 z-[60] flex flex-col-reverse items-end gap-4 pointer-events-none">
