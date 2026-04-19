@@ -1669,6 +1669,7 @@ const App = () => {
     isDebtAnalysis: false,
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [firebaseError, setFirebaseError] = useState(null);
   const [posterTheme, setPosterTheme] = useState(null);
   const [transportMode, setTransportMode] = useState("driving");
@@ -2475,11 +2476,11 @@ const handleCalculateDebts = async () => {
       let finalImageUrl = itemData.image;
       if (itemData.image && itemData.image.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
-        setIsAnalyzing(true); // 開啟全螢幕旋轉動畫，防止使用者亂點
+        setIsUploading(true); // 開啟全螢幕旋轉動畫，防止使用者亂點
         
         const uploadedUrl = await uploadImageToImgBB(itemData.image);
         
-        setIsAnalyzing(false); // 關閉動畫
+        setIsUploading(false); // 關閉動畫
         
         if (uploadedUrl) {
           finalImageUrl = uploadedUrl; // 把肥大的 Base64 換成網址！
@@ -2569,11 +2570,11 @@ const handleSaveNote = async () => {
       let finalNoteImageUrl = itemData.noteImage;
       if (itemData.noteImage && itemData.noteImage.length > 1000) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
-        setIsAnalyzing(true); // 開啟全螢幕旋轉動畫
+        setIsUploading(true); // 開啟全螢幕旋轉動畫
         
         const uploadedUrl = await uploadImageToImgBB(itemData.noteImage);
         
-        setIsAnalyzing(false); // 關閉動畫
+        setIsUploading(false); // 關閉動畫
         
         if (uploadedUrl) {
           finalNoteImageUrl = uploadedUrl; // 換成網址
@@ -2823,17 +2824,24 @@ const handleSaveNote = async () => {
         members={tripData.members}
       />
 
-      {(isAnalyzing || isImportLoading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
+    {/* 🌟 修改這個全螢幕載入畫面 */}
+      {(isAnalyzing || isImportLoading || isUploading || (aiAnalysisResult && aiAnalysisResult.isLoading)) && (
         <div className="absolute inset-0 z-[100] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
           <div className="relative mb-6">
             <div className="w-20 h-20 border-4 border-[#eadef1] rounded-full animate-spin"></div>
             <div className="w-20 h-20 border-4 border-[#68577b] rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <Sparkles className="text-[#68577b] animate-pulse" size={32} />
+              {/* 如果是上傳中，顯示雲端上傳圖示，否則顯示 AI 星星 */}
+              {isUploading ? (
+                <Upload className="text-[#68577b] animate-bounce" size={24} />
+              ) : (
+                <Sparkles className="text-[#68577b] animate-pulse" size={32} />
+              )}
             </div>
           </div>
           <h3 className="text-xl font-serif font-bold text-stone-900 tracking-widest animate-pulse mb-2">
-            AI 正在思考中...
+            {/* 根據不同狀態顯示對應文字 */}
+            {isUploading ? "圖片上傳中..." : isImportLoading ? "讀取檔案中..." : "AI 正在思考中..."}
           </h3>
         </div>
       )}
