@@ -100,6 +100,37 @@ const db = getFirestore(app);
 const appId =
   typeof __app_id !== "undefined" ? __app_id : "travel-app-sandbox-v1";
 
+// 🌟 1. 貼上你剛剛複製的 ImgBB API Key
+const IMGBB_API_KEY = "787712ddc2bb46a69c1a29f33b847415";
+
+// 🌟 2. 新增上傳工具函式
+async function uploadImageToImgBB(base64Image) {
+  if (!base64Image) return null;
+  try {
+    // ImgBB 只需要純圖片數據，要把前面的 "data:image/jpeg;base64," 切掉
+    const base64Data = base64Image.split(',')[1];
+    
+    const formData = new FormData();
+    formData.append("image", base64Data);
+
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      return data.data.url; // 成功！回傳短短的圖片網址
+    } else {
+      throw new Error(data.error?.message || "ImgBB 上傳失敗");
+    }
+  } catch (error) {
+    console.error("圖片上傳發生錯誤:", error);
+    return null;
+  }
+}
+
 // --- AI 呼叫函式 ---
 async function callGeminiAPI(parts) {
   try {
@@ -2433,20 +2464,30 @@ const handleCalculateDebts = async () => {
       }));
     }
   };
+
   const handleSaveItem = async () => {
-    const tripRef = doc(
-      db,
-      "artifacts",
-      appId,
-      "public",
-      "data",
-      "travel_trips",
-      tripId
-    );
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
 
     try {
-      const list =
-        activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
+      const list = activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
+
+      // 🌟🌟🌟 新增這段：攔截圖片並上傳到 ImgBB
+      let finalImageUrl = itemData.image;
+      if (itemData.image && itemData.image.startsWith('data:image')) {
+        showToast("正在上傳圖片至雲端，請稍候...", "success");
+        setIsAnalyzing(true); // 開啟全螢幕旋轉動畫，防止使用者亂點
+        
+        const uploadedUrl = await uploadImageToImgBB(itemData.image);
+        
+        setIsAnalyzing(false); // 關閉動畫
+        
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl; // 把肥大的 Base64 換成網址！
+        } else {
+          showToast("圖片上傳失敗，將不包含圖片儲存", "error");
+          finalImageUrl = null;
+        }
+      }
 
       let safeData = {};
       const commonFields = {
@@ -2460,13 +2501,13 @@ const handleCalculateDebts = async () => {
           day: itemData.day || 1,
           time: itemData.time || "10:00",
           location: itemData.location || "", 
-          lat: itemData.lat || null,  // 🟢 新增這行：儲存緯度
-          lng: itemData.lng || null,  // 🟢 新增這行：儲存經度
+          lat: itemData.lat || null,  
+          lng: itemData.lng || null,  
           category: itemData.category || "sightseeing",
           notes: itemData.notes || "",
           guideInfo: itemData.guideInfo || "", 
           tags: itemData.tags || [],
-          image: itemData.image || null,
+          image: finalImageUrl, // 🌟 這裡現在存的是 ImgBB 網址了！
         };
       } else {
         safeData = {
@@ -2478,14 +2519,15 @@ const handleCalculateDebts = async () => {
           payer: itemData.payer || getCurrentUserNickname(),
           isSplit: !!itemData.isSplit, 
           splitWith: itemData.splitWith || [],
+          currency: itemData.currency || "TWD",
+          foreignAmount: itemData.foreignAmount || "",
+          exchangeRate: itemData.exchangeRate || 1,
         };
       }
 
       if (isEditMode) {
         await updateDoc(tripRef, {
-          [activeTab]: list.map((i) =>
-            i.id === editingId ? { ...i, ...safeData } : i
-          ),
+          [activeTab]: list.map((i) => i.id === editingId ? { ...i, ...safeData } : i ),
         });
       } else {
         await updateDoc(tripRef, { [activeTab]: arrayUnion(safeData) });
@@ -2509,7 +2551,7 @@ const handleCalculateDebts = async () => {
     }
   };
 
-  const handleSaveNote = async () => {
+const handleSaveNote = async () => {
     if (!itemData.noteContent?.trim() && !itemData.noteImage) {
       showToast("請輸入文字或上傳圖片", "error");
       return;
@@ -2523,12 +2565,30 @@ const handleCalculateDebts = async () => {
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     
     try {
+      // 🌟🌟🌟 新增這段：攔截「記事本」的圖片並上傳到 ImgBB
+      let finalNoteImageUrl = itemData.noteImage;
+      if (itemData.noteImage && itemData.noteImage.startsWith('data:image')) {
+        showToast("正在上傳圖片至雲端，請稍候...", "success");
+        setIsAnalyzing(true); // 開啟全螢幕旋轉動畫
+        
+        const uploadedUrl = await uploadImageToImgBB(itemData.noteImage);
+        
+        setIsAnalyzing(false); // 關閉動畫
+        
+        if (uploadedUrl) {
+          finalNoteImageUrl = uploadedUrl; // 換成網址
+        } else {
+          showToast("圖片上傳失敗，將不包含圖片儲存", "error");
+          finalNoteImageUrl = null;
+        }
+      }
+
       if (isEditMode && editingId) {
         const currentNotes = tripData.notes || [];
         const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
           ...n, 
           content: itemData.noteContent || "", 
-          image: itemData.noteImage || null, 
+          image: finalNoteImageUrl, // 🌟 存入網址
           isEdited: true 
         } : n);
         
@@ -2544,7 +2604,7 @@ const handleCalculateDebts = async () => {
         const newNote = {
           id: "note_" + Date.now(),
           content: itemData.noteContent || "", 
-          image: itemData.noteImage || null,   
+          image: finalNoteImageUrl, // 🌟 存入網址
           color: '#68577b', 
           author: getCurrentUserNickname(),
           emoji: userEmoji,
