@@ -296,29 +296,27 @@ const ConfirmModal = ({
 const LinkText = ({ text }) => {
   if (!text) return null;
 
-  // 1. 先用 Markdown 格式的連結來切分字串： [顯示文字](網址)
-  const mdRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
+  // 之前的版本：處理 Markdown 格式，並且強制使用 target="_blank"
+  const mdRegex = /(\[[^\]]+\]\([a-zA-Z0-9\-]+:\/\/[^\s)]+\))/g;
   const parts = text.split(mdRegex);
 
   return (
     <span>
       {parts.map((part, i) => {
-        // 檢查是否為 Markdown 連結格式
-        const mdMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+        const mdMatch = part.match(/^\[([^\]]+)\]\(([a-zA-Z0-9\-]+:\/\/[^\s)]+)\)$/);
         if (mdMatch) {
-          const linkText = mdMatch[1]; // 抓取中括號內的文字
-          const url = mdMatch[2];      // 抓取小括號內的網址
+          const linkText = mdMatch[1]; 
+          const url = mdMatch[2];      
           return (
             <a
               key={i}
               href={url}
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_blank"           // 🔴 問題出在這裡！這行會強迫手機打開瀏覽器的新分頁
+              rel="noopener noreferrer" // 🔴 這是搭配 target="_blank" 的安全屬性
               className="text-[#68577b] font-bold hover:text-stone-900 hover:underline break-all relative inline-flex items-center gap-1 group"
               onClick={(e) => e.stopPropagation()}
             >
               <span className="border-b border-[#b4a0c8] group-hover:border-stone-900 transition-colors pb-0.5">{linkText}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-opacity mb-1"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </a>
           );
         }
