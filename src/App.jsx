@@ -360,7 +360,7 @@ const LinkText = ({ text }) => {
 };
 
 const SetupGuide = ({ error }) => (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-[#faf9f4] p-8 text-center font-sans">
+  <div className="flex flex-col h-screen bg-[#FDFCF8] font-sans max-w-md mx-auto shadow-2xl relative text-stone-800 overflow-hidden">
     <div className="bg-white p-8 rounded-3xl shadow-xl max-w-lg border border-stone-100 text-left">
       <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
         <AlertTriangle size={32} />
@@ -3679,39 +3679,38 @@ const handleSaveNote = async () => {
         </div>
       </main>
 
-{/* 🌟 替換：全半透明毛玻璃的懸浮輸入區 */}
+{/* 🌟 頂級透明版：完全去除外層背景，只保留極細邊框與強效模糊 */}
       {activeTab === "notes" && ( 
-        <div className="absolute bottom-[90px] left-0 right-0 px-4 z-30 animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="absolute bottom-[90px] left-0 right-0 px-6 z-30 animate-in slide-in-from-bottom-4 fade-in duration-300">
           
-          {/* 外層玻璃容器 (稍微降低不透明度讓背景更透) */}
-          <div className="bg-[#FDFCF8]/40 backdrop-blur-xl border border-white/50 p-3 rounded-[2rem] shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
+          {/* 外層：完全透明，僅靠 backdrop-blur 透出後方內容 */}
+          <div className="backdrop-blur-2xl bg-white/10 border border-white/30 p-4 rounded-[2.5rem] shadow-2xl">
             
-            {/* 🌟 內部輸入區：改成半透明 (bg-white/40)，聚焦時稍微變白一點 (focus-within:bg-white/60) */}
-            <div className="bg-white/40 transition-colors focus-within:bg-white/60 rounded-[1.5rem] p-3 border border-white/40 flex flex-col gap-2 relative">
-              
+            {/* 內層輸入區：維持高透明度，並移除多餘陰影 */}
+            <div className="flex flex-col gap-3">
               <textarea
                 rows="2"
                 placeholder="想分享什麼？"
-                className="w-full bg-transparent outline-none resize-none text-stone-800 placeholder:text-stone-500 text-sm font-medium px-2 pt-1"
+                className="w-full bg-transparent outline-none resize-none text-stone-800 placeholder:text-stone-400 text-base font-medium px-2"
                 onChange={(e) => {
                   e.target.style.height = 'auto';
                   e.target.style.height = e.target.scrollHeight + 'px';
                 }}
-                style={{ maxHeight: '100px' }}
+                style={{ maxHeight: '120px' }}
               />
               
-              {/* 底部按鈕區 */}
-              <div className="flex items-center justify-between mt-1">
-                <button className="p-2 text-stone-500 hover:text-stone-700 hover:bg-white/50 rounded-full transition-colors flex items-center justify-center">
-                  <Camera size={20} />
+              <div className="flex items-center justify-between">
+                <button className="p-2.5 text-stone-500 hover:text-stone-800 hover:bg-white/20 rounded-full transition-all">
+                  <Camera size={22} />
                 </button>
-                {/* 發佈按鈕也帶點微透感 */}
-                <button className="bg-[#6B5A74]/90 backdrop-blur-sm hover:bg-[#56485E] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 border border-[#6B5A74]/30">
+                
+                {/* 發佈按鈕：使用深色半透明，增加高級感 */}
+                <button className="bg-stone-800/80 backdrop-blur-md hover:bg-stone-900 text-white px-7 py-2.5 rounded-2xl text-sm font-bold transition-all active:scale-95 border border-white/10">
                   發佈
                 </button>
               </div>
-
             </div>
+
           </div>
         </div>
       )}
