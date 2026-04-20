@@ -577,13 +577,15 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
 
             {/* 地圖按鈕 */}
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 bg-white text-[#68577b] border border-white shadow-sm font-medium py-3 rounded-xl hover:bg-stone-50 transition-colors"
-            >
-              <MapPin size={18} /> 在 Google Maps 開啟
-            </a>
+  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    item.location
+  )}`}
+  target="_blank"
+  rel="noreferrer"
+  className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-medium py-3 rounded-xl hover:bg-blue-100 transition-colors"
+>
+  <MapPin size={18} /> 在 Google Maps 開啟
+</a>
 
             {/* 標籤 */}
             {(item.tags || []).length > 0 && (
@@ -3251,10 +3253,15 @@ const handleSaveNote = async () => {
                                       isDangerous: true,
                                     })
                                   }
-                                  onMap={(loc) =>
-                                    window.open(`http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(loc)}`, "_blank")
-                                  }
-                                />
+                                 onMap={(loc) =>
+    window.open(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        loc
+      )}`,
+      "_blank"
+    )
+  }
+/>
                               ))}
                           </div>
                         </div>
