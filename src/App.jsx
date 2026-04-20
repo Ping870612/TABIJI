@@ -3372,35 +3372,6 @@ const handleSaveNote = async () => {
           <div className="w-1/4 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
             <div className="space-y-4 pt-6 px-4">
               
-              {/* 留言輸入區 */}
-              <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] shadow-[0_8px_30px_rgba(104,87,123,0.06)] border border-white">
-                <textarea
-                  placeholder="想分享什麼？"
-                  className="w-full bg-[#faf9f4] p-4 rounded-2xl text-sm placeholder:text-stone-400 outline-none border border-transparent focus:bg-white focus:border-[#eadef1] focus:ring-2 focus:ring-[#eedbff] transition-all min-h-[100px] resize-y text-stone-900"
-                  value={itemData.noteContent || ""}
-                  onChange={(e) => setItemData({ ...itemData, noteContent: e.target.value })}
-                />
-
-                {itemData.noteImage && (
-                  <div className="relative mt-3 h-24 inline-block">
-                    <img src={itemData.noteImage} className="h-full w-auto max-w-[200px] object-cover rounded-xl border-2 border-white shadow-sm" alt="Preview" />
-                    <button onClick={() => setItemData({ ...itemData, noteImage: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:scale-110 transition-transform"><X size={12} /></button>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center mt-3">
-                  <div>
-                    <label className="cursor-pointer p-3 bg-stone-50 rounded-full text-[#68577b] hover:bg-[#eadef1]/50 transition-colors inline-flex items-center justify-center border border-stone-100">
-                      <Camera size={20} />
-                      <input type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
-                    </label>
-                  </div>
-                  <button onClick={handleSaveNote} className="bg-[#68577b] hover:bg-[#504062] text-white px-8 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all shadow-md">
-                    {isEditMode ? "更新" : "發佈"}
-                  </button>
-                </div>
-              </div>
-
               {/* 留言列表 */}
               <div className="space-y-4">
                 {(tripData?.notes || [])
@@ -3708,20 +3679,21 @@ const handleSaveNote = async () => {
         </div>
       </main>
 
-      {/* 🌟 新增：記事本的底部懸浮輸入區 (毛玻璃背景) */}
-      {activeTab === "notes" && ( // 若你的記事本 tab 叫做別的名稱，請修改這裡
+{/* 🌟 替換：全半透明毛玻璃的懸浮輸入區 */}
+      {activeTab === "notes" && ( 
         <div className="absolute bottom-[90px] left-0 right-0 px-4 z-30 animate-in slide-in-from-bottom-4 fade-in duration-300">
-          {/* 毛玻璃外層容器 */}
-          <div className="bg-[#FDFCF8]/60 backdrop-blur-xl border border-white/60 p-3 rounded-[2rem] shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+          
+          {/* 外層玻璃容器 (稍微降低不透明度讓背景更透) */}
+          <div className="bg-[#FDFCF8]/40 backdrop-blur-xl border border-white/50 p-3 rounded-[2rem] shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
             
-            {/* 純白色的內部輸入區 */}
-            <div className="bg-white rounded-[1.5rem] p-3 shadow-sm border border-stone-100 flex flex-col gap-2 relative">
+            {/* 🌟 內部輸入區：改成半透明 (bg-white/40)，聚焦時稍微變白一點 (focus-within:bg-white/60) */}
+            <div className="bg-white/40 transition-colors focus-within:bg-white/60 rounded-[1.5rem] p-3 border border-white/40 flex flex-col gap-2 relative">
+              
               <textarea
                 rows="2"
                 placeholder="想分享什麼？"
-                className="w-full bg-transparent outline-none resize-none text-stone-700 placeholder:text-stone-400 text-sm font-medium px-2 pt-1"
+                className="w-full bg-transparent outline-none resize-none text-stone-800 placeholder:text-stone-500 text-sm font-medium px-2 pt-1"
                 onChange={(e) => {
-                  // 讓文字框自動長高 (選用)
                   e.target.style.height = 'auto';
                   e.target.style.height = e.target.scrollHeight + 'px';
                 }}
@@ -3730,13 +3702,15 @@ const handleSaveNote = async () => {
               
               {/* 底部按鈕區 */}
               <div className="flex items-center justify-between mt-1">
-                <button className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-full transition-colors flex items-center justify-center">
+                <button className="p-2 text-stone-500 hover:text-stone-700 hover:bg-white/50 rounded-full transition-colors flex items-center justify-center">
                   <Camera size={20} />
                 </button>
-                <button className="bg-[#6B5A74] hover:bg-[#56485E] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all active:scale-95">
+                {/* 發佈按鈕也帶點微透感 */}
+                <button className="bg-[#6B5A74]/90 backdrop-blur-sm hover:bg-[#56485E] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 border border-[#6B5A74]/30">
                   發佈
                 </button>
               </div>
+
             </div>
           </div>
         </div>
