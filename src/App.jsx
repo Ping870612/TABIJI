@@ -3742,9 +3742,6 @@ const handleSaveNote = async () => {
         </div>
       )}
 
-      {/* 下面是你原本的導覽列 */}
-      <nav className="absolute bottom-6 left-6 right-6 ...">
-
 {/* --- Bottom Navigation (完美膠囊比例 + 4選項果凍動畫) --- */}
       <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[340px]">
         <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full border border-white/80 shadow-[0_15px_40px_rgba(104,87,123,0.12)]">
