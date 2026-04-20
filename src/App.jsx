@@ -3167,7 +3167,7 @@ const handleSaveNote = async () => {
       </header>
 
 {/* --- Main 內容區 --- */}
-      <main className="flex-1 overflow-hidden w-full relative bg-[#faf9f4]">
+      <main className={`flex-1 overflow-y-auto px-4 pt-4 scrollbar-hide relative ${activeTab === 'notes' ? 'pb-64' : 'pb-32'}`}>
         
         {/* 🌟 核心修改：寬度改為 400% 容納四個分頁，推移比例改為 25%、50%、75% */}
 <div
@@ -3707,6 +3707,43 @@ const handleSaveNote = async () => {
 
         </div>
       </main>
+
+      {/* 🌟 新增：記事本的底部懸浮輸入區 (毛玻璃背景) */}
+      {activeTab === "notes" && ( // 若你的記事本 tab 叫做別的名稱，請修改這裡
+        <div className="absolute bottom-[90px] left-0 right-0 px-4 z-30 animate-in slide-in-from-bottom-4 fade-in duration-300">
+          {/* 毛玻璃外層容器 */}
+          <div className="bg-[#FDFCF8]/60 backdrop-blur-xl border border-white/60 p-3 rounded-[2rem] shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+            
+            {/* 純白色的內部輸入區 */}
+            <div className="bg-white rounded-[1.5rem] p-3 shadow-sm border border-stone-100 flex flex-col gap-2 relative">
+              <textarea
+                rows="2"
+                placeholder="想分享什麼？"
+                className="w-full bg-transparent outline-none resize-none text-stone-700 placeholder:text-stone-400 text-sm font-medium px-2 pt-1"
+                onChange={(e) => {
+                  // 讓文字框自動長高 (選用)
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                style={{ maxHeight: '100px' }}
+              />
+              
+              {/* 底部按鈕區 */}
+              <div className="flex items-center justify-between mt-1">
+                <button className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-full transition-colors flex items-center justify-center">
+                  <Camera size={20} />
+                </button>
+                <button className="bg-[#6B5A74] hover:bg-[#56485E] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all active:scale-95">
+                  發佈
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 下面是你原本的導覽列 */}
+      <nav className="absolute bottom-6 left-6 right-6 ...">
 
 {/* --- Bottom Navigation (完美膠囊比例 + 4選項果凍動畫) --- */}
       <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[340px]">
