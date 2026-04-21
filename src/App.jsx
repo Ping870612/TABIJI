@@ -3167,10 +3167,39 @@ const handleSaveNote = async () => {
       </header>
 
 {/* --- Main 內容區 --- */}
-      <main className={`flex-1 overflow-y-auto px-4 pt-4 scrollbar-hide relative ${activeTab === 'notes' ? 'pb-64' : 'pb-32'}`}>
+      {/* 🌟 1. 徹底改造 main：拿掉所有的 auto 滾動與 padding，改成 overflow-hidden 完全鎖死！ */}
+      <main className="flex-1 overflow-hidden relative bg-[#FDFCF8]">
         
-        {/* 🌟 核心修改：寬度改為 400% 容納四個分頁，推移比例改為 25%、50%、75% */}
-<div
+        {/* 🌟 2. 你的透明毛玻璃懸浮發文區，放在 400% 軌道的「外面」，這樣切換時它才不會跟著滑走 */}
+        {activeTab === "notes" && ( 
+          <div className="absolute bottom-[90px] left-0 right-0 px-6 z-30 animate-in fade-in zoom-in-95 duration-300">
+            <div className="backdrop-blur-2xl bg-white/10 border border-white/30 p-4 rounded-[2.5rem] shadow-2xl">
+              <div className="flex flex-col gap-3">
+                <textarea
+                  rows="2"
+                  placeholder="想分享什麼？"
+                  className="w-full bg-transparent outline-none resize-none text-stone-800 placeholder:text-stone-400 text-base font-medium px-2"
+                  onChange={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
+                  style={{ maxHeight: '120px' }}
+                />
+                <div className="flex items-center justify-between">
+                  <button className="p-2.5 text-stone-500 hover:text-stone-800 hover:bg-white/20 rounded-full transition-all">
+                    <Camera size={22} />
+                  </button>
+                  <button className="bg-stone-800/80 backdrop-blur-md hover:bg-stone-900 text-white px-7 py-2.5 rounded-2xl text-sm font-bold transition-all active:scale-95 border border-white/10">
+                    發佈
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 🌟 3. 你的 400% 軌道維持原樣 */}
+        <div
           className="flex h-full w-[400%] transition-transform duration-500 ease-out"
           style={{
             transform:
