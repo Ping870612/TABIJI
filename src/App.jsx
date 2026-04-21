@@ -3170,29 +3170,72 @@ const handleSaveNote = async () => {
       {/* 🌟 1. 徹底改造 main：拿掉所有的 auto 滾動與 padding，改成 overflow-hidden 完全鎖死！ */}
       <main className="flex-1 overflow-hidden relative bg-[#FDFCF8]">
         
-        {/* 🌟 2. 你的透明毛玻璃懸浮發文區，放在 400% 軌道的「外面」，這樣切換時它才不會跟著滑走 */}
+{/* 🌟 完整版：完美避開選單、支援圖片預覽與上傳發佈的懸浮發文區 */}
         {activeTab === "notes" && ( 
-          <div className="absolute bottom-[90px] left-0 right-0 px-6 z-30 animate-in fade-in zoom-in-95 duration-300">
-            <div className="backdrop-blur-2xl bg-white/10 border border-white/30 p-4 rounded-[2.5rem] shadow-2xl">
+          // 1. 將 bottom-[90px] 改為 bottom-[120px]，確保不會蓋到導覽列
+          <div className="absolute bottom-[120px] left-0 right-0 px-5 z-30 animate-in slide-in-from-bottom-4 fade-in duration-300">
+            
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/60 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
               <div className="flex flex-col gap-3">
-                <textarea
-                  rows="2"
-                  placeholder="想分享什麼？"
-                  className="w-full bg-transparent outline-none resize-none text-stone-800 placeholder:text-stone-400 text-base font-medium px-2"
-                  onChange={(e) => {
-                    e.target.style.height = 'auto';
-                    e.target.style.height = e.target.scrollHeight + 'px';
-                  }}
-                  style={{ maxHeight: '120px' }}
-                />
-                <div className="flex items-center justify-between">
-                  <button className="p-2.5 text-stone-500 hover:text-stone-800 hover:bg-white/20 rounded-full transition-all">
+                
+                <div className="bg-white/40 focus-within:bg-white/60 transition-colors rounded-2xl border border-white/50 shadow-inner p-3">
+                  
+                  {/* 2. 圖片預覽區塊 (如果有選圖片才會出現) */}
+                  {itemData.noteImage && (
+                    <div className="relative inline-block mb-2 animate-in zoom-in duration-200">
+                      <img 
+                        src={itemData.noteImage} 
+                        alt="準備上傳的圖片" 
+                        className="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-sm"
+                      />
+                      {/* 取消圖片的按鈕 */}
+                      <button 
+                        onClick={() => setItemData({ ...itemData, noteImage: null })}
+                        className="absolute -top-2 -right-2 bg-stone-800 text-white p-1 rounded-full hover:bg-stone-600 shadow-md transition-transform active:scale-90"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
+
+                  <textarea
+                    rows="1"
+                    placeholder="想分享什麼？"
+                    value={itemData.noteContent || ""}
+                    className="w-full bg-transparent outline-none resize-none text-stone-800 placeholder:text-stone-500 text-sm font-medium px-1"
+                    onChange={(e) => {
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                      setItemData({ ...itemData, noteContent: e.target.value });
+                    }}
+                    style={{ maxHeight: '120px' }}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between px-1">
+                  
+                  {/* 3. 相機按鈕：接回你原本寫好的 handleNoteImageUpload */}
+                  <label className="cursor-pointer p-2 text-stone-600 hover:text-stone-900 hover:bg-white/50 rounded-full transition-all flex items-center gap-2 active:scale-95">
                     <Camera size={22} />
-                  </button>
-                  <button className="bg-stone-800/80 backdrop-blur-md hover:bg-stone-900 text-white px-7 py-2.5 rounded-2xl text-sm font-bold transition-all active:scale-95 border border-white/10">
+                    <span className="text-xs font-bold text-stone-500">照片</span>
+                    
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handleNoteImageUpload} // 接回原本的邏輯
+                    />
+                  </label>
+                  
+                  {/* 4. 發佈按鈕：接回原本寫好的 handleSaveNote */}
+                  <button 
+                    onClick={handleSaveNote} // 接回原本的邏輯
+                    className="bg-[#68577b]/90 backdrop-blur-md hover:bg-[#504062] text-white px-7 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 border border-white/20 shadow-sm"
+                  >
                     發佈
                   </button>
                 </div>
+
               </div>
             </div>
           </div>
