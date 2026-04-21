@@ -2820,6 +2820,8 @@ const handleSaveNote = async () => {
     acc[day].push(item);
     return acc;
   }, {});
+
+  const myChecklist = (tripData?.checklist || []).filter(item => item.createdBy === user?.uid);
   
   const getDateForDay = (day) => {
     if (!tripData?.startDate) return "";
@@ -3352,7 +3354,7 @@ const handleSaveNote = async () => {
             )}
           </div>
 
-          {/* ========================================= */}
+{/* ========================================= */}
           {/* 🌟 2. 行李清單分頁 (左二) 🌟 */}
           {/* ========================================= */}
           <div className="w-1/4 h-full overflow-y-auto overflow-x-hidden pb-[120px] scroll-smooth">
@@ -3362,19 +3364,22 @@ const handleSaveNote = async () => {
               <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-white">
                 <div className="flex justify-between items-end mb-3">
                   <div>
-                    <h3 className="text-xl font-serif font-bold text-stone-900">行李清單</h3>
-                    <p className="text-[10px] text-stone-500 mt-1 tracking-widest uppercase">Packing List</p>
+                    {/* 標題加上「我的」 */}
+                    <h3 className="text-xl font-serif font-bold text-stone-900">我的行李清單</h3>
+                    <p className="text-[10px] text-stone-500 mt-1 tracking-widest uppercase">My Packing List</p>
                   </div>
                   <div className="text-[#68577b] font-bold font-mono text-2xl">
-                    {(tripData?.checklist || []).filter(i => i.isCompleted).length} 
-                    <span className="text-sm text-stone-400"> / {(tripData?.checklist || []).length}</span>
+                    {/* 改用 myChecklist */}
+                    {myChecklist.filter(i => i.isCompleted).length} 
+                    <span className="text-sm text-stone-400"> / {myChecklist.length}</span>
                   </div>
                 </div>
                 
                 <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden shadow-inner">
                   <div 
                     className="h-full bg-gradient-to-r from-[#b4a0c8] to-[#68577b] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] rounded-full"
-                    style={{ width: `${(tripData?.checklist || []).length === 0 ? 0 : ((tripData?.checklist || []).filter(i => i.isCompleted).length / (tripData?.checklist || []).length) * 100}%` }}
+                    // 改用 myChecklist
+                    style={{ width: `${myChecklist.length === 0 ? 0 : (myChecklist.filter(i => i.isCompleted).length / myChecklist.length) * 100}%` }}
                   ></div>
                 </div>
               </div>
@@ -3399,7 +3404,8 @@ const handleSaveNote = async () => {
 
               {/* 待辦事項列表 */}
               <div className="space-y-2.5 mt-2">
-                {(tripData?.checklist || [])
+                {/* 改用 myChecklist */}
+                {myChecklist
                   .slice()
                   .sort((a, b) => (a.isCompleted === b.isCompleted ? 0 : a.isCompleted ? 1 : -1))
                   .map(item => (
@@ -3428,7 +3434,8 @@ const handleSaveNote = async () => {
                   </div>
                 ))}
                 
-                {(!tripData?.checklist || tripData?.checklist.length === 0) && (
+                {/* 改用 myChecklist */}
+                {myChecklist.length === 0 && (
                   <div className="text-center py-10 text-[#b4a0c8] text-sm font-bold tracking-widest">
                     清單空空的，開始新增要帶的東西吧！
                   </div>
