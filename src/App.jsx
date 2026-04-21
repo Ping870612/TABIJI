@@ -3751,42 +3751,6 @@ const handleSaveNote = async () => {
         </div>
       </main>
 
-{/* 🌟 頂級透明版：完全去除外層背景，只保留極細邊框與強效模糊 */}
-      {activeTab === "notes" && ( 
-        <div className="absolute bottom-[90px] left-0 right-0 px-6 z-30 animate-in slide-in-from-bottom-4 fade-in duration-300">
-          
-          {/* 外層：完全透明，僅靠 backdrop-blur 透出後方內容 */}
-          <div className="backdrop-blur-2xl bg-white/10 border border-white/30 p-4 rounded-[2.5rem] shadow-2xl">
-            
-            {/* 內層輸入區：維持高透明度，並移除多餘陰影 */}
-            <div className="flex flex-col gap-3">
-              <textarea
-                rows="2"
-                placeholder="想分享什麼？"
-                className="w-full bg-transparent outline-none resize-none text-stone-800 placeholder:text-stone-400 text-base font-medium px-2"
-                onChange={(e) => {
-                  e.target.style.height = 'auto';
-                  e.target.style.height = e.target.scrollHeight + 'px';
-                }}
-                style={{ maxHeight: '120px' }}
-              />
-              
-              <div className="flex items-center justify-between">
-                <button className="p-2.5 text-stone-500 hover:text-stone-800 hover:bg-white/20 rounded-full transition-all">
-                  <Camera size={22} />
-                </button>
-                
-                {/* 發佈按鈕：使用深色半透明，增加高級感 */}
-                <button className="bg-stone-800/80 backdrop-blur-md hover:bg-stone-900 text-white px-7 py-2.5 rounded-2xl text-sm font-bold transition-all active:scale-95 border border-white/10">
-                  發佈
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
-
 {/* --- Bottom Navigation (完美膠囊比例 + 4選項果凍動畫) --- */}
       <nav className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[340px]">
         <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full border border-white/80 shadow-[0_15px_40px_rgba(104,87,123,0.12)]">
