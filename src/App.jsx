@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useJsApiLoader, Autocomplete, GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import {
   MapPin,
   Calendar,
@@ -68,14 +68,16 @@ import {
 import {
   getFirestore,
   doc,
-  setDoc,
   onSnapshot,
   updateDoc,
   arrayUnion,
-  getDoc,
-  collection,
+  runTransaction,
   deleteDoc,
 } from "firebase/firestore";
+
+import MapView, { hasCoordinates } from "./MapView";
+import { updateTrip, editRecord, updateRecord, mergeFields, applyAIUpdates, normalizeImportedItems } from "./lib/tripUpdates";
+import { calculateDebts, validateExpense } from "./lib/expenses";
 
 // --- 配置區塊 ---
 
@@ -83,7 +85,7 @@ const libraries = ["places"];
 
 // 1. Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyBCfZdkNZMyoutYmUUQw7D0qmxXDDsMA9U",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: "test-5523e.firebaseapp.com",
   projectId: "test-5523e",
   storageBucket: "test-5523e.firebasestorage.app",
@@ -93,15 +95,14 @@ const firebaseConfig = {
 
 // --- 初始化 Firebase ---
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+const auth = firebaseConfig.apiKey ? getAuth(app) : null;
 const db = getFirestore(app);
 
 // 設定 App ID
 const appId =
   typeof __app_id !== "undefined" ? __app_id : "travel-app-sandbox-v1";
 
-// 🌟 1. 貼上你剛剛複製的 ImgBB API Key
-const IMGBB_API_KEY = "787712ddc2bb46a69c1a29f33b847415";
+const IMGBB_API_KEY = process.env.REACT_APP_IMGBB_API_KEY;
 
 // --- 🌟 1. 幫手機專屬打造的 Base64 轉實體檔案 (Blob) 函式 ---
 function base64ToBlob(dataURI) {
@@ -129,6 +130,7 @@ function base64ToBlob(dataURI) {
 async function uploadImageToImgBB(base64Image) {
   if (!base64Image) return null;
   try {
+    if (!IMGBB_API_KEY) throw new Error("圖片上傳服務尚未設定，請聯絡網站管理者");
     // 把超長字串還原成輕巧的真實檔案
     const imageBlob = base64ToBlob(base64Image);
     if (!imageBlob) throw new Error("圖片轉換失敗");
@@ -225,7 +227,7 @@ async function fetchExchangeRate(baseCurrency) {
     const response = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
     if (!response.ok) throw new Error("API 請求失敗");
     const data = await response.json();
-    return data.rates["TWD"] || 1; // 抓取該幣別對台幣的匯率
+    return data.rates?.["TWD"] || null; // 抓取該幣別對台幣的匯率
   } catch (error) {
     console.error("匯率抓取錯誤:", error);
     return null;
@@ -366,28 +368,21 @@ const SetupGuide = ({ error }) => (
         <AlertTriangle size={32} />
       </div>
       <h2 className="text-2xl font-bold text-stone-800 mb-2 text-center">
-        需要設定 Firebase
+        網站暫時無法連線
       </h2>
       <p className="text-stone-500 mb-6 leading-relaxed text-center text-sm">
-        預設的測試金鑰在外部環境無法使用。請依照以下步驟設定您自己的 Firebase 專案。
+        請稍後重試；若持續發生，請聯絡網站管理者。您的旅程資料不會因此被刪除。
       </p>
 
       <div className="bg-red-50 text-red-600 p-4 rounded-xl text-[10px] font-mono mb-6 overflow-x-auto border border-red-100">
         錯誤訊息: {error?.message || "Unknown Connection Error"}
       </div>
 
-      <ol className="text-sm text-stone-600 space-y-3 list-decimal pl-5 mb-8">
-        <li>前往 Firebase Console 並建立新專案。</li>
-        <li>建立 Web App 並複製 <code>firebaseConfig</code>。</li>
-        <li>回到程式碼，取代 <code>firebaseConfig</code> 變數。</li>
-        <li>開啟 <strong>Authentication</strong> (匿名登入) 與 <strong>Firestore</strong> (Test mode)。</li>
-      </ol>
-
       <button
         onClick={() => window.location.reload()}
         className="w-full bg-[#68577b] text-white px-6 py-4 rounded-xl font-bold hover:bg-[#504062] transition-colors shadow-lg"
       >
-        已完成設定，重新整理頁面
+        重新整理頁面
       </button>
     </div>
   </div>
@@ -452,7 +447,7 @@ const AIAnalysisModal = ({
           ) : isDebtAnalysis && debtData.length > 0 ? (
             <div className="space-y-3">
               <p className="text-sm text-stone-500 mb-2">
-                建議結算方案 (已四捨五入)：
+                結算方案（TWD，尾差依姓名順序分配到分）：
               </p>
               {debtData.map((debt, idx) => {
                 const fromMember = Object.values(members || {}).find(
@@ -548,7 +543,7 @@ const ItemDetailModal = ({ isOpen, onClose, item, members }) => {
             {/* 設定比例為接近 21:9 (使用 aspect-[21/9]) */}
             <div className="w-full aspect-[21/9]">
               <img 
-                src={item.image} 
+                src={item.image} loading="lazy" decoding="async"
                 alt={item.location} 
                 className="w-full h-full object-cover"
               />
@@ -909,7 +904,7 @@ const ShareModal = ({ isOpen, onClose, tripId, tripName, copyToClipboard }) => {
   );
 };
 
-const LocationInput = ({ value, onChange, placeholder }) => {
+const LocationInput = ({ value, onChange, placeholder, isLoaded }) => {
   const [autocomplete, setAutocomplete] = useState(null);
 
   const onLoad = (auto) => setAutocomplete(auto);
@@ -919,25 +914,20 @@ const LocationInput = ({ value, onChange, placeholder }) => {
       const place = autocomplete.getPlace();
       const placeName = place.name || place.formatted_address;
       
-      const lat = place.geometry?.location?.lat() || null;
-      const lng = place.geometry?.location?.lng() || null;
+      const lat = place.geometry?.location?.lat() ?? null;
+      const lng = place.geometry?.location?.lng() ?? null;
       
       if (placeName) {
         onChange(placeName, lat, lng);
       }
     }
   };
+  const input = <input type="text" placeholder={placeholder} aria-label="地點" value={value}
+    onChange={(e) => onChange(e.target.value, null, null)}
+    className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 pl-11 pr-12 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-900 font-bold text-base" />;
   return (
     <div className="relative">
-      <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
-        <input
-          type="text"
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value, null, null)}
-          className="w-full bg-white border border-white shadow-sm rounded-2xl p-4 pl-11 outline-none focus:ring-2 focus:ring-[#eadef1] transition-colors text-stone-900 font-bold text-base"
-        />
-      </Autocomplete>
+      {isLoaded ? <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>{input}</Autocomplete> : input}
       <Search className="absolute left-4 top-4 text-[#b4a0c8]" size={18} />
       {value && (
         <button
@@ -1145,7 +1135,7 @@ const ItineraryCard = ({
       {item.image && (
         <div className="relative w-full h-20 sm:h-24 overflow-hidden rounded-t-3xl border-b border-white">
           <img 
-            src={item.image} 
+            src={item.image} loading="lazy" decoding="async"
             alt={item.location} 
             className="w-full h-full object-cover opacity-95 group-hover:opacity-100 transition-opacity" 
           />
@@ -1156,13 +1146,13 @@ const ItineraryCard = ({
       <div className="p-5 pt-4 relative">
         {/* 操作按鈕 (移動到資訊區塊的右上角) */}
         <div className="absolute top-3 right-3 flex gap-1 z-10 opacity-100 bg-white/80 backdrop-blur-md rounded-xl p-1 shadow-sm border border-stone-100/50">
-          <button onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
+          <button aria-label="開啟導航" onClick={(e) => { e.stopPropagation(); onMap(item.location); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center p-1.5 text-stone-400 hover:text-[#68577b] rounded-lg transition-colors"><Navigation size={14} /></button>
+          <button aria-label="編輯行程" onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center p-1.5 text-stone-400 hover:text-stone-600 rounded-lg transition-colors"><Edit size={14} /></button>
+          <button aria-label="刪除行程" onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center p-1.5 text-stone-400 hover:text-red-400 rounded-lg transition-colors"><Trash2 size={14} /></button>
         </div>
 
         {/* 時間與分類標籤 (移除了 Icon，只顯示文字) */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 pr-36 min-h-[44px]">
           <span className="text-[12px] font-bold text-stone-500 font-mono bg-white/80 px-2 py-0.5 rounded-md shadow-sm border border-stone-100/50">
             {item.time}
           </span>
@@ -1196,96 +1186,11 @@ const ItineraryCard = ({
   );
 };
 
-const MapView = ({ points }) => {
-  const [directionsResponse, setDirectionsResponse] = useState(null);
-  const [routeError, setRouteError] = useState(false);
-  const [mapInstance, setMapInstance] = useState(null);
-
-  const items = points || [];
-  
-  // 🌟 修正重點 1：不再隨便切斷航班前面的行程！
-  // 直接抓取這一天「所有」帶有座標的景點
-  const effectivePoints = items.filter(p => p.lat && p.lng);
-
-  useEffect(() => {
-    setDirectionsResponse(null); 
-    setRouteError(false);
-    
-    // 🌟 修正重點 2：為了避免「跨海航班」導致 Google Maps 開車路線報錯
-    // 規劃路線時，把 'flight' 類別排除，只對陸地景點進行連線
-    const landPoints = effectivePoints.filter(p => p.category !== 'flight');
-
-    if (landPoints.length >= 2 && window.google) {
-      const directionsService = new window.google.maps.DirectionsService();
-      
-      const origin = { lat: landPoints[0].lat, lng: landPoints[0].lng };
-      const destination = { lat: landPoints[landPoints.length - 1].lat, lng: landPoints[landPoints.length - 1].lng };
-      const waypoints = landPoints.slice(1, -1).map(p => ({
-        location: { lat: p.lat, lng: p.lng },
-        stopover: true
-      }));
-
-      directionsService.route({
-        origin: origin,
-        destination: destination,
-        waypoints: waypoints,
-        travelMode: window.google.maps.TravelMode.DRIVING
-      }).then(response => {
-        setDirectionsResponse(response);
-        setRouteError(false);
-      }).catch(e => {
-        console.warn("陸地段路線計算失敗:", e);
-        setRouteError(true); 
-      });
-    } else {
-       // 如果陸地景點不足以連線 (例如只有1個點，或當天全是航班)
-       // 強制進入「圖釘模式」，不畫線
-       setRouteError(true);
-    }
-  }, [points]); 
-
-  // 自動縮放地圖以包含所有點位
-  useEffect(() => {
-    if (mapInstance && effectivePoints.length > 0) {
-      const bounds = new window.google.maps.LatLngBounds();
-      effectivePoints.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
-      mapInstance.fitBounds(bounds);
-    }
-  }, [mapInstance, effectivePoints, routeError]);
-
-  if (!effectivePoints.length) {
-    return <div className="w-full h-[250px] bg-white/50 flex items-center justify-center rounded-2xl mb-2 text-stone-400 text-sm border border-white shadow-sm">無座標資訊，請嘗試重新編輯地點並點擊下拉選單</div>;
-  }
-
-  const center = { lat: effectivePoints[0].lat, lng: effectivePoints[0].lng };
-
-  return (
-    <div className="w-full h-[250px] shadow-sm border border-white rounded-2xl z-0 relative mb-2 overflow-hidden">
-      <GoogleMap
-        mapContainerStyle={{ width: '100%', height: '100%' }}
-        center={center}
-        zoom={12}
-        options={{ disableDefaultUI: true }}
-        onLoad={map => setMapInstance(map)}
-      >
-        {/* 顯示各點圖釘 (包含航班，只要它有座標就會標出來) */}
-        {(effectivePoints.length === 1 || routeError) && effectivePoints.map((p, idx) => (
-          <Marker key={idx} position={{ lat: p.lat, lng: p.lng }} />
-        ))}
-        
-        {/* 顯示計算出的陸地導航路線 */}
-        {directionsResponse && !routeError && (
-          <DirectionsRenderer directions={directionsResponse} />
-        )}
-      </GoogleMap>
-    </div>
-  );
-};
 // --- 修改：更細窄精緻的折疊地圖按鈕 ---
-const DayMapPreview = ({ points }) => {
+const DayMapPreview = ({ points, isLoaded, loadError, active = true }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const validPoints = (points || []).filter(p => p.lat && p.lng);
+  const validPoints = (points || []).filter(hasCoordinates);
   const hasRoute = validPoints.length >= 1; // 只要有1個座標就顯示
 
   if (!hasRoute) return null;
@@ -1293,6 +1198,7 @@ const DayMapPreview = ({ points }) => {
   return (
     <div className="mb-4 px-1 animate-in fade-in duration-500 w-full">
       <button
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-white/70 backdrop-blur-md border border-white shadow-[0_4px_12px_rgba(104,87,123,0.05)] rounded-2xl py-2.5 px-4 flex items-center justify-between text-stone-900 hover:bg-white hover:shadow-[0_6px_16px_rgba(104,87,123,0.08)] transition-all active:scale-95 group"
       >
@@ -1319,7 +1225,8 @@ const DayMapPreview = ({ points }) => {
           isOpen ? "max-h-[350px] opacity-100 mt-2" : "max-h-0 opacity-0 mt-0"
         }`}
       >
-        <MapView points={points} />
+        {isOpen && active && (isLoaded ? <MapView points={points} /> :
+          <p role="status" className="p-4 text-sm text-stone-500">{loadError ? "地圖載入失敗，仍可編輯行程或使用外部導航" : "地圖載入中…"}</p>)}
       </div>
     </div>
   );
@@ -1407,7 +1314,7 @@ const WelcomeScreen = ({
       showToast("回程日期有誤", "error");
       return;
     }
-    onCreate(newTripData);
+    onCreate(newTripData).catch(e => showToast("建立失敗: " + e.message, "error"));
   };
 
   const handleFileAnalyze = async (file) => {
@@ -1433,7 +1340,7 @@ const WelcomeScreen = ({
       const result = JSON.parse(resText.replace(/```json|```/g, "").trim());
 
       setIsImportOpen(false);
-      onImportTrip(result);
+      await onImportTrip(result);
     } catch (e) {
       console.error(e);
       showToast("匯入失敗，請確認檔案格式", "error");
@@ -1681,7 +1588,7 @@ const WelcomeScreen = ({
 
 const App = () => {
   // 從環境變數讀取 Key
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: libraries,
     language: "zh-TW",
@@ -1692,6 +1599,7 @@ const App = () => {
   const [tripId, setTripId] = useState(null);
   const [tripData, setTripData] = useState(null);
   const [localTripName, setLocalTripName] = useState("");
+  const nameBase = useRef(null);
   const [newChecklistText, setNewChecklistText] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false); 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
@@ -1699,9 +1607,14 @@ const App = () => {
   const [activeTab, setActiveTab] = useState("itinerary");
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editorViewport, setEditorViewport] = useState(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const editingBase = useRef(null);
+  const replyBase = useRef(null);
+  const saving = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
   const [originalImage, setOriginalImage] = useState(null);
   const [crop, setCrop] = useState();
@@ -1733,9 +1646,30 @@ const App = () => {
   // --- 2. 輔助函式 ---
   const showToast = (message, type = "success") => setToast({ message, type });
 
+  const changeTrip = async (change, message) => {
+    try {
+      await updateTrip(db, doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId), change);
+      if (message) showToast(message);
+      return true;
+    } catch (e) {
+      showToast("更新失敗: " + e.message, "error");
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!isModalOpen || !viewport) return;
+    const resize = () => setEditorViewport({ height: viewport.height, top: viewport.offsetTop });
+    resize();
+    viewport.addEventListener("resize", resize);
+    viewport.addEventListener("scroll", resize);
+    return () => { viewport.removeEventListener("resize", resize); viewport.removeEventListener("scroll", resize); };
+  }, [isModalOpen]);
+
   // --- 3. Effects ---
   useEffect(() => {
-    if (tripData?.name) {
+    if (tripData?.name && nameBase.current === null) {
       setLocalTripName(tripData.name);
     }
   }, [tripData?.name]);
@@ -1743,10 +1677,11 @@ const App = () => {
   const handleSaveName = async () => {
     if (!tripId || localTripName === tripData?.name) return;
     try {
-      await updateDoc(
+      await updateTrip(db,
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
-        { name: localTripName }
+        latest => ({ name: mergeFields(latest, { name: nameBase.current ?? tripData.name }, { name: localTripName }).name })
       );
+      nameBase.current = null;
       showToast("旅程名稱已更新");
     } catch (e) {
       showToast("更新失敗", "error");
@@ -1764,11 +1699,14 @@ const App = () => {
 
   const handleDateUpdate = async (field, value) => {
     if (!tripId) return;
-    setTripData((prev) => ({ ...prev, [field]: value }));
     try {
-      await updateDoc(
+      await updateTrip(db,
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
-        { [field]: value }
+        latest => {
+          const dates = mergeFields(latest, tripData, { [field]: value });
+          if (!value || (dates.startDate && dates.endDate && dates.startDate > dates.endDate)) throw new Error("結束日期不可早於開始日期");
+          return { [field]: dates[field] };
+        }
       );
     } catch (e) {
       console.error("Date update failed", e);
@@ -1812,7 +1750,7 @@ const App = () => {
     }
 
     const data = tripData.itinerary
-      .sort((a, b) => a.day - b.day || a.time.localeCompare(b.time))
+      .sort((a, b) => a.day - b.day || (a.time || "").localeCompare(b.time || ""))
       .map((item) => ({
         "Day": `Day ${item.day}`,
         "時間": item.time,
@@ -1927,6 +1865,10 @@ const App = () => {
   };
 
   useEffect(() => {
+    if (!auth) {
+      setFirebaseError(new Error("網站連線設定尚未完成，請聯絡網站管理者"));
+      return;
+    }
     const initAuth = async () => {
       try {
         if (typeof __initial_auth_token !== "undefined" && __initial_auth_token)
@@ -1942,31 +1884,36 @@ const App = () => {
     return onAuthStateChanged(auth, setUser);
   }, []);
 
-  // --- 自動更新匯率監控 (新增在此) ---
-useEffect(() => {
-  // 如果不是在編輯記帳，或是幣別是台幣，就不執行
-  if (activeTab !== "expenses" || !isModalOpen || itemData.currency === "TWD") {
-    if (itemData.currency === "TWD" && itemData.exchangeRate !== 1) {
-       setItemData(prev => ({ ...prev, exchangeRate: 1 }));
-    }
-    return;
-  }
-
-  const updateRate = async () => {
-    const rate = await fetchExchangeRate(itemData.currency);
-    if (rate) {
-      setItemData(prev => ({
-        ...prev,
-        exchangeRate: rate,
-        // 如果已經有輸入外幣，順便幫使用者算好台幣
-        amount: prev.foreignAmount ? Math.round(prev.foreignAmount * rate) : prev.amount
-      }));
-    }
-  };
-  updateRate();
-}, [itemData.currency, isModalOpen]); // 當幣別切換或視窗打開時觸發
-  
   useEffect(() => {
+    if (activeTab !== "expenses" || !isModalOpen || !itemData.currency) return;
+    // Opening an existing expense must preserve its historical/manual exchange rate.
+    if (isEditMode && itemData.currency === (editingBase.current?.currency || "TWD")) {
+      if (!itemData.exchangeRate) {
+        const rate = editingBase.current.exchangeRate || 1;
+        setItemData(prev => ({ ...prev, exchangeRate: rate, amount: prev.foreignAmount ? Math.round(prev.foreignAmount * rate * 100) / 100 : prev.amount }));
+      }
+      return;
+    }
+    let cancelled = false;
+    const currency = itemData.currency;
+    const previousRate = itemData.exchangeRate;
+    const updateRate = async () => {
+      const rate = currency === "TWD" ? 1 : await fetchExchangeRate(currency);
+      if (cancelled) return;
+      if (!rate) { showToast("匯率取得失敗，請手動輸入匯率", "error"); return; }
+      setItemData(prev => prev.currency !== currency || prev.exchangeRate !== previousRate ? prev : ({
+        ...prev, exchangeRate: rate,
+        amount: prev.foreignAmount ? Math.round(prev.foreignAmount * rate * 100) / 100 : prev.amount,
+      }));
+    };
+    updateRate();
+    return () => { cancelled = true; };
+    // Rates are fetched on currency selection, not on amount/manual-rate edits.
+  }, [itemData.currency, isModalOpen, activeTab, isEditMode]);
+
+  useEffect(() => {
+    setTripData(null);
+    nameBase.current = null;
     if (!user || !tripId) return;
     const unsubscribe = onSnapshot(
       doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
@@ -1990,7 +1937,8 @@ useEffect(() => {
           showToast("找不到旅程", "error");
           setTripId(null);
         }
-      }
+      },
+      error => { showToast("旅程同步失敗，請檢查連線後重新開啟", "error"); console.error(error); }
     );
     return () => unsubscribe();
   }, [user, tripId]);
@@ -2010,10 +1958,11 @@ useEffect(() => {
       weather: {},
       members: {},
     };
-    await setDoc(
-      doc(db, "artifacts", appId, "public", "data", "travel_trips", newId),
-      initialData
-    );
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", newId);
+    await runTransaction(db, async transaction => {
+      if ((await transaction.get(tripRef)).exists()) throw new Error("旅程代碼重複，請重試");
+      transaction.set(tripRef, initialData);
+    });
     setTripId(newId);
     updateTripWeather(newId, destination, startDate, endDate, []);
   };
@@ -2021,12 +1970,7 @@ useEffect(() => {
   const createTripFromImport = async (importData) => {
     if (!user) return;
     const newId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const processedItinerary = (importData.itinerary || []).map((item) => ({
-      ...item,
-      id: Date.now() + Math.random().toString(36).substr(2, 9),
-      createdBy: user.uid,
-      category: item.category || "sightseeing",
-    }));
+    const processedItinerary = normalizeImportedItems(importData.itinerary, user.uid);
     const initialData = {
       id: newId,
       name: importData.name || "匯入的旅程",
@@ -2039,10 +1983,11 @@ useEffect(() => {
       weather: {},
       members: {},
     };
-    await setDoc(
-      doc(db, "artifacts", appId, "public", "data", "travel_trips", newId),
-      initialData
-    );
+    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", newId);
+    await runTransaction(db, async transaction => {
+      if ((await transaction.get(tripRef)).exists()) throw new Error("旅程代碼重複，請重試");
+      transaction.set(tripRef, initialData);
+    });
     setTripId(newId);
 if (initialData.destination && initialData.startDate) {
       updateTripWeather(newId, initialData.destination, initialData.startDate, initialData.endDate, processedItinerary);
@@ -2061,42 +2006,35 @@ if (initialData.destination && initialData.startDate) {
       "travel_trips",
       tripId
     );
-    const updatedMembers = {
-      ...(tripData.members || {}),
-      [user.uid]: profileData,
-    };
-    await updateDoc(tripRef, { members: updatedMembers });
-    setShowProfileSetup(false);
-    showToast(`歡迎加入，${profileData.nickname}！`);
+    try {
+      await updateTrip(db, tripRef, latest => {
+        const nickname = profileData.nickname.trim();
+        if (!nickname || Object.entries(latest.members || {}).some(([uid, member]) => uid !== user.uid && member.nickname === nickname)) {
+          throw new Error("暱稱已被使用，請選擇另一個暱稱");
+        }
+        return { members: { ...latest.members, [user.uid]: { ...profileData, nickname } } };
+      });
+      setShowProfileSetup(false);
+      showToast(`歡迎加入，${profileData.nickname}！`);
+    } catch (e) { showToast(e.message, "error"); }
   };
 
-  const handleJoinAsMember = async (targetUid, targetMemberData) => {
+  const handleJoinAsMember = async (targetUid) => {
     if (!user || !tripId) return;
-    setShowMemberSelect(false);
-    
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    
-    const newMembers = { ...(tripData.members || {}) };
-    delete newMembers[targetUid];
-    newMembers[user.uid] = targetMemberData;
-    
-    const newItinerary = (tripData.itinerary || []).map(item => {
-      if (item.createdBy === targetUid) {
-        return { ...item, createdBy: user.uid };
-      }
-      return item;
-    });
-
-    try {
-      await updateDoc(tripRef, { 
-        members: newMembers,
-        itinerary: newItinerary
-      });
-      showToast(`身分已轉移！歡迎回來，${targetMemberData.nickname}`);
-    } catch (e) {
-      console.error(e);
-      showToast("身分轉移失敗", "error");
-    }
+    const success = await changeTrip(latest => {
+      const members = { ...latest.members };
+      if (!members[targetUid]) throw new Error("身分已變更，請重新選擇");
+      members[user.uid] = members[targetUid];
+      if (targetUid !== user.uid) delete members[targetUid];
+      const transfer = item => ({ ...item, ...(item.createdBy === targetUid ? { createdBy: user.uid } : {}) });
+      return {
+        members,
+        itinerary: (latest.itinerary || []).map(transfer),
+        expenses: (latest.expenses || []).map(transfer),
+        checklist: (latest.checklist || []).map(transfer),
+      };
+    }, "身分已轉移，歡迎回來！");
+    if (success) setShowMemberSelect(false);
   };
 
   const handleFileImport = async (file) => {
@@ -2128,15 +2066,11 @@ if (initialData.destination && initialData.startDate) {
       if (!resText) throw new Error("AI analysis failed");
 
       const cleanJson = resText.replace(/```json|```/g, "").trim();
-      const newItems = JSON.parse(cleanJson).map((item) => ({
-        ...item,
-        id: Date.now() + Math.random().toString(36).substr(2, 9),
-        createdBy: user.uid,
-      }));
+      const newItems = normalizeImportedItems(JSON.parse(cleanJson), user.uid);
 
       await updateDoc(
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
-        { itinerary: [...(tripData.itinerary || []), ...newItems] }
+        { itinerary: arrayUnion(...newItems) }
       );
 
       showToast(`成功匯入 ${newItems.length} 個行程！`);
@@ -2214,7 +2148,7 @@ if (initialData.destination && initialData.startDate) {
 
         // 優先權：1. 當天最早且有座標的景點 -> 2. 旅程總目的地座標
         const firstValidItem = (grouped[dayNum] || [])
-          .sort((a, b) => a.time.localeCompare(b.time))
+          .sort((a, b) => (a.time || "").localeCompare(b.time || ""))
           .find(i => i.lat && i.lng);
 
         const lat = firstValidItem?.lat || defaultCoords?.lat;
@@ -2280,21 +2214,15 @@ if (initialData.destination && initialData.startDate) {
       const cleanJson = res.replace(/```json|```/g, "").trim();
       const enrichedData = JSON.parse(cleanJson);
 
-      const newItinerary = tripData.itinerary.map((item) => {
-        const enrichment = enrichedData.find((e) => e.id === item.id);
-        
-        return enrichment ? { ...item, ...enrichment } : item;
-      });
-
-      await updateDoc(
+      await updateTrip(db,
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
-        { itinerary: newItinerary }
+        latest => ({ itinerary: applyAIUpdates(latest.itinerary || [], tripData.itinerary, enrichedData, "guide") })
       );
 
       showToast("導遊分析完成！");
     } catch (e) {
       console.error(e);
-      showToast("分析失敗，請稍後再試", "error");
+      showToast("分析失敗: " + e.message, "error");
     } finally {
       setIsAnalyzing(false);
     }
@@ -2312,7 +2240,7 @@ if (initialData.destination && initialData.startDate) {
       const days = [...new Set(tripData.itinerary.map(i => i.day))];
       const dayStartTimes = {};
       days.forEach(day => {
-        const items = tripData.itinerary.filter(i => i.day === day).sort((a, b) => a.time.localeCompare(b.time));
+        const items = tripData.itinerary.filter(i => i.day === day).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
         if (items.length > 0) dayStartTimes[day] = items[0].time;
       });
 
@@ -2355,27 +2283,15 @@ if (initialData.destination && initialData.startDate) {
       }
       const optimized = JSON.parse(cleanJson);
 
-      const newItinerary = optimized
-        .map((o) => {
-          const orig = tripData.itinerary.find((i) => i.id === o.id);
-          return orig ? { ...orig, day: o.day, time: o.time } : null;
-        })
-        .filter(Boolean);
-
-      const finalItinerary = [
-        ...newItinerary,
-        ...tripData.itinerary.filter((i) => !newItinerary.find((n) => n.id === i.id))
-      ];
-
-      await updateDoc(
+      await updateTrip(db,
         doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId),
-        { itinerary: finalItinerary }
+        latest => ({ itinerary: applyAIUpdates(latest.itinerary || [], tripData.itinerary, optimized, "optimize") })
       );
 
       showToast(`已根據${transportMode === "driving" ? "開車" : "大眾運輸"}路線優化完畢！`);
     } catch (e) {
       console.error(e);
-      showToast("優化失敗，請稍後再試", "error");
+      showToast("優化失敗: " + e.message, "error");
     } finally {
       setIsAnalyzing(false);
     }
@@ -2440,96 +2356,31 @@ if (initialData.destination && initialData.startDate) {
     );
   };
 
-const handleCalculateDebts = async () => {
+const handleCalculateDebts = () => {
     if (!tripData?.expenses?.length) {
       showToast("沒有支出紀錄", "error");
       return;
     }
 
-    // 1. 過濾出有意義的金額
-    const validExpenses = tripData.expenses.filter((item) => {
-      const amount = parseFloat(item.amount);
-      return !isNaN(amount) && amount > 0;
-    });
-
-    if (validExpenses.length === 0) {
-      setAiAnalysisResult({
-        isOpen: true,
-        title: "計算失敗",
-        content: "原因：偵測不到有效的金額數字。\n請檢查您的支出紀錄，確保金額皆大於 0。",
-        isDebtAnalysis: false,
-        isLoading: false,
-      });
-      return;
-    }
-
-    // 2. 開啟 AI 等待視窗
-    setAiAnalysisResult({
-      isOpen: true,
-      title: "AI 分帳計算",
-      content: "",
-      isDebtAnalysis: true,
-      isLoading: true,
-    });
-
     try {
-      // 🌟 改寫後的精確 Prompt 邏輯
-      const res = await callGeminiAPI([
-        {
-          text: `你是一個精準的旅遊財務計算機器人。請根據以下 JSON 資料計算成員間的還款：${JSON.stringify(validExpenses)}。
-
-          ### 運算規則（務必嚴格遵守）：
-          1. 逐一掃描每一筆支出物件。
-          2. **檢查 isSplit 欄位**：
-             - 如果 "isSplit" 為 false，該筆支出完全由 "payer" 負擔，不產生任何還款債務。
-             - 如果 "isSplit" 為 true，該筆支出才需要計算債務。
-          3. **計算分攤方式**：
-             - 僅限 "splitWith" 陣列中列出的成員參與分攤。
-             - 每人分攤額 = "amount" / ("splitWith" 陣列的人數)。
-             - 注意："payer" (代墊人) 通常也會在 "splitWith" 名單內，請務必計算人數。
-          4. **結算邏輯**：
-             - 統計每個人「代墊的總額」與「應分攤的總額」。
-             - 計算「代墊總額 - 應分攤總額 = 淨餘額」。
-             - 淨餘額為正者是「收錢的人」，負者是「給錢的人」。
-          5. **還款優化**：
-             - 算出誰該給誰多少錢，並盡可能減少轉帳次數。
-
-          ### 回傳規範：
-          - 嚴格只回傳純 JSON Array，不准有 Markdown 標籤或解釋文字。
-          - 格式：[{"from": "給錢者姓名", "to": "收錢者姓名", "amount": 四捨五入整數}]
-          - 若無人欠款，回傳 []。`,
-        },
-      ]);
-
-      if (!res) throw new Error("AI Failed");
-
-      // 3. 清洗資料並顯示結果
-      const cleanJson = res.replace(/```json|```/g, "").trim();
-      setAiAnalysisResult((prev) => ({
-        ...prev,
-        content: cleanJson,
-        isLoading: false,
-      }));
+      const debts = calculateDebts(tripData.expenses);
+      setAiAnalysisResult({ isOpen: true, title: "分帳計算", content: debts.length ? JSON.stringify(debts) : "目前無需互相還款", isDebtAnalysis: debts.length > 0, isLoading: false });
     } catch (e) {
-      console.error("AI 結算失敗:", e);
-      setAiAnalysisResult((prev) => ({
-        ...prev,
-        content: "計算失敗，請檢查網路或金鑰權限。",
-        isLoading: false,
-        isDebtAnalysis: false,
-      }));
+      setAiAnalysisResult({ isOpen: true, title: "請檢查支出資料", content: e.message, isDebtAnalysis: false, isLoading: false });
     }
   };
 
   const handleSaveItem = async () => {
+    if (saving.current || !user || !tripId) return;
+    saving.current = true;
+    setIsSaving(true);
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
 
     try {
-      const list = activeTab === "itinerary" ? tripData.itinerary : tripData.expenses;
 
-      // 🌟 只要這串字超過 1000 字，代表它是一坨沒處理過的圖片代碼，就啟動上傳！
+      // Keep the draft intact when image upload fails.
       let finalImageUrl = itemData.image || null;
-      if (itemData.image && typeof itemData.image === 'string' && itemData.image.length > 1000) {
+      if (itemData.image && typeof itemData.image === 'string' && itemData.image.startsWith("data:")) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
         setIsUploading(true); // 開啟上傳動畫
         
@@ -2540,25 +2391,24 @@ const handleCalculateDebts = async () => {
         if (uploadedUrl) {
           finalImageUrl = uploadedUrl;
         } else {
-          showToast("圖片上傳失敗，將不包含圖片儲存", "error");
-          finalImageUrl = null;
+          throw new Error("圖片上傳失敗，草稿已保留，請重試");
         }
       }
 
       let safeData = {};
       const commonFields = {
-        id: isEditMode ? editingId : Date.now().toString(),
-        createdBy: user.uid,
+        id: isEditMode ? editingId : crypto.randomUUID(),
+        createdBy: isEditMode ? (editingBase.current.createdBy || user.uid) : user.uid,
       };
 
       if (activeTab === "itinerary") {
         safeData = {
           ...commonFields,
-          day: itemData.day || 1,
+          day: Number(itemData.day || 1),
           time: itemData.time || "10:00",
           location: itemData.location || "", 
-          lat: itemData.lat || null,  
-          lng: itemData.lng || null,  
+          lat: itemData.lat ?? null,
+          lng: itemData.lng ?? null,
           category: itemData.category || "sightseeing",
           notes: itemData.notes || "",
           guideInfo: itemData.guideInfo || "", 
@@ -2577,14 +2427,27 @@ const handleCalculateDebts = async () => {
           splitWith: itemData.splitWith || [],
           currency: itemData.currency || "TWD",
           foreignAmount: itemData.foreignAmount || "",
-          exchangeRate: itemData.exchangeRate || 1,
+          exchangeRate: itemData.currency && itemData.currency !== "TWD" ? itemData.exchangeRate : 1,
         };
       }
 
+      if (activeTab === "itinerary") {
+        if (!Number.isInteger(safeData.day) || safeData.day < 1 || !/^([01]\d|2[0-3]):[0-5]\d$/.test(safeData.time) || !safeData.location.trim()) {
+          throw new Error("請填寫有效天數、時間與地點");
+        }
+      } else {
+        if (!safeData.item.trim()) throw new Error("請填寫消費項目");
+        validateExpense(safeData);
+        if (!Number.isFinite(Number(safeData.exchangeRate)) || Number(safeData.exchangeRate) <= 0) throw new Error("匯率須大於零");
+      }
       if (isEditMode) {
-        await updateDoc(tripRef, {
-          [activeTab]: list.map((i) => i.id === editingId ? { ...i, ...safeData } : i ),
-        });
+        const base = editingBase.current;
+        const edited = Object.fromEntries(Object.entries(safeData).filter(([key]) =>
+          key !== "id" && key !== "createdBy" && JSON.stringify(itemData[key]) !== JSON.stringify(base[key])
+        ));
+        await updateTrip(db, tripRef, latest => ({
+          [activeTab]: editRecord(latest[activeTab], editingId, base, edited),
+        }));
       } else {
         await updateDoc(tripRef, { [activeTab]: arrayUnion(safeData) });
       }
@@ -2594,6 +2457,10 @@ const handleCalculateDebts = async () => {
     } catch (e) {
       console.error(e);
       showToast("儲存失敗: " + e.message, "error");
+    } finally {
+      saving.current = false;
+      setIsSaving(false);
+      setIsUploading(false);
     }
   };
 
@@ -2608,6 +2475,7 @@ const handleCalculateDebts = async () => {
   };
 
 const handleSaveNote = async () => {
+    if (saving.current) return;
     if (!itemData.noteContent?.trim() && !itemData.noteImage) {
       showToast("請輸入文字或上傳圖片", "error");
       return;
@@ -2620,10 +2488,12 @@ const handleSaveNote = async () => {
 
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     
+    saving.current = true;
+    setIsSaving(true);
     try {
-// 🌟 記事本的圖片一樣用長度 1000 來攔截！
+// Upload only new local images, preserving existing URLs.
       let finalNoteImageUrl = itemData.noteImage || null;
-      if (itemData.noteImage && typeof itemData.noteImage === 'string' && itemData.noteImage.length > 1000) {
+      if (itemData.noteImage && typeof itemData.noteImage === 'string' && itemData.noteImage.startsWith("data:")) {
         showToast("正在上傳圖片至雲端，請稍候...", "success");
         setIsUploading(true); 
         
@@ -2634,21 +2504,14 @@ const handleSaveNote = async () => {
         if (uploadedUrl) {
           finalNoteImageUrl = uploadedUrl; 
         } else {
-          showToast("圖片上傳失敗，將不包含圖片儲存", "error");
-          finalNoteImageUrl = null;
+          throw new Error("圖片上傳失敗，草稿已保留，請重試");
         }
       }
 
       if (isEditMode && editingId) {
-        const currentNotes = tripData.notes || [];
-        const updatedNotes = currentNotes.map(n => n.id === editingId ? { 
-          ...n, 
-          content: itemData.noteContent || "", 
-          image: finalNoteImageUrl, // 🌟 存入網址
-          isEdited: true 
-        } : n);
-        
-        await updateDoc(tripRef, { notes: updatedNotes });
+        await updateTrip(db, tripRef, latest => ({ notes: editRecord(latest.notes, editingId, editingBase.current, {
+          content: itemData.noteContent || "", image: finalNoteImageUrl, isEdited: true,
+        }) }));
         showToast("更新成功！");
 
       } else {
@@ -2658,7 +2521,7 @@ const handleSaveNote = async () => {
         }
 
         const newNote = {
-          id: "note_" + Date.now(),
+          id: crypto.randomUUID(),
           content: itemData.noteContent || "", 
           image: finalNoteImageUrl, // 🌟 存入網址
           color: '#68577b', 
@@ -2678,83 +2541,50 @@ const handleSaveNote = async () => {
       
     } catch (e) { 
       console.error("記事本儲存失敗:", e);
-      showToast("留言失敗: " + (e.message || "未知錯誤"), "error"); 
+      showToast("留言失敗: " + (e.message || "未知錯誤"), "error");
+    } finally {
+      saving.current = false;
+      setIsSaving(false);
+      setIsUploading(false);
     }
   };
 
-  const togglePinNote = async (note) => {
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    const updatedNotes = (tripData.notes || []).map(n => 
-      n.id === note.id ? { ...n, isPinned: !n.isPinned } : n
-    );
-    await updateDoc(tripRef, { notes: updatedNotes });
-    showToast(note.isPinned ? "已取消置頂" : "已置頂！");
-  };
+  const togglePinNote = note => changeTrip(latest => ({
+    notes: updateRecord(latest.notes, note.id, current => ({ ...current, isPinned: !current.isPinned }))
+  }), "置頂狀態已更新");
 
-  const deleteNote = async (noteId) => {
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    await updateDoc(tripRef, { notes: tripData.notes.filter(n => n.id !== noteId) });
-    showToast("已刪除");
-  };
+  const deleteNote = noteId => changeTrip(latest => ({
+    notes: (latest.notes || []).filter(note => note.id !== noteId)
+  }), "已刪除");
 
-  const handleReplySubmit = async (noteId) => {
+  const handleReplySubmit = async noteId => {
     const input = document.getElementById(`reply-input-${noteId}`);
-    const text = input?.value;
-    if (!text?.trim()) return;
-
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    const updatedNotes = tripData.notes.map(n => n.id === noteId ? { 
-      ...n, replies: [...(n.replies || []), { id: Date.now(), author: getCurrentUserNickname(), content: text, time: Date.now() }] 
-    } : n);
-    await updateDoc(tripRef, { notes: updatedNotes });
-    showToast("回覆成功");
-    if (input) input.value = ''; 
+    const content = input?.value;
+    if (!content?.trim()) return;
+    const reply = { id: crypto.randomUUID(), author: getCurrentUserNickname(), content, time: Date.now() };
+    const success = await changeTrip(latest => ({
+      notes: updateRecord(latest.notes, noteId, note => ({ ...note, replies: [...(note.replies || []), reply] }))
+    }), "回覆成功");
+    if (success && input?.value === content) input.value = "";
   };
 
   const handleEditReplySave = async (noteId, replyId) => {
     if (!editReplyContent.trim()) return;
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    const updatedNotes = tripData.notes.map(n => {
-      if (n.id === noteId) {
-        return {
-          ...n,
-          replies: n.replies.map(r => r.id === replyId ? { ...r, content: editReplyContent, isEdited: true } : r)
-        };
-      }
-      return n;
-    });
-    await updateDoc(tripRef, { notes: updatedNotes });
-    setEditingReplyId(null);
-    showToast("回覆已更新");
+    const success = await changeTrip(latest => ({
+      notes: updateRecord(latest.notes, noteId, note => ({ ...note,
+        replies: editRecord(note.replies, replyId, replyBase.current, { content: editReplyContent, isEdited: true })
+      }))
+    }), "回覆已更新");
+    if (success) setEditingReplyId(null);
   };
 
-  const handleDeleteReply = async (noteId, replyId) => {
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    const updatedNotes = tripData.notes.map(n => {
-      if (n.id === noteId) {
-        return { ...n, replies: n.replies.filter(r => r.id !== replyId) };
-      }
-      return n;
-    });
-    await updateDoc(tripRef, { notes: updatedNotes });
-    showToast("回覆已刪除");
-  };
-  
+  const handleDeleteReply = (noteId, replyId) => changeTrip(latest => ({
+    notes: updateRecord(latest.notes, noteId, note => ({ ...note, replies: (note.replies || []).filter(reply => reply.id !== replyId) }))
+  }), "回覆已刪除");
+
   const deleteItem = async (col, item) => {
-    const tripRef = doc(
-      db,
-      "artifacts",
-      appId,
-      "public",
-      "data",
-      "travel_trips",
-      tripId
-    );
-    await updateDoc(tripRef, {
-      [col]: tripData[col].filter((i) => i.id !== item.id),
-    });
-    setConfirmConfig({ isOpen: false });
-    showToast("已刪除");
+    const success = await changeTrip(latest => ({ [col]: (latest[col] || []).filter(record => record.id !== item.id) }), "已刪除");
+    if (success) setConfirmConfig({ isOpen: false });
   };
 
   // --- 🌟 行李清單相關邏輯 ---
@@ -2762,7 +2592,7 @@ const handleSaveNote = async () => {
     if (!newChecklistText.trim() || !tripId) return;
     const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
     const newItem = {
-      id: "check_" + Date.now(),
+      id: crypto.randomUUID(),
       text: newChecklistText.trim(),
       isCompleted: false,
       createdBy: user.uid
@@ -2776,22 +2606,13 @@ const handleSaveNote = async () => {
     }
   };
 
-  const toggleChecklist = async (item) => {
-    if (!tripId) return;
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    const updatedList = (tripData.checklist || []).map(i =>
-      i.id === item.id ? { ...i, isCompleted: !i.isCompleted } : i
-    );
-    await updateDoc(tripRef, { checklist: updatedList });
-  };
+  const toggleChecklist = item => changeTrip(latest => ({
+    checklist: updateRecord(latest.checklist, item.id, current => ({ ...current, isCompleted: !current.isCompleted }))
+  }));
 
-  const deleteChecklist = async (item) => {
-    if (!tripId) return;
-    const tripRef = doc(db, "artifacts", appId, "public", "data", "travel_trips", tripId);
-    const updatedList = (tripData.checklist || []).filter(i => i.id !== item.id);
-    await updateDoc(tripRef, { checklist: updatedList });
-    showToast("已刪除項目");
-  };
+  const deleteChecklist = item => changeTrip(latest => ({
+    checklist: (latest.checklist || []).filter(record => record.id !== item.id)
+  }), "已刪除項目");
 
   const handleDeleteTrip = async () => {
     if (!tripId) return;
@@ -2814,12 +2635,16 @@ const handleSaveNote = async () => {
     }
   };
 
-  const groupedItinerary = (tripData?.itinerary || []).reduce((acc, item) => {
+  const groupedItinerary = useMemo(() => {
+    const grouped = (tripData?.itinerary || []).reduce((acc, item) => {
     const day = item.day || 1;
     if (!acc[day]) acc[day] = [];
     acc[day].push(item);
     return acc;
-  }, {});
+    }, {});
+    Object.values(grouped).forEach(items => items.sort((a, b) => (a.time || "").localeCompare(b.time || "")));
+    return grouped;
+  }, [tripData?.itinerary]);
 
   const myChecklist = (tripData?.checklist || []).filter(item => item.createdBy === user?.uid);
   
@@ -2844,6 +2669,8 @@ const handleSaveNote = async () => {
     );
   if (!tripId || !tripData)
     return (
+      <>
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <WelcomeScreen
         onCreate={createTrip}
         onImportTrip={createTripFromImport}
@@ -2852,6 +2679,7 @@ const handleSaveNote = async () => {
         isJoining={false}
         showToast={showToast}
       />
+      </>
     );
 
   return (
@@ -3010,7 +2838,7 @@ const handleSaveNote = async () => {
 
                     <div className="flex-1 space-y-2 pt-1 pb-2 mb-1 leading-relaxed">
                       {groupedItinerary[day]
-                        .sort((a, b) => a.time.localeCompare(b.time))
+                        .sort((a, b) => (a.time || "").localeCompare(b.time || ""))
                         .map((item) => (
                           <div
                             key={item.id}
@@ -3064,7 +2892,7 @@ const handleSaveNote = async () => {
                 className="text-3xl leading-none font-serif font-black bg-transparent border-b-2 border-transparent hover:border-[#eadef1] focus:border-[#68577b] px-1 pb-0 pt-1 flex-1 min-w-0 placeholder-[#b4a0c8] focus:outline-none text-stone-900 tracking-wide transition-all truncate"
                 value={localTripName}
                 placeholder="點擊輸入旅程名稱..."
-                onChange={(e) => setLocalTripName(e.target.value)}
+                onChange={(e) => { if (nameBase.current === null) nameBase.current = tripData.name; setLocalTripName(e.target.value); }}
                 onBlur={handleSaveName}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") e.target.blur();
@@ -3170,7 +2998,7 @@ const handleSaveNote = async () => {
 
 {/* --- Main 內容區 --- */}
       {/* 🌟 1. 徹底改造 main：拿掉所有的 auto 滾動與 padding，改成 overflow-hidden 完全鎖死！ */}
-      <main className="flex-1 overflow-hidden relative bg-[#FDFCF8]">
+      <main className="flex-1 min-h-0 overflow-hidden relative bg-[#FDFCF8]">
         
 {/* 🌟 完整版：完美避開選單、支援圖片預覽與上傳發佈的懸浮發文區 */}
         {activeTab === "notes" && ( 
@@ -3231,7 +3059,7 @@ const handleSaveNote = async () => {
                   
                   {/* 4. 發佈按鈕：接回原本寫好的 handleSaveNote */}
                   <button 
-                    onClick={handleSaveNote} // 接回原本的邏輯
+                    disabled={isSaving} onClick={handleSaveNote} // 接回原本的邏輯
                     className="bg-[#68577b]/90 backdrop-blur-md hover:bg-[#504062] text-white px-7 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 border border-white/20 shadow-sm"
                   >
                     發佈
@@ -3299,11 +3127,10 @@ const handleSaveNote = async () => {
                             </div>
                           </div>
 
-                        <DayMapPreview points={groupedItinerary[day]} />
+                        <DayMapPreview points={groupedItinerary[day]} isLoaded={isLoaded} loadError={loadError} active={activeTab === "itinerary"} />
                         
                           <div className="space-y-4">
                             {groupedItinerary[day]
-                              .sort((a, b) => a.time.localeCompare(b.time))
                               .map((item) => (
                                 <ItineraryCard
                                   key={item.id}
@@ -3312,6 +3139,7 @@ const handleSaveNote = async () => {
                                   onSelect={setSelectedItem}
                                   onEdit={(i) => {
                                     setEditingId(i.id);
+                                    editingBase.current = i;
                                     setItemData(i);
                                     setIsEditMode(true);
                                     setIsModalOpen(true);
@@ -3484,7 +3312,7 @@ const handleSaveNote = async () => {
                             <Pin size={14} className={note.isPinned ? "fill-amber-500" : ""} />
                           </button>
 
-                          <button onClick={() => { setIsEditMode(true); setEditingId(note.id); setItemData({ noteContent: note.content, noteImage: note.image }); }} className="p-2 rounded-xl text-stone-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Edit size={14} /></button>
+                          <button onClick={() => { editingBase.current = note; setIsEditMode(true); setEditingId(note.id); setItemData({ noteContent: note.content, noteImage: note.image }); }} className="p-2 rounded-xl text-stone-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Edit size={14} /></button>
                           <button onClick={() => deleteNote(note.id)} className="p-2 rounded-xl text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={14} /></button>
                         </div>
                       </div>
@@ -3531,8 +3359,8 @@ const handleSaveNote = async () => {
                                 {r.author === getCurrentUserNickname() && (
                                   <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0 bg-white/80 backdrop-blur-sm rounded-lg px-1 shadow-sm border border-white">
                                     <button
-                                      onClick={() => { setEditingReplyId(r.id); setEditReplyContent(r.content); }}
-                                      className="p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
+                                      onClick={() => { replyBase.current = r; setEditingReplyId(r.id); setEditReplyContent(r.content); }}
+                                      className="min-w-[44px] min-h-[44px] flex items-center justify-center p-1.5 text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
                                     >
                                       <Edit size={12} />
                                     </button>
@@ -3547,7 +3375,7 @@ const handleSaveNote = async () => {
                                           isDangerous: true,
                                         });
                                       }}
-                                      className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                      className="min-w-[44px] min-h-[44px] flex items-center justify-center p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
                                     >
                                       <Trash2 size={12} />
                                     </button>
@@ -3642,7 +3470,7 @@ const handleSaveNote = async () => {
                   onClick={handleCalculateDebts}
                   className="bg-white text-[#68577b] hover:bg-[#faf9f4] p-3 rounded-2xl shadow-lg flex flex-col items-center gap-1 text-[10px] font-bold active:scale-95 transition-transform"
                 >
-                  <Calculator size={20} /> AI 結算
+                  <Calculator size={20} /> 分帳結算
                 </button>
               </div>
 
@@ -3683,7 +3511,8 @@ const handleSaveNote = async () => {
                         className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white flex justify-between items-center group hover:bg-white transition-colors cursor-pointer"
                         onClick={() => {
                           setEditingId(expense.id);
-                          setItemData(expense);
+                          editingBase.current = expense;
+                          setItemData({ ...expense, currency: expense.currency || "TWD", foreignAmount: expense.foreignAmount || (expense.currency && expense.currency !== "TWD" ? "" : expense.amount) });
                           setIsEditMode(true);
                           setIsModalOpen(true);
                         }}
@@ -3708,7 +3537,7 @@ const handleSaveNote = async () => {
                               </div>
                               {expense.isSplit && (
                                 <span className="text-purple-500 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded font-medium">
-                                  {expense.splitWith.length}人分
+                                  {(expense.splitWith || []).length}人分
                                 </span>
                               )}
                             </div>
@@ -3787,6 +3616,7 @@ const handleSaveNote = async () => {
             ].map((tab) => (
               <button
                 key={tab.id}
+                disabled={isSaving}
                 onClick={() => {
                   setActiveTab(tab.id);
                   setIsEditMode(false);
@@ -3908,8 +3738,8 @@ const handleSaveNote = async () => {
       )}
 
       {isModalOpen && (
-        <div className="absolute inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] flex flex-col border border-white">
+        <div role="dialog" aria-modal="true" aria-label="編輯內容" style={editorViewport ? { height: editorViewport.height, top: editorViewport.top, bottom: "auto" } : undefined} className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#faf9f4] w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl animate-in zoom-in-95 fade-in transition-opacity duration-200 max-h-full flex flex-col border border-white">
             <h3 className="text-xl font-serif font-bold mb-6 text-stone-900 tracking-wide text-center shrink-0">
               {isEditMode
                 ? "編輯內容"
@@ -3918,7 +3748,7 @@ const handleSaveNote = async () => {
                 : "新增支出"}
             </h3>
 
-            <div className="space-y-4 overflow-y-auto scrollbar-hide px-1 flex-1">
+            <div className="space-y-4 overflow-y-auto overscroll-contain min-h-0 scrollbar-hide px-1 flex-1">
               {activeTab === "itinerary" ? (
                 <>
                   <div className="grid grid-cols-2 gap-3 w-full">
@@ -3957,6 +3787,7 @@ const handleSaveNote = async () => {
                         : "Location"}
                     </label>
                     <LocationInput
+                      isLoaded={isLoaded}
                       placeholder={
                         itemData.category === "flight"
                           ? "TPE - NRT"
@@ -4193,7 +4024,7 @@ const handleSaveNote = async () => {
                         <select 
                           className="bg-white border border-white shadow-sm rounded-xl px-3 py-3 text-base font-bold outline-none focus:ring-2 focus:ring-[#eadef1] text-[#68577b] shrink-0"
                           value={itemData.currency || "TWD"}
-                          onChange={(e) => setItemData({ ...itemData, currency: e.target.value })}
+                          onChange={(e) => setItemData({ ...itemData, currency: e.target.value, exchangeRate: e.target.value === "TWD" ? 1 : "", amount: e.target.value === "TWD" ? itemData.foreignAmount : "" })}
                         >
                           <option value="TWD">TWD 台幣</option>
                           <option value="JPY">JPY 日幣</option>
@@ -4213,7 +4044,7 @@ const handleSaveNote = async () => {
                             setItemData({ 
                               ...itemData, 
                               foreignAmount: fAmount, 
-                              amount: fAmount ? Math.round(fAmount * rate) : "" 
+                              amount: fAmount ? Math.round(fAmount * rate * 100) / 100 : ""
                             });
                           }}
                         />
@@ -4233,7 +4064,7 @@ const handleSaveNote = async () => {
                                 setItemData({ 
                                   ...itemData, 
                                   exchangeRate: newRate,
-                                  amount: itemData.foreignAmount ? Math.round(itemData.foreignAmount * newRate) : itemData.amount
+                                  amount: itemData.foreignAmount ? Math.round(itemData.foreignAmount * newRate * 100) / 100 : itemData.amount
                                 });
                               }}
                             />
@@ -4354,16 +4185,18 @@ const handleSaveNote = async () => {
             </div>
             <div className="flex gap-3 mt-6 shrink-0 border-t border-white/50 pt-4">
               <button
-                onClick={() => setIsModalOpen(false)}
+                disabled={isSaving} onClick={() => setIsModalOpen(false)}
                 className="flex-1 py-4 rounded-2xl bg-white border border-white shadow-sm text-stone-500 font-bold hover:bg-stone-50 transition-colors"
               >
                 取消
               </button>
               <button
                 onClick={handleSaveItem}
+                disabled={isSaving}
+                aria-busy={isSaving}
                 className="flex-1 py-4 rounded-2xl bg-[#68577b] text-white font-bold hover:bg-[#504062] transition-colors shadow-lg shadow-[#68577b]/30"
               >
-                確認儲存
+                {isSaving ? "儲存中…" : "確認儲存"}
               </button>
             </div>
           </div>
